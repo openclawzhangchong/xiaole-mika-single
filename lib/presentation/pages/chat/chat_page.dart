@@ -1064,9 +1064,8 @@ class _ChatPageState extends ConsumerState<ChatPage> {
         }
         final up = await _uploadVision(xfile.path, q);
         // v4.3.1：新协议两段式——MCP 场景 WS 必在线（请求即经 WS 下发），直接调
-        // v4.3.3：同步传服务器 message（多路尝试的路径 B 需要它）
         final desc = up['kind'] == 'uuid'
-            ? await _callImageToText(up['value']!, serverMessage: up['message'])
+            ? await _callImageToText(up['value']!)
             : (up['value'] ?? '');
         _appendOrCreateChatMessage(MessageSender.ai, desc);
         return {'success': true, 'question': q, 'description': desc};
@@ -1179,17 +1178,36 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     }
   }
 
-  /// v4.3.1：识图两段式第二步——经 WS 发 MCP tools/call image_to_text（带 uuid），
-  /// 等待服务器同 id 应答中的图片描述文本。失败抛中文异常。
-  /// 调用前提：WS 已连接（上传阶段成功说明连接过；断线时入口处先自动连接）。
+  /// 识图两段式第二步：拿到 `uuid` 后向服务器索要图片描述。
   ///
-  /// v4.3.3：服务器对该调用的响应方式**无公开文档**（全网检索无实现可参考），
-  /// 故改为**多路自动尝试**——三路并行，**谁先出结果用谁**，日志分打 [A]/[B]/[C] 标记，
-  /// 一次真机复现即可排除掉不可能的路径：
+  /// ⚠️ 现状（v4.3.4 定格，2026-09-11 真机结论）：**此步骤在官方服务器上无可用协议，功能暂缓**。
+  /// 调用链路（A/C 两路）与日志埋点全部保留，等日后拿到官方教程或服务器修复后再继续开发。
+  ///
+  /// 【已确认的事实】（完整证据见仓库根 `故障报告_识图image_to_text无响应_2026-09-11.md`）
+  ///   1. 上传链路完全正常：POST `capabilities.vision.url` → HTTP 200 + `{success, uuid, message}`；
+  ///   2. 服务器返回的 message（"Please call the tool `image_to_text` ... then reply to the user"）
+  ///      措辞是**给 LLM 的指令**（只有 LLM 才能 "reply to the user"），设备无法执行；
+  ///   3. 设备发 `tools/call image_to_text{uuid}`（路径 A）→ 服务器 **30 秒零响应**（无 result 也 error）；
+  ///   4. 设备把 message 当文本请求发（原路径 B，`listen/detect`）→ 服务器**明确拒绝**：
+  ///      `{"type":"alert","status":"ERROR","message":"Detect is only for wake words, do not send long texts."}`
+  ///      （官方服务器对 detect 只接受唤醒词短语，长文本一律拒绝——第三方开发者亦有公开记录）
+  ///      → **v4.3.4 已移除路径 B**（无效，且每次都会触发服务器 ERROR）；
+  ///   5. 全网检索无该协议的正确实现（第三方客户端只能用第三方视觉 API 绕过，或改打自建服务器）；
+  ///   6. 服务器对**非法**请求会明确报错，却对路径 A **完全静默** → A 不是服务器认识的用法。
+  ///
+  /// 【判定】疑似**服务端该功能未完成**：把"给 LLM 的 tool-call 提示"当作 HTTP 响应体返回了，
+  /// 真正的描述生成从未发生。客户端无法通过公开协议完成，故暂缓。
+  ///
+  /// 【日后如何继续】
+  ///   - 拿到官方教程/抓包对比：按新协议改写下方发送体即可（埋点已齐备，日志分类默认开
+  ///     `vision`/`ws`/`mcp`，一次复现就能看清全部往返）；
+  ///   - 服务器修复：本方法**无需改动**，路径 A 的应答会经 `_pendingMcpCalls` 自动命中；
+  ///   - 改用自建 xiaozhi-esp32-server：其识图链路完整，本方法同样可直接复用。
+  ///
+  /// 保留两路（谁先出结果用谁）：
   ///   [A] 发 tools/call image_to_text{uuid} → 由 _pendingMcpCalls 捕获 mcp 应答
-  ///   [B] 把服务器返回的 message 原文当文本请求发 → 让服务器 LLM 自行处理
   ///   [C] 纯等待服务器主动推送（tts/llm 文本）→ 由 _visionAux 捕获
-  Future<String> _callImageToText(String uuid, {String? serverMessage}) async {
+  Future<String> _callImageToText(String uuid) async {
     // v4.3.2：切到相机 Activity 期间 WS 很可能已被系统回收/服务端断开，
     // 此处先重新校验连接状态，断了就先重连再发，避免"连接已死却按在线发"。
     if (_wsManager == null || !_isConnected) {
@@ -1219,19 +1237,9 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     _wsManager!.sendMessage(reqA);
     logger.info('[A] 识图：已发起 tools/call image_to_text id=$id uuid=$uuid');
 
-    // ---------- 路径 B：把服务器 message 原文当文本请求发 ----------
-    if (serverMessage != null && serverMessage.trim().isNotEmpty) {
-      final reqB = jsonEncode({
-        'type': 'listen',
-        'state': 'detect',
-        'text': serverMessage.trim(),
-        'source': 'text',
-      });
-      _wsManager!.sendMessage(reqB);
-      logger.info('[B] 识图：已把服务器 message 作为文本请求发出 ${_clip(reqB)}');
-    } else {
-      logger.info('[B] 识图：跳过（服务器未返回 message）');
-    }
+    // 注：v4.3.4 已移除原「路径 B」（把服务器 message 当 listen/detect 文本请求发送）——
+    // 真机证实官方服务器一律拒绝长文本（alert: "Detect is only for wake words..."），
+    // 且每次都会触发服务器 ERROR 报警，故不再发送。详见方法头注释。
 
     // ---------- 路径 C：纯等待服务器主动推送 ----------
     logger.info('[C] 识图：开始监听服务器主动推送（tts/llm 文本）');
@@ -1349,7 +1357,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
       try {
         final up = await _uploadVision(xfile.path, '这张图里有什么？');
         final desc = up['kind'] == 'uuid'
-            ? await _callImageToText(up['value']!, serverMessage: up['message'])
+            ? await _callImageToText(up['value']!)
             : (up['value'] ?? '识图结果为空');
         _finishVisionBubble(placeholderId, MessageSender.ai, desc);
         logger.info('视觉识物成功（${desc.length} 字符）');
