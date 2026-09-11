@@ -9,6 +9,7 @@ import 'core/providers/theme_provider.dart';
 import 'package:logging/logging.dart';
 import 'package:opus_flutter/opus_flutter.dart' as opus_flutter;
 import 'core/utils/log_buffer.dart';
+import 'core/utils/audio_util.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -16,8 +17,11 @@ void main() async {
   // 初始化本地存储
   await StorageService.instance.init();
 
-  // v4.3.3：恢复日志分类开关（默认只开 vision/ws/mcp 三件套）
+  // v4.3.3：恢复日志分类开关（默认开 vision/ws/mcp/audio）
   await LogBuffer.loadCategories();
+
+  // v4.4.0：恢复 AEC 通话通路偏好（默认开）
+  AudioUtil.loadAecPref();
 
   // 配置 Logger - 添加这部分代码
   Logger.root.level = Level.ALL; // 设置日志级别

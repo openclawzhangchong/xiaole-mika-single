@@ -91,13 +91,12 @@ class _ChatPageState extends ConsumerState<ChatPage> {
   String? _activeEmotionKey;
   // v4.2.0：真实电量（申请书 8 号，battery_plus；桌面端不可用时回退虚拟值）
   final Battery _battery = Battery();
-  // v3.2.0：抢话打断 barge-in（对齐网页版，xiaoleweb.md §4.3）
-  bool _bargeinEnabled = true;
-  int _bargeinHits = 0;
+  // v4.4.0：barge-in（抢话打断）已**移除**。
+  // 原实现（v3.2.0 引入）用未经回声消除的麦克风原始振幅判断用户开口，
+  // AI 说话时扬声器回声必然使其超标 → 误触发 → 提前恢复上行 → AI 自己的声音被上传
+  // → 「自问自答」。详见 PLAN_v4.4.0_语音自问自答修复.md 根因③。
+  // 需要时可回退到远端 git 历史（v4.3.5 及更早）取回实现。
   StreamSubscription<double>? _bargeinSub;
-  // v3.2.0：barch-in 判据——amplitudeStream 归一化值（dBFS -50~0 → 0.0~1.0），
-  // 0.36 ≈ 网页版 RMS 0.025（约 -32dBFS）；连续 4 个采样点（400ms）超阈值判为开口
-  static const double _bargeinThreshold = 0.36;
 
   // OTA 认证信息
   XiaozhiOtaService? _otaService;
@@ -105,6 +104,23 @@ class _ChatPageState extends ConsumerState<ChatPage> {
   // AI 播放状态跟踪
   bool _isAiPlaying = false;
   Timer? _aiPlayingTimer; // 用于检测播放结束的定时器
+
+  /// v4.4.0 尾音保护：AI 播放结束后的一段时间内**丢弃**麦克风上行音频，
+  /// 避免扬声器缓冲区里残留的尾音被收录并当成"用户开口"（根因①）。null = 不在保护期。
+  DateTime? _resumeGuardUntil;
+
+  /// v4.4.0：尾音保护时长（毫秒）——默认 300，可调范围 100–500（开发者中心「⏱ 尾音保护」）
+  int get _tailGuardMs {
+    final v = StorageService.instance.getInt(AppConfig.keyTailGuardMs);
+    if (v == null) return AppConfig.defaultTailGuardMs;
+    return v.clamp(AppConfig.minTailGuardMs, AppConfig.maxTailGuardMs);
+  }
+
+  /// 进入尾音保护期（AI 播放结束的两个入口调用）
+  void _enterTailGuard() {
+    _resumeGuardUntil = DateTime.now().add(Duration(milliseconds: _tailGuardMs));
+    logger.info('[audio] 进入尾音保护 ${_tailGuardMs}ms（丢弃此期间的麦克风音频）');
+  }
 
   // AI 正在输入 / 语音通话
   bool _isAiTyping = false;
@@ -124,10 +140,8 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     // v3.2.0：恢复 TTS 音量偏好（set_volume 工具与设置页滑杆共用）
     final savedVol = StorageService.instance.getInt(AppConfig.keyTtsVolume);
     if (savedVol != null) AudioUtil.setTtsVolume(savedVol);
-    // v3.3.0：加载开发者功能开关（MCP/MQTT/识物/抢话/调试），barge-in 从开关取
-    AppFeats.load().then((_) {
-      if (mounted) setState(() => _bargeinEnabled = AppFeats.bargein);
-    });
+    // v4.4.0：barge-in 已移除，不再需要把开关同步进状态（其余开发者开关照常加载）
+    AppFeats.load();
     // v4.3.0：全局设备型号矫正——手机型号 fallback / xiaole-voice-v1 旧值
     // 幂等归一为 m5stack-core-s3（OTA 识别层早已统一，此为展示/存储层残留清理）
     AgentIdentityStore.normalizeGlobalModel();
@@ -1165,29 +1179,6 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     logger.info('📡 MQTT 常驻启动（endpoint=${mqtt.endpoint}）');
   }
 
-  /// v3.2.0：barge-in 能量检测（通话中 + AI 说话时生效；依赖浏览器级 AEC 消除扬声器回声）
-  /// 判据：连续 4 个采样点（100ms 间隔，约 400ms）振幅超阈值 → 用户开口 → 发 abort
-  void _onAmplitudeForBargeIn(double amp) {
-    if (!_bargeinEnabled || !_isInVoiceCall || !_isAiPlaying) {
-      _bargeinHits = 0;
-      return;
-    }
-    if (amp > _bargeinThreshold) {
-      _bargeinHits++;
-      if (_bargeinHits >= 4) {
-        _bargeinHits = 0;
-        _isAiPlaying = false; // 立即恢复上行（不等服务器停发音频）
-        try {
-          _wsManager?.sendMessage(jsonEncode({'type': 'abort', 'reason': 'bargein'}));
-        } catch (_) {}
-        _appendOrCreateChatMessage(MessageSender.system, '🎤 已打断 AI，请继续说');
-        logger.info('barge-in：检测到用户开口，已发送 abort');
-      }
-    } else {
-      _bargeinHits = 0;
-    }
-  }
-
   /// 识图两段式第二步：拿到 `uuid` 后向服务器索要图片描述。
   ///
   /// ⚠️ 现状（v4.3.4 定格，2026-09-11 真机结论）：**此步骤在官方服务器上无可用协议，功能暂缓**。
@@ -1580,7 +1571,9 @@ class _ChatPageState extends ConsumerState<ChatPage> {
         setState(() {
           _isAiPlaying = false;
         });
-        logger.info('AI 播放结束，恢复发送麦克风数据');
+        // v4.4.0：进入尾音保护（根因①——此时扬声器可能还在播最后几个字）
+        _enterTailGuard();
+        logger.info('AI 播放结束（500ms 无新音频），进入尾音保护');
       }
     });
     
@@ -1631,7 +1624,9 @@ class _ChatPageState extends ConsumerState<ChatPage> {
               setState(() {
                 _isAiPlaying = false;
               });
-              logger.info('TTS 结束($state)，AI 播放完成，恢复发送麦克风数据');
+              // v4.4.0：进入尾音保护（同上）
+              _enterTailGuard();
+              logger.info('TTS 结束($state)，AI 播放完成，进入尾音保护');
             }
           }
           break;
@@ -1791,6 +1786,16 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     if (_isAiPlaying) {
       // logger.info('AI 正在播放，跳过发送音频数据'); // 注释掉，避免日志过多
       return;
+    }
+
+    // v4.4.0 尾音保护：AI 刚说完时，扬声器缓冲区里可能还在播最后几个字，
+    // 此时上行的音频实为 AI 自己的尾音 → 会被服务器 ASR 当成"用户开口"导致自问自答。
+    // 故保护期内丢弃音频，等扬声器余音衰减完毕。
+    final guard = _resumeGuardUntil;
+    if (guard != null) {
+      if (DateTime.now().isBefore(guard)) return;
+      _resumeGuardUntil = null;
+      logger.info('[audio] 尾音保护结束，恢复上行麦克风数据');
     }
 
     // 通过 WebSocket 发送音频数据
@@ -1958,10 +1963,9 @@ class _ChatPageState extends ConsumerState<ChatPage> {
         logger.severe('通话音频流错误: $e');
       },
     );
-    // v3.2.0：barge-in——AI 说话期间监听麦克风能量，用户开口立即 abort
+    // v4.4.0：barge-in 已移除，不再订阅麦克风能量流
     _bargeinSub?.cancel();
-    _bargeinHits = 0;
-    _bargeinSub = AudioUtil.amplitudeStream.listen(_onAmplitudeForBargeIn);
+    _bargeinSub = null;
     _handleContinuousListenStart();
     if (mounted) setState(() => _callStatus = '已连接');
   }
@@ -1978,10 +1982,9 @@ class _ChatPageState extends ConsumerState<ChatPage> {
   void _endVoiceCall() {
     _voiceCallTimer?.cancel();
     _voiceCallTimer = null;
-    // v3.2.0：停止 barge-in 能量监听
+    // v4.4.0：barge-in 已移除（保留订阅清理以防残留）
     _bargeinSub?.cancel();
     _bargeinSub = null;
-    _bargeinHits = 0;
     // 取消音频流订阅（与持续监听同链路，只调用不改 lib/core）
     _callAudioSubscription?.cancel();
     _callAudioSubscription = null;

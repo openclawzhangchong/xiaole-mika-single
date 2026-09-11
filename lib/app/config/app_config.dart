@@ -4,7 +4,15 @@ class AppConfig {
 
   // 应用信息
   static const String appName = '小乐'; // v4.0.0：品牌统一（默认智能体名前缀等）
-  static const String appVersion = '4.3.5'; // v4.3.5：方案一——MCP take_photo 按官方固件做法把上传响应体"原样"作为工具结果回传，交由服务端 LLM 处理（官方仓库 image_to_text 出现 0 次 ⇒ 设备端不存在第二段调用）
+  static const String appVersion = '4.4.0'; // v4.4.0：语音自问自答修复——关闭误触发的 barge-in + 录音源走通话通路启用硬件AEC(可切换) + 尾音保护(默认300ms可调100-500) + 音频日志默认开
+
+  /// v4.4.0 尾音保护：AI 播放结束后丢弃麦克风音频的时长（毫秒）
+  static const int defaultTailGuardMs = 300;
+  static const int minTailGuardMs = 100;
+  static const int maxTailGuardMs = 500;
+
+  /// v4.4.0 尾音保护时长的持久化键
+  static const String keyTailGuardMs = 'tail_guard_ms';
 
   // API 配置（默认值，可在设置中修改）
   static const String defaultBaseUrl = 'https://api.example.com';

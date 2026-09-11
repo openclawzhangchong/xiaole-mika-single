@@ -15,7 +15,9 @@ class AppFeats {
   /// 开关清单与默认值：
   /// - mcptools（🧰 MCP 设备工具）：v3.0 起默认开（用户批准）
   /// - vision（📷 视觉识物）：v3.1 起默认开
-  /// - bargein（🎤 抢话打断）：v3.2 起默认开
+  /// - bargein（🎤 抢话打断）：v3.2 起默认开 → **v4.4.0 起默认关**：
+  ///   其用未回声消除的麦克风振幅判断，AI 说话时必然误触发，会把 AI 自己的声音上行
+  ///   造成「自问自答」。详见 PLAN_v4.4.0_语音自问自答修复.md 根因③
   /// - mqtt（📡 MQTT 常驻在线）：v3.3 新增，**默认关**（EMQX 限流待真机观察，灰度）
   /// - mcpDebug（🧪 MCP 调试）：默认关（开=字幕保留 % 工具名原文）
   /// - emotion（😄 表情动画）：v4.3.0 新增，**默认关**（用户拍板：全屏动画移入
@@ -32,7 +34,7 @@ class AppFeats {
     'mcptools': true,
     'mqtt': false,
     'vision': true,
-    'bargein': true,
+    'bargein': false, // v4.4.0：默认关（误触发导致 AI 自问自答，见方案根因③）
     'mcpDebug': false,
     'emotion': false,
   };

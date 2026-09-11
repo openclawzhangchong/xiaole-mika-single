@@ -50,14 +50,14 @@ class LogBuffer {
     'ui': '🖥 界面与其他',
   };
 
-  /// 默认开关：**只开识图排查链路三件套**，其余默认关（张老师拍板）
+  /// 默认开关：默认只开**识图排查链路 + 音频**（张老师拍板 v4.4.0 增加 audio）
   static const Map<String, bool> defaultCategoryEnabled = <String, bool>{
     'vision': true,
     'ws': true,
     'mcp': true,
     'cloud': false,
     'ota': false,
-    'audio': false,
+    'audio': true, // v4.4.0：排查语音「自问自答」需要，默认开
     'ui': false,
   };
 

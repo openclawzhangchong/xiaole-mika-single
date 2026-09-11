@@ -8,6 +8,7 @@ import 'package:opus_dart/opus_dart.dart';
 import 'package:audio_session/audio_session.dart';
 import 'package:flutter_pcm_sound/flutter_pcm_sound.dart';
 import 'package:xiaozhi_client_flutter/app/config/app_config.dart';
+import 'package:xiaozhi_client_flutter/core/storage/storage_service.dart';
 
 /// 音频工具类，用于处理Opus音频编解码和录制播放
 class AudioUtil {
@@ -27,6 +28,28 @@ class AudioUtil {
   static void setTtsVolume(int percent) {
     _ttsVolumePercent = percent.clamp(0, 100);
     print('$TAG: TTS 音量已设为 $_ttsVolumePercent%');
+  }
+
+  /// v4.4.0：是否走 Android **通话音频通路**以启用**硬件 AEC**（默认开）。
+  /// 播放侧（见 117 行 AndroidAudioUsage.voiceCommunication）已是通话通路，
+  /// 录音侧必须与之对齐，硬件 AEC 才会真正生效；否则扬声器声音会被麦克风收录，
+  /// 造成 AI 说话的尾音被误识别成用户说话（「自问自答」）。
+  /// 少数机型走通话通路音色略闷 → 可在开发者中心「🎧 通话降噪通路（AEC）」关闭，回退默认录音源。
+  /// ⚠️ 红线登记：本项只选择音频通路，未动编解码 / 采样率 / 缓冲参数（已获张老师授权）。
+  static bool useAecSource = true;
+  static const String _kAecSource = 'audio_aec_source';
+
+  /// 启动时从存储恢复（main 中调用一次）
+  static void loadAecPref() {
+    useAecSource = StorageService.instance.getBool(_kAecSource) ?? true;
+    print('$TAG: AEC 通路偏好已恢复 useAecSource=$useAecSource');
+  }
+
+  /// 切换并持久化（对**下次**录音/通话生效，当前正在录音的不受影响）
+  static void setAecSource(bool v) {
+    useAecSource = v;
+    StorageService.instance.setBool(_kAecSource, v);
+    print('$TAG: AEC 通路已设为 useAecSource=$v（下次录音生效）');
   }
 
   static final StreamController<Uint8List> _audioStreamController =
@@ -260,6 +283,13 @@ class AudioUtil {
             noiseSuppress: enableAEC,
             // 🔥 自动增益控制 - 自动调整麦克风音量
             autoGain: enableAEC,
+            // v4.4.0：Android 录音源——与播放侧（117 行 voiceCommunication）对齐，硬件 AEC 才生效。
+            // 默认 voiceCommunication；少数机型音色略闷时可在开发者中心关掉，回退 defaultSource。
+            androidConfig: AndroidRecordConfig(
+              audioSource: useAecSource
+                  ? AndroidAudioSource.voiceCommunication
+                  : AndroidAudioSource.defaultSource,
+            ),
           ),
         );
 

@@ -5,6 +5,9 @@ import 'package:xiaozhi_client_flutter/core/utils/toast_util.dart';
 import '../services/app_feats.dart';
 import '../../core/utils/log_buffer.dart';
 import 'log_category_page.dart';
+import '../../core/utils/audio_util.dart';
+import '../../core/storage/storage_service.dart';
+import '../../app/config/app_config.dart';
 
 /// 开发者中心（v3.3.0，对齐网页版模式，xiaoleweb.md 第十一章）
 /// ------------------------------------------------------------
@@ -64,12 +67,9 @@ class _DevCenterPageState extends State<DevCenterPage> {
               '聊天栏相机按钮：拍照问 AI 这是什么',
               'vision',
             ),
-            _switchTile(
-              isDark,
-              '🎤 抢话打断',
-              '通话中 AI 说话时你开口立即打断（误触发可关）',
-              'bargein',
-            ),
+            // v4.4.0：原「🎤 抢话打断」开关已移除——其用未消回声的振幅判断会误触发，
+            // 导致 AI 自问自答（方案根因③）。此处改为 AEC 通话通路开关。
+            _aecTile(isDark),
             _switchTile(
               isDark,
               '🧪 MCP 调试',
@@ -84,6 +84,7 @@ class _DevCenterPageState extends State<DevCenterPage> {
             ),
           ]),
           _section(isDark, '诊断', [
+            _tailGuardTile(),
             ListTile(
               leading:
                   const Icon(Icons.receipt_long_outlined, color: Color(0xFF576B95)),
@@ -132,6 +133,100 @@ class _DevCenterPageState extends State<DevCenterPage> {
         ],
       ),
     );
+  }
+
+  /// v4.4.0：AEC 通话通路开关
+  /// **独立于 `AppFeats`**——`AppFeats.allOff()`（"全部关闭"＝普通用户模式）会关掉所有开关，
+  /// 而 AEC 属基础收音质量而非"开发者增强功能"，不应被"全部关闭"取消，故用独立存储键。
+  Widget _aecTile(bool isDark) {
+    return SwitchListTile(
+      value: AudioUtil.useAecSource,
+      onChanged: (v) {
+        AudioUtil.setAecSource(v);
+        setState(() {});
+        ToastUtil.show(v
+            ? '通话降噪通路已开启（下次录音生效）'
+            : '通话降噪通路已关闭，恢复原录音源（下次录音生效）');
+      },
+      title: Text(
+        '🎧 通话降噪通路（AEC）',
+        style: TextStyle(
+          fontSize: 16,
+          color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
+        ),
+      ),
+      subtitle: Padding(
+        padding: const EdgeInsets.only(top: 2),
+        child: Text(
+          '开启＝走通话音频通路以启用硬件回声消除，可消除 AI 尾音被误识别；少数机型音色略闷。下次录音/通话生效',
+          style: TextStyle(
+            fontSize: 12,
+            color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
+          ),
+        ),
+      ),
+    );
+  }
+
+  int get _tailGuardMs {
+    final v = StorageService.instance.getInt(AppConfig.keyTailGuardMs);
+    if (v == null) return AppConfig.defaultTailGuardMs;
+    return v.clamp(AppConfig.minTailGuardMs, AppConfig.maxTailGuardMs);
+  }
+
+  /// v4.4.0：尾音保护时长（100–500ms，默认 300）
+  Widget _tailGuardTile() {
+    final ms = _tailGuardMs;
+    return ListTile(
+      leading: const Icon(Icons.timer_outlined, color: Color(0xFF576B95)),
+      title: const Text('⏱ 尾音保护'),
+      subtitle: Text('AI 说完后等待 $ms 毫秒再恢复采集（减少误识别；调大更保险）'),
+      onTap: () => _pickTailGuard(ms),
+    );
+  }
+
+  Future<void> _pickTailGuard(int current) async {
+    double value = current.toDouble();
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('尾音保护时长'),
+        content: StatefulBuilder(
+          builder: (ctx, setS) => Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('${value.round()} 毫秒'),
+              Slider(
+                value: value,
+                min: AppConfig.minTailGuardMs.toDouble(),
+                max: AppConfig.maxTailGuardMs.toDouble(),
+                divisions: 8, // 100~500，步进 50
+                label: '${value.round()}ms',
+                onChanged: (v) => setS(() => value = v),
+              ),
+              const Text(
+                'AI 说完后等多久再开始听你说话：调大可减少误识别，调小更灵敏',
+                style: TextStyle(fontSize: 12),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('取消')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('保存')),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    final v =
+        value.round().clamp(AppConfig.minTailGuardMs, AppConfig.maxTailGuardMs);
+    await StorageService.instance.setInt(AppConfig.keyTailGuardMs, v);
+    setState(() {});
+    ToastUtil.show('尾音保护已设为 ${v}ms');
   }
 
   /// v4.3.2：复制最近 200 条运行日志到剪贴板（供用户粘贴给 AI 排查故障）
