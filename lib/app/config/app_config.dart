@@ -4,7 +4,7 @@ class AppConfig {
 
   // 应用信息
   static const String appName = '小乐'; // v4.0.0：品牌统一（默认智能体名前缀等）
-  static const String appVersion = '4.3.4'; // v4.3.4：识图功能暂缓（官方服务器无可用协议，详见故障报告）——移除无效的路径B（服务器明确拒绝长文本注入）+ 方法内留存完整现状与后续开发说明
+  static const String appVersion = '4.3.5'; // v4.3.5：方案一——MCP take_photo 按官方固件做法把上传响应体"原样"作为工具结果回传，交由服务端 LLM 处理（官方仓库 image_to_text 出现 0 次 ⇒ 设备端不存在第二段调用）
 
   // API 配置（默认值，可在设置中修改）
   static const String defaultBaseUrl = 'https://api.example.com';

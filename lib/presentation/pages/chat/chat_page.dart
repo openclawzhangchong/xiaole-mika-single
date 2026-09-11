@@ -1063,11 +1063,21 @@ class _ChatPageState extends ConsumerState<ChatPage> {
           return {'success': false, 'message': 'user cancelled camera'};
         }
         final up = await _uploadVision(xfile.path, q);
-        // v4.3.1：新协议两段式——MCP 场景 WS 必在线（请求即经 WS 下发），直接调
-        final desc = up['kind'] == 'uuid'
-            ? await _callImageToText(up['value']!)
-            : (up['value'] ?? '');
-        _appendOrCreateChatMessage(MessageSender.ai, desc);
+        // v4.3.5【方案一修正】：官方固件 Esp32Camera::Explain() 的全部实现就是
+        //   `std::string result = http->ReadAll(); return result;`
+        // —— 把 HTTP 响应体**原样**作为 MCP 工具结果返回，由**服务端 LLM** 依据其中的
+        //    uuid/message（"Please call the tool image_to_text…"）自行完成描述获取。
+        //    官方仓库全文件 `image_to_text` 出现 0 次 ⇒ **设备端不存在"第二段调用"**。
+        //    旧实现错在此处也去发 tools/call（方向反了：tools/call 是服务器→设备），必然超时。
+        // 现按官方做法回传响应体原文：旧协议下它本身就是描述；新协议下它是给 LLM 的提示。
+        final desc = up['raw'] ?? up['message'] ?? up['value'] ?? '';
+        logger.info('MCP take_photo 回传响应体原文 ${desc.length} 字符，交由服务端 LLM 处理'
+            '（kind=${up['kind']}）');
+        // 仅旧协议（响应体即描述）才回填 AI 气泡；新协议下这段是**给 LLM 的提示**，
+        // 不能显示给用户（否则又变成"把 JSON 摆给用户看"），真正的描述由服务端 LLM 回复。
+        if (up['kind'] == 'text') {
+          _appendOrCreateChatMessage(MessageSender.ai, desc);
+        }
         return {'success': true, 'question': q, 'description': desc};
       } catch (e) {
         return {'success': false, 'message': '$e'};
@@ -1495,7 +1505,9 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     }
     logger.info('识图上传解析结果 kind=$kind valueLen=${value.length}'
         ' serverMessage=${serverMsg.isEmpty ? "(无)" : serverMsg}');
-    return {'kind': kind, 'value': value, 'message': serverMsg};
+    // v4.3.5：额外回传响应体原文（raw）。官方固件 Esp32Camera::Explain() 的做法就是把它**原样**
+    // 作为工具结果返回给服务端 LLM（见 视觉方案修复.md 第一节），故 MCP 场景需要用到它。
+    return {'kind': kind, 'value': value, 'message': serverMsg, 'raw': body};
   }
 
   /// 处理 WebSocket 事件
