@@ -4,7 +4,7 @@ class AppConfig {
 
   // 应用信息
   static const String appName = '小乐'; // v4.0.0：品牌统一（默认智能体名前缀等）
-  static const String appVersion = '4.4.0'; // v4.4.0：语音自问自答修复——关闭误触发的 barge-in + 录音源走通话通路启用硬件AEC(可切换) + 尾音保护(默认300ms可调100-500) + 音频日志默认开
+  static const String appVersion = '6.0.0'; // v6.0.0 正式版：基于 v4.4.0 原版（含自问自答修复），仅新增「通话界面全屏(隐藏AppBar+系统沉浸式)」；语音扩展能力(灵敏度/声纹/唤醒)已封存于 tag archive-voice-wip-20260912 与 v4.5.x/v4.6.x，待后续开发
 
   /// v4.4.0 尾音保护：AI 播放结束后丢弃麦克风音频的时长（毫秒）
   static const int defaultTailGuardMs = 300;

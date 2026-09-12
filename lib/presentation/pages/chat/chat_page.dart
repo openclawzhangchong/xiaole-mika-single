@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:xiaozhi_client_flutter/core/network/xiaozhi_ota_service.dart';
@@ -178,6 +179,8 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     }
     // v4.3.3：页面销毁打点（含来源标记）——与 initState 配对，可判定页面是否被重建
     logger.info('聊天页 dispose（页面销毁，将主动断开 WS）');
+    // v6.0.0：若在通话全屏状态下直接销毁页面，恢复系统 UI，避免沉浸式残留到其他页面
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     _cleanupWebSocket(source: 'dispose');
     _otaService?.dispose();
     super.dispose();
@@ -186,7 +189,10 @@ class _ChatPageState extends ConsumerState<ChatPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
+      // v6.0.0：通话中隐藏顶端工具栏，使通话界面全屏扩展（微信通话效果）
+      appBar: _showVoiceCallOverlay
+          ? null
+          : AppBar(
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -1937,6 +1943,8 @@ class _ChatPageState extends ConsumerState<ChatPage> {
       _ensureConnectedThen(_startVoiceCall, '进入通话');
       return;
     }
+    // v6.0.0：进入通话 → 系统沉浸式（隐藏状态栏/导航栏），配合隐藏 AppBar 实现全屏
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
     setState(() {
       _isInVoiceCall = true;
       _showVoiceCallOverlay = true;
@@ -1980,6 +1988,8 @@ class _ChatPageState extends ConsumerState<ChatPage> {
 
   /// 结束语音通话
   void _endVoiceCall() {
+    // v6.0.0：退出通话 → 恢复系统 UI（与进入时的沉浸式配对）
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     _voiceCallTimer?.cancel();
     _voiceCallTimer = null;
     // v4.4.0：barge-in 已移除（保留订阅清理以防残留）
@@ -2031,11 +2041,24 @@ class _ChatPageState extends ConsumerState<ChatPage> {
   }
 
   /// 通话中顶部小条（最小化后点击可恢复）
+  /// v6.0.0：收起通话全屏层 —— 同时恢复系统 UI，避免沉浸式状态残留
+  void _collapseVoiceCallOverlay() {
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    setState(() => _showVoiceCallOverlay = false);
+  }
+
+  /// v6.0.0：展开 / 重新展开通话全屏层 —— 每次都必须重入系统沉浸式
+  /// （收起时已恢复 edgeToEdge，若展开时只 setState 而不重设沉浸式，会丢失全屏效果）
+  void _expandVoiceCallOverlay() {
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+    setState(() => _showVoiceCallOverlay = true);
+  }
+
   Widget _buildVoiceCallBanner() {
     return Material(
       color: AppColors.primary,
       child: InkWell(
-        onTap: () => setState(() => _showVoiceCallOverlay = true),
+        onTap: _expandVoiceCallOverlay,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: Row(
