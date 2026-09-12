@@ -1,0 +1,58 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# The .vscode folder contains launch configuration and tasks you configure in
+# VS Code which you may wish to be included in version control, so this line
+# is commented out by default.
+#.vscode/
+
+# Flutter/Dart/Pub related
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+/build/
+/coverage/
+
+# Symbolication related
+app.*.symbols
+
+# Obfuscation related
+app.*.map.json
+
+# Android Studio will place build artifacts here
+/android/app/debug
+/android/app/profile
+/android/app/release
+
+# golden 失败反馈图（本地调试产物，不入库）
+test/failures/
+
+# ===== v6.0.0 项目整理：排除杂物（完整树入库时一并生效）=====
+# 旧损坏仓库的备份（2026-09-12 git 事故留档，不随仓库分发）
+.git_damaged_bak/
+# 硬件编译日志（临时资料）
+小智的这个硬件的编译日志build.log.txt
+# Flutter 工具状态文件
+.flutter
+.flutter_tool_state
+devtools_options.yaml
