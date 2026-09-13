@@ -256,6 +256,61 @@ class _CloudSyncPageState extends State<CloudSyncPage> {
     }
   }
 
+  /// v6.2.0：**清空该账号在云端的全部数据**（智能体配置 + 全部聊天记录）。
+  ///
+  /// 危险操作：先弹二次确认（明确列出删除范围与"不可恢复"），
+  /// 再调用云端 `POST /clear`（服务端仍会做手机号+用户名双因子核验）。
+  /// 本机数据不受影响。
+  Future<void> _clearCloud() async {
+    final st = await CloudSyncService.loadState();
+    if (st == null) return;
+    if (!mounted) return;
+
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('⚠️ 清空云端数据'),
+        content: Text(
+          '将删除账号「${st.maskedPhone}」在云端的全部数据：\n\n'
+          '· 所有智能体配置（含 MAC / 设备 ID）\n'
+          '· 全部聊天记录\n\n'
+          '此操作不可恢复（你本机上的数据不受影响）。',
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('取消')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('确认清空',
+                style: TextStyle(color: Color(0xFFE64340))),
+          ),
+        ],
+      ),
+    );
+    if (ok != true || !mounted) return;
+
+    _setBusy(true, status: '正在清空云端数据…', progress: 0.5);
+    try {
+      final r = await _svc.clearAll(st);
+      if (!mounted) return;
+      if (r['ok'] == true) {
+        setState(() {
+          _statusText = '云端数据已清空'
+              '（智能体 ${r['deletedAgents'] ?? 0} · 会话块 ${r['deletedBlocks'] ?? 0}）';
+          _busy = false;
+          _progress = 1;
+        });
+      } else {
+        _fail('清空失败：${r['error'] ?? '未知错误'}');
+      }
+    } catch (e, st2) {
+      // 异常必须复位 _busy，避免界面永久转圈（v4.3.2 教训）
+      _log.severe('清空云端异常: $e\n${_shortStack(st2)}');
+      _fail(_netError(e, '清空云端'));
+    }
+  }
+
   Future<void> _unbind() async {
     final ok = await showDialog<bool>(
       context: context,
@@ -429,6 +484,18 @@ class _CloudSyncPageState extends State<CloudSyncPage> {
               onPressed: _pull,
               icon: const Icon(Icons.download),
               label: const Text('⬇ 从云端恢复到本机'),
+            ),
+          ),
+          const SizedBox(height: 10),
+          // v6.2.0：清空云端数据（危险操作 → 二次确认）
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: _clearCloud,
+              icon: const Icon(Icons.delete_forever_outlined,
+                  size: 18, color: Color(0xFFE64340)),
+              label: const Text('🗑 清空云端数据',
+                  style: TextStyle(color: Color(0xFFE64340))),
             ),
           ),
           const SizedBox(height: 10),

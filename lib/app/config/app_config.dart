@@ -4,7 +4,7 @@ class AppConfig {
 
   // 应用信息
   static const String appName = '小乐'; // v4.0.0：品牌统一（默认智能体名前缀等）
-  static const String appVersion = '6.1.3'; // v6.1.3：开发者中心新增「📋 查看已注册的工具清单」——点开分组列出全部 26 项 MCP 设备工具（含用途说明与"需你确认"提示）；仅改 dev_center_page.dart 一个文件
+  static const String appVersion = '6.2.0'; // v6.2.0：一键云端修复设备身份(MAC/设备ID)上传与恢复+恢复后设全局身份+新增「清空云端数据」(配套云端 POST /clear 已上线)；详见 CHANGELOG.md
 
   /// v4.4.0 尾音保护：AI 播放结束后丢弃麦克风音频的时长（毫秒）
   static const int defaultTailGuardMs = 300;
