@@ -52,8 +52,16 @@ class _DevCenterPageState extends State<DevCenterPage> {
             _switchTile(
               isDark,
               '🧰 MCP 设备工具',
-              '向 AI 注册设备工具：音量/主题/拍照/定时器/日程——AI 可真实操控',
+              '向 AI 注册设备工具：26 项（音量/闹钟/日程/拨号/短信/导航/截屏…）——AI 可真实操控',
               'mcptools',
+            ),
+            // v6.1.2：点开查看已注册给 AI 的**全部 26 项**工具（分组 + 用途说明）
+            ListTile(
+              leading: const Icon(Icons.list_alt, color: Color(0xFF576B95)),
+              title: const Text('📋 查看已注册的工具清单'),
+              subtitle: const Text('26 项能力分组明细（AI 能做什么，一目了然）'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => _showMcpToolsDialog(isDark),
             ),
             _switchTile(
               isDark,
@@ -243,6 +251,108 @@ class _DevCenterPageState extends State<DevCenterPage> {
     } catch (e) {
       ToastUtil.show('复制失败：$e');
     }
+  }
+
+  /// v6.1.2：展示已注册给 AI 的**全部 MCP 设备工具（26 项）**，分组 + 用途说明。
+  /// 只读展示，不改动任何工具实现。
+  void _showMcpToolsDialog(bool isDark) {
+    final prim = isDark ? AppColors.textPrimaryDark : AppColors.textPrimary;
+    final sub = isDark ? AppColors.textSecondaryDark : AppColors.textSecondary;
+
+    // 组名 → [ [工具名, 用途], ... ]
+    final groups = <String, List<List<String>>>{
+      '① 基础能力（11 项）': [
+        ['self.get_device_status', '设备状态：音量 / 主题 / 电量 / 网络'],
+        ['self.audio_speaker.set_volume', '调节音量（真实系统媒体音量）'],
+        ['self.screen.set_theme', '切换深色 / 浅色主题'],
+        ['self.timer.create_countdown', '创建倒计时（到点提醒+震动+播报）'],
+        ['self.timer.get_tasks', '查看进行中的倒计时'],
+        ['self.timer.stop_task', '停止指定倒计时'],
+        ['self.schedule.create_event', '创建日程（写入系统日历，App 关了也提醒）'],
+        ['self.schedule.get_events', '查看已创建的日程记录'],
+        ['self.schedule.delete_event', '删除日程记录'],
+        ['self.camera.take_photo', '拍照并识别画面内容'],
+        ['self.screen.preview_image', '在聊天里显示一张图片'],
+      ],
+      '② 官方标准补齐（5 项）': [
+        ['self.screen.set_brightness', '调节屏幕亮度（应用级，免权限）'],
+        ['self.screen.get_info', '屏幕尺寸 / 像素比信息'],
+        ['self.get_system_info', '系统与设备信息：品牌 / 型号 / 安卓版本'],
+        ['self.screen.snapshot', '截取当前界面（不用系统录屏权限）'],
+        ['self.reboot', '重启会话（重新连接 + 清空当前对话）'],
+      ],
+      '③ 系统能力·免权限（5 项）': [
+        ['self.phone.dial', '打开拨号盘并填入号码（需你点拨出）'],
+        ['self.message.send_sms', '发短信：预填号码与内容（需你点发送）'],
+        ['self.map.navigate', '打开地图导航到指定地点'],
+        ['self.system.open_settings', '打开系统设置页：WiFi / 蓝牙 / 声音等'],
+        ['self.system.open_url', '用浏览器打开网页'],
+      ],
+      '④ 提醒与随身工具（5 项）': [
+        ['self.alarm.set_alarm', '设置真实系统闹钟（时钟 App 里可见，关机后仍会响）'],
+        ['self.show_toast', '屏幕轻提示（不打断对话）'],
+        ['self.share.text', '把文字分享到备忘录 / 微信 / 钉钉等'],
+        ['self.clipboard.get', '读取剪贴板内容'],
+        ['self.clipboard.set', '把文字写入剪贴板'],
+      ],
+    };
+
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('MCP 设备工具（共 26 项）'),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('AI 通过 MCP 协议可直接调用的能力清单：',
+                    style: TextStyle(fontSize: 12, color: sub)),
+                for (final g in groups.entries) ...[
+                  Padding(
+                    padding: const EdgeInsets.only(top: 12, bottom: 6),
+                    child: Text(g.key,
+                        style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                            color: prim)),
+                  ),
+                  for (final t in g.value)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 7),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('• ${t[1]}',
+                              style: TextStyle(fontSize: 13, color: prim)),
+                          Padding(
+                            padding: const EdgeInsets.only(left: 10, top: 1),
+                            child: Text(t[0],
+                                style: TextStyle(fontSize: 11, color: sub)),
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
+                Padding(
+                  padding: const EdgeInsets.only(top: 12),
+                  child: Text(
+                    '⚠️ 闹钟 / 日程 / 短信 / 拨号 / 分享会打开系统界面，'
+                    '需要你确认后才真正生效（安卓的安全设计）。',
+                    style: TextStyle(fontSize: 11, color: sub, height: 1.4),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx), child: const Text('知道了')),
+        ],
+      ),
+    );
   }
 
   Widget _section(bool isDark, String title, List<Widget> children) {
