@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 6.0.0+29
+version: 6.1.0+30
 
 environment:
   sdk: ^3.8.0
@@ -66,6 +66,14 @@ dependencies:
   # 多媒体
   image_picker: ^1.0.7
   permission_handler: ^11.3.0
+
+  # MCP 设备工具能力（v6.1.0，方案见 PLAN_v6.1.0_MCP设备工具能力扩展.md）
+  # ⚠️ 本项目 Flutter 3.32.2：下列版本均为「锁定的兼容版」，勿随意升级
+  flutter_volume_controller: 2.0.1   # 锁版：2.0.2 需 Flutter>=3.35；仅此版本提供"只改媒体流"API
+  android_intent_plus: ^6.1.0        # 系统闹钟/日历/拨号/短信/导航/设置
+  screen_brightness: ^2.1.11         # 屏幕亮度（仅应用级，不申请 WRITE_SETTINGS）
+  flutter_tts: ^4.2.5                # 到点语音播报（调用系统自带 TTS 引擎，不下载模型）
+  # torch_light: ^2.0.0              # ❌ 2.0.0 要求 Dart SDK ^3.12（本项目 3.8.1）→ 待定兼容版或改为不支持
   
   # 工具类
   logger: ^2.0.2

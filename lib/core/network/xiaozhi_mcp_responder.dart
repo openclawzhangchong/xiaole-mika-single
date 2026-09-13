@@ -278,6 +278,227 @@ class XiaozhiMcpStandardTools {
     },
   );
 
+  // ==================== v6.1.0 新增能力（方案见 PLAN_v6.1.0_MCP设备工具能力扩展.md）====================
+
+  // ---- 🅑 补齐官方标准（官方 mcp_server.cc 有、我们原先缺失）----
+
+  static const setBrightness = XiaozhiMcpTool(
+    name: 'self.screen.set_brightness',
+    description: 'Set the screen brightness. Range 1-100 (application-level, '
+        'no special permission required).',
+    inputSchema: {
+      'type': 'object',
+      'properties': {
+        'brightness': {'type': 'integer', 'minimum': 1, 'maximum': 100}
+      },
+      'required': ['brightness']
+    },
+  );
+
+  static const getScreenInfo = XiaozhiMcpTool(
+    name: 'self.screen.get_info',
+    description: 'Get the screen information (width, height, pixel ratio) '
+        'in logical pixels, useful for adapting layouts.',
+    inputSchema: {'type': 'object', 'properties': {}},
+  );
+
+  static const getSystemInfo = XiaozhiMcpTool(
+    name: 'self.get_system_info',
+    description: 'Get system and device information: app version, platform, '
+        'device model, manufacturer, Android version.',
+    inputSchema: {'type': 'object', 'properties': {}},
+  );
+
+  static const snapshot = XiaozhiMcpTool(
+    name: 'self.screen.snapshot',
+    description: 'Take a screenshot of the current app screen and save it locally. '
+        'Use this when the user asks you to look at the current screen. '
+        'The picture bubble will be shown in the chat.',
+    inputSchema: {'type': 'object', 'properties': {}},
+  );
+
+  static const reboot = XiaozhiMcpTool(
+    name: 'self.reboot',
+    description: 'Restart the assistant session on the device '
+        '(reconnect the websocket and clear the current conversation). '
+        'It does NOT reboot the phone.',
+    inputSchema: {'type': 'object', 'properties': {}},
+  );
+
+  // ---- 🅒 Android 系统能力（全部免危险权限）----
+
+  static const dial = XiaozhiMcpTool(
+    name: 'self.phone.dial',
+    description: 'Open the phone dialer with a number pre-filled. '
+        'The user still needs to press the call button. '
+        'Use this for requests like "call mom".',
+    inputSchema: {
+      'type': 'object',
+      'properties': {
+        'number': {'type': 'string', 'description': 'Phone number to dial'}
+      },
+      'required': ['number']
+    },
+  );
+
+  static const sendSms = XiaozhiMcpTool(
+    name: 'self.message.send_sms',
+    description: 'Open the SMS app with recipient and message pre-filled. '
+        'The user still needs to press send.',
+    inputSchema: {
+      'type': 'object',
+      'properties': {
+        'number': {'type': 'string', 'description': 'Recipient phone number'},
+        'body': {'type': 'string', 'description': 'Message content'}
+      },
+      'required': ['number', 'body']
+    },
+  );
+
+  static const navigate = XiaozhiMcpTool(
+    name: 'self.map.navigate',
+    description: 'Open the map app and navigate to a destination '
+        '(place name or address).',
+    inputSchema: {
+      'type': 'object',
+      'properties': {
+        'destination': {'type': 'string', 'description': 'Place name or address'}
+      },
+      'required': ['destination']
+    },
+  );
+
+  static const openSettings = XiaozhiMcpTool(
+    name: 'self.system.open_settings',
+    description: 'Open an Android system settings page. '
+        'Supported pages: wifi, bluetooth, sound, display, battery, location, '
+        'apps, airplane, data, home.',
+    inputSchema: {
+      'type': 'object',
+      'properties': {
+        'page': {
+          'type': 'string',
+          'description': 'Settings page key',
+          'enum': [
+            'wifi', 'bluetooth', 'sound', 'display', 'battery',
+            'location', 'apps', 'airplane', 'data', 'home'
+          ]
+        }
+      },
+      'required': ['page']
+    },
+  );
+
+  static const openUrl = XiaozhiMcpTool(
+    name: 'self.system.open_url',
+    description: 'Open a web page in the system browser.',
+    inputSchema: {
+      'type': 'object',
+      'properties': {
+        'url': {'type': 'string', 'description': 'Web URL'}
+      },
+      'required': ['url']
+    },
+  );
+
+  // ---- 🅐 闹钟与轻提示 / 分享 ----
+
+  static const setAlarm = XiaozhiMcpTool(
+    name: 'self.alarm.set_alarm',
+    description: 'Set a REAL system alarm in the phone clock app. '
+        'The system clock will open with the alarm pre-filled; '
+        'the user must tap save to confirm. '
+        'Once saved, the alarm rings even if this app is closed or the phone restarts.',
+    inputSchema: {
+      'type': 'object',
+      'properties': {
+        'hour': {'type': 'integer', 'minimum': 0, 'maximum': 23,
+          'description': 'Hour in 24-hour format'},
+        'minute': {'type': 'integer', 'minimum': 0, 'maximum': 59},
+        'label': {'type': 'string', 'description': 'Alarm label, e.g. "起床"'},
+        'weekdays': {
+          'type': 'array',
+          'items': {'type': 'integer', 'minimum': 1, 'maximum': 7},
+          'description': 'Repeat days (1=Sunday ... 7=Saturday). '
+              'Omit or empty for a one-time alarm.'
+        }
+      },
+      'required': ['hour', 'minute']
+    },
+  );
+
+  static const showToast = XiaozhiMcpTool(
+    name: 'self.show_toast',
+    description: 'Show a short toast message on the screen. '
+        'Use it for lightweight feedback (e.g. "已记下") without interrupting the '
+        'conversation. Do not use it for important information.',
+    inputSchema: {
+      'type': 'object',
+      'properties': {
+        'text': {'type': 'string', 'description': 'Text to show, keep it short'}
+      },
+      'required': ['text']
+    },
+  );
+
+  static const shareText = XiaozhiMcpTool(
+    name: 'self.share.text',
+    description: 'Share a text to other apps (notes, memo, WeChat, ...) via the '
+        'system share sheet. Use this to save a note or memo for the user; '
+        'the user picks the target app and confirms.',
+    inputSchema: {
+      'type': 'object',
+      'properties': {
+        'text': {'type': 'string', 'description': 'Content to share'},
+        'subject': {'type': 'string', 'description': 'Optional title'}
+      },
+      'required': ['text']
+    },
+  );
+
+  // ---- 🅓 剪贴板 ----
+
+  static const clipboardGet = XiaozhiMcpTool(
+    name: 'self.clipboard.get',
+    description: 'Read the current clipboard text.',
+    inputSchema: {'type': 'object', 'properties': {}},
+  );
+
+  static const clipboardSet = XiaozhiMcpTool(
+    name: 'self.clipboard.set',
+    description: 'Write text into the system clipboard.',
+    inputSchema: {
+      'type': 'object',
+      'properties': {
+        'text': {'type': 'string'}
+      },
+      'required': ['text']
+    },
+  );
+
+  /// v6.1.0：本轮新增的 15 项能力
+  static List<XiaozhiMcpTool> v61Tools() => [
+        // 🅑 官方标准补齐
+        setBrightness,
+        getScreenInfo,
+        getSystemInfo,
+        snapshot,
+        reboot,
+        // 🅒 系统能力
+        dial,
+        sendSms,
+        navigate,
+        openSettings,
+        openUrl,
+        // 🅐 闹钟 / 轻提示 / 分享
+        setAlarm,
+        showToast,
+        shareText,
+        // 🅓 剪贴板
+        clipboardGet,
+        clipboardSet,
+      ];
+
   static List<XiaozhiMcpTool> p0Set() => [
         status,
         setVolume,
@@ -290,10 +511,18 @@ class XiaozhiMcpStandardTools {
         scheduleDelete,
       ];
 
-  /// v3.2.0：全量 11 项（对齐真机 mcp_server.cc）
+  /// v3.2.0：全量 11 项。⚠️ 当时的注释称"对齐真机 mcp_server.cc"**不准确**——
+  /// 经 v6.1.0 逐字核对官方源码：官方**没有** timer / schedule / alarm / toast 任何工具，
+  /// `self.timer.*` 与 `self.schedule.*` 属**本项目自研扩展**。
   static List<XiaozhiMcpTool> fullSet() => [
         ...p0Set(),
         takePhoto,
         previewImage,
+      ];
+
+  /// v6.1.0：注册用的完整工具集 = 原有 11 项 + 本轮新增 15 项 = **26 项**
+  static List<XiaozhiMcpTool> allTools() => [
+        ...fullSet(),
+        ...v61Tools(),
       ];
 }

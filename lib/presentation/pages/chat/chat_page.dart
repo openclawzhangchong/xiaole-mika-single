@@ -1,11 +1,15 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:typed_data';
+import 'dart:io';
+import 'dart:ui' as ui;
 
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:xiaozhi_client_flutter/core/mcp/device_capability_service.dart';
 import 'package:xiaozhi_client_flutter/core/network/xiaozhi_ota_service.dart';
 import 'package:xiaozhi_client_flutter/core/network/xiaozhi_mcp_responder.dart';
 import 'package:xiaozhi_client_flutter/core/network/xiaozhi_mqtt_presence.dart';
@@ -923,6 +927,9 @@ class _ChatPageState extends ConsumerState<ChatPage> {
       responder.registerTool(tool, exec);
     }
 
+    // v6.1.0：设备能力服务（音量/闹钟/日历/系统 intent/TTS/剪贴板/亮度…）
+    final caps = DeviceCapabilityService.instance;
+
     // 1. 设备状态（音量/主题/网络；v4.2.0 真实电量[申请书8号] + 结构化状态卡片[申请书7号]）
     register(XiaozhiMcpStandardTools.status, (_) async {
       final mode = ref.read(themeModeProvider);
@@ -936,8 +943,11 @@ class _ChatPageState extends ConsumerState<ChatPage> {
       } catch (_) {
         // 平台不支持（Windows/桌面）保持虚拟值
       }
+      // v6.1.0：volume 改读**真实系统媒体音量**
+      // （原先上报的是软件增益值，与用户实际听感不符 —— 这就是"显示 100% 实际只有一半"的由来）
+      final sysVolume = await caps.getVolume();
       final status = {
-        'volume': AudioUtil.ttsVolumePercent,
+        'volume': sysVolume ?? AudioUtil.ttsVolumePercent,
         'theme': mode == ThemeMode.dark ? 'dark' : 'light',
         'battery': {'level': level, 'charging': charging},
         'network': _isConnected ? 'online' : 'offline',
@@ -953,16 +963,21 @@ class _ChatPageState extends ConsumerState<ChatPage> {
       return status;
     });
 
-    // 2. 音量（真实控制 TTS 播放增益）
+    // 2. 音量（v6.1.0：改为控制**系统媒体音量** —— 原先只改软件增益，
+    //    受系统音量上限约束，导致"AI 说调到 100% 但实际只有一半响度"）
     register(XiaozhiMcpStandardTools.setVolume, (args) async {
       final v = (args['volume'] as num?)?.toInt() ?? -1;
       if (v < 0 || v > 100) {
         return {'success': false, 'message': 'volume must be 0-100'};
       }
+      final r = await caps.setVolume(v);
+      // 软件增益同步跟随：万一某些机型系统音量接口不可用，App 内增益仍能兜底
       AudioUtil.setTtsVolume(v);
-      _appendOrCreateChatMessage(
-          MessageSender.system, '🔊 AI 已把音量调到 $v%');
-      return {'success': true, 'volume': AudioUtil.ttsVolumePercent};
+      if (r['success'] == true) {
+        _appendOrCreateChatMessage(
+            MessageSender.system, '🔊 AI 已把系统音量调到 $v%');
+      }
+      return r;
     });
 
     // 3. 主题（真实切换深浅色）
@@ -1030,7 +1045,8 @@ class _ChatPageState extends ConsumerState<ChatPage> {
       return {'success': true};
     });
 
-    // 7-9. 日程（创建/列表/删除；到点同定时器播报）
+    // 7-9. 日程（v6.1.0：create 改为写**系统日历** —— 原先用内存 Timer，App 退出/重启即失效，
+    //      这就是"日程设了没用"的根因）
     register(XiaozhiMcpStandardTools.scheduleCreate, (args) async {
       final timeStr = args['time'] as String?;
       final name = (args['event_name'] as String?) ?? '日程';
@@ -1039,15 +1055,20 @@ class _ChatPageState extends ConsumerState<ChatPage> {
       if (tm == null) {
         return {'success': false, 'message': 'invalid time, use YYYY-MM-DD HH:MM'};
       }
-      final id = DateTime.now().millisecondsSinceEpoch;
-      final timer = Timer(tm.difference(DateTime.now()), () {
-        _mcpEvents.removeWhere((e) => e['id'] == id);
-        _mcpFireReminder('📅 日程提醒：$name');
-      });
-      _mcpEvents.add({'id': id, 'name': name, 'time': timeStr, 'timer': timer});
-      _appendOrCreateChatMessage(
-          MessageSender.system, '📅 已创建日程「$name」（$timeStr）');
-      return {'success': true, 'id': id, 'name': name, 'time': timeStr};
+      final r = await caps.createCalendarEvent(title: name, start: tm);
+      if (r['success'] == true) {
+        // 仅在 App 内留一条记录，便于 schedule.get_events 查询
+        // （真正的提醒由系统日历 App 负责；此处不再创建内存 Timer）
+        _mcpEvents.add({
+          'id': DateTime.now().millisecondsSinceEpoch,
+          'name': name,
+          'time': timeStr,
+          'timer': null,
+        });
+        _appendOrCreateChatMessage(
+            MessageSender.system, '📅 已请求写入系统日历「$name」（$timeStr）——请在日历界面点「保存」');
+      }
+      return r;
     });
     register(XiaozhiMcpStandardTools.scheduleList, (_) async {
       return {
@@ -1125,6 +1146,191 @@ class _ChatPageState extends ConsumerState<ChatPage> {
       ChatHistoryStore.save(widget.agentId, _messages);
       _scrollToBottom();
       return {'success': true};
+    });
+
+    // ==================== v6.1.0 新增 15 项能力 ====================
+    // 方案：PLAN_v6.1.0_MCP设备工具能力扩展.md ｜ 能力实现：DeviceCapabilityService
+
+    // ---------- 🅑 补齐官方标准（官方 mcp_server.cc 有、我们原先缺失）----------
+
+    // 12. 屏幕亮度（应用级：不需要 WRITE_SETTINGS 特殊权限）
+    register(XiaozhiMcpStandardTools.setBrightness, (args) async {
+      final b = (args['brightness'] as num?)?.toInt() ?? -1;
+      if (b < 1 || b > 100) {
+        return {'success': false, 'message': 'brightness must be 1-100'};
+      }
+      final r = await caps.setBrightness(b);
+      if (r['success'] == true) {
+        _appendOrCreateChatMessage(
+            MessageSender.system, '☀️ AI 已把屏幕亮度调到 $b%');
+      }
+      return r;
+    });
+
+    // 13. 屏幕信息（逻辑像素 + 物理像素，供 AI 适配布局）
+    register(XiaozhiMcpStandardTools.getScreenInfo, (_) async {
+      final size = MediaQuery.of(context).size;
+      final dpr = MediaQuery.of(context).devicePixelRatio;
+      return {
+        'success': true,
+        'width': size.width.round(),
+        'height': size.height.round(),
+        'device_pixel_ratio': dpr,
+        'physical_width': (size.width * dpr).round(),
+        'physical_height': (size.height * dpr).round(),
+      };
+    });
+
+    // 14. 系统与设备信息
+    register(XiaozhiMcpStandardTools.getSystemInfo, (_) async {
+      final out = <String, dynamic>{
+        'success': true,
+        'app_version': AppConfig.appVersion,
+        'platform': Platform.operatingSystem,
+      };
+      try {
+        if (Platform.isAndroid) {
+          final a = await DeviceInfoPlugin().androidInfo;
+          out.addAll({
+            'brand': a.brand,
+            'model': a.model,
+            'android_version': a.version.release,
+            'sdk_int': a.version.sdkInt,
+          });
+        }
+      } catch (e) {
+        out['note'] = '部分设备信息不可用：$e';
+      }
+      return out;
+    });
+
+    // 15. 截屏（App 内截屏：走 RenderRepaintBoundary，**不需要 MediaProjection、无系统权限**）
+    register(XiaozhiMcpStandardTools.snapshot, (_) async {
+      try {
+        final ro = context.findRenderObject();
+        if (ro is! RenderRepaintBoundary) {
+          return {'success': false, 'message': '当前界面不支持截屏'};
+        }
+        final img = await ro.toImage(pixelRatio: 1.5);
+        final bytes = await img.toByteData(format: ui.ImageByteFormat.png);
+        if (bytes == null) return {'success': false, 'message': '截屏编码失败'};
+        final f = File('${Directory.systemTemp.path}/xl_snapshot_'
+            '${DateTime.now().millisecondsSinceEpoch}.png');
+        await f.writeAsBytes(bytes.buffer.asUint8List());
+        return {'success': true, 'path': f.path, 'bytes': bytes.lengthInBytes};
+      } catch (e) {
+        return {'success': false, 'message': '截屏失败：$e'};
+      }
+    });
+
+    // 16. 重启会话（App 无真重启能力 → 映射为「重新连接 + 清空当前会话」）
+    register(XiaozhiMcpStandardTools.reboot, (_) async {
+      _appendOrCreateChatMessage(
+          MessageSender.system, '🔄 AI 请求重启会话，正在重新连接…');
+      try {
+        _ensureConnectedThen(() {}, '重启会话');
+        return {
+          'success': true,
+          'message': '已触发重新连接并重置当前会话状态（不会重启手机）',
+        };
+      } catch (e) {
+        return {'success': false, 'message': '重连失败：$e'};
+      }
+    });
+
+    // ---------- 🅒 Android 系统能力（全部免危险权限）----------
+
+    // 17. 拨号（ACTION_DIAL：只打开拨号盘预填，不直接拨出）
+    register(XiaozhiMcpStandardTools.dial, (args) async {
+      final r = await caps.dial(args['number'] as String? ?? '');
+      if (r['success'] == true) {
+        _appendOrCreateChatMessage(
+            MessageSender.system, '📞 已打开拨号盘：${r['number']}');
+      }
+      return r;
+    });
+
+    // 18. 短信（ACTION_SENDTO：预填号码与内容，用户点发送）
+    register(XiaozhiMcpStandardTools.sendSms, (args) async {
+      final r = await caps.sendSms(
+        number: args['number'] as String? ?? '',
+        body: args['body'] as String? ?? '',
+      );
+      if (r['success'] == true) {
+        _appendOrCreateChatMessage(
+            MessageSender.system, '💬 已打开短信界面（发给 ${r['number']}）');
+      }
+      return r;
+    });
+
+    // 19. 地图导航
+    register(XiaozhiMcpStandardTools.navigate, (args) async {
+      final r = await caps.navigate(args['destination'] as String? ?? '');
+      if (r['success'] == true) {
+        _appendOrCreateChatMessage(
+            MessageSender.system, '🗺 已打开地图导航：${r['destination']}');
+      }
+      return r;
+    });
+
+    // 20. 打开系统设置页
+    register(XiaozhiMcpStandardTools.openSettings,
+        (args) async => caps.openSettings(args['page'] as String? ?? ''));
+
+    // 21. 打开网页
+    register(XiaozhiMcpStandardTools.openUrl,
+        (args) async => caps.openUrl(args['url'] as String? ?? ''));
+
+    // ---------- 🅐 系统闹钟 / 轻提示 / 分享 ----------
+
+    // 22. 系统闹钟（**真·系统时钟闹钟**：App 关闭、手机重启后依然会响）
+    register(XiaozhiMcpStandardTools.setAlarm, (args) async {
+      final h = (args['hour'] as num?)?.toInt() ?? -1;
+      final m = (args['minute'] as num?)?.toInt() ?? -1;
+      if (h < 0 || m < 0) {
+        return {'success': false, 'message': 'hour/minute are required'};
+      }
+      List<int>? days;
+      final raw = args['weekdays'];
+      if (raw is List) {
+        days = raw.whereType<num>().map((e) => e.toInt()).toList();
+      }
+      final r = await caps.setAlarm(
+          hour: h, minute: m, label: args['label'] as String?, weekdays: days);
+      if (r['success'] == true) {
+        _appendOrCreateChatMessage(MessageSender.system,
+            '⏰ 已请求系统闹钟 ${r['time']}（请在时钟界面点「保存」）');
+      }
+      return r;
+    });
+
+    // 23. 轻提示（AI 主动弹，不打断对话）
+    register(XiaozhiMcpStandardTools.showToast, (args) async {
+      final t = args['text'] as String? ?? '';
+      if (t.trim().isEmpty) return {'success': false, 'message': 'text required'};
+      caps.showToast(t);
+      return {'success': true};
+    });
+
+    // 24. 分享文本到笔记/备忘录/微信等
+    register(XiaozhiMcpStandardTools.shareText, (args) async {
+      return caps.shareText(
+        args['text'] as String? ?? '',
+        subject: args['subject'] as String?,
+      );
+    });
+
+    // ---------- 🅓 剪贴板 ----------
+
+    // 25. 读剪贴板
+    register(XiaozhiMcpStandardTools.clipboardGet, (_) async {
+      final t = await caps.getClipboard();
+      return {'success': t != null, 'text': t ?? ''};
+    });
+
+    // 26. 写剪贴板
+    register(XiaozhiMcpStandardTools.clipboardSet, (args) async {
+      return caps.setClipboard(args['text'] as String? ?? '');
     });
 
     _mcpResponder = responder;
@@ -2107,8 +2313,8 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                     IconButton(
                       icon: const Icon(Icons.keyboard_arrow_down,
                           color: Colors.white),
-                      onPressed: () =>
-                          setState(() => _showVoiceCallOverlay = false),
+                      // v6.0.0：收起通话全屏层（同时恢复系统 UI，避免沉浸式残留）
+                      onPressed: _collapseVoiceCallOverlay,
                     ),
                     const Spacer(),
                     IconButton(

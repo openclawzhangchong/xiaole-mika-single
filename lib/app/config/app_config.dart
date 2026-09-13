@@ -4,7 +4,7 @@ class AppConfig {
 
   // 应用信息
   static const String appName = '小乐'; // v4.0.0：品牌统一（默认智能体名前缀等）
-  static const String appVersion = '6.0.0'; // v6.0.0 正式版：基于 v4.4.0 原版（含自问自答修复），仅新增「通话界面全屏(隐藏AppBar+系统沉浸式)」；语音扩展能力(灵敏度/声纹/唤醒)已封存于 tag archive-voice-wip-20260912 与 v4.5.x/v4.6.x，待后续开发
+  static const String appVersion = '6.1.0'; // v6.1.0：MCP 设备工具能力扩展（11→26 项）——真·系统音量/真·系统闹钟(AlarmClock intent)/系统日历/免权限系统能力(拨号/短信/导航/设置/网页)/官方标准补齐(亮度/屏幕信息/系统信息/截屏/重启会话)/toast/分享/剪贴板/TTS播报；方案见 PLAN_v6.1.0_MCP设备工具能力扩展.md
 
   /// v4.4.0 尾音保护：AI 播放结束后丢弃麦克风音频的时长（毫秒）
   static const int defaultTailGuardMs = 300;
