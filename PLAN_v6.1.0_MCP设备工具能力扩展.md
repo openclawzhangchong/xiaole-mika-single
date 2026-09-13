@@ -3,6 +3,14 @@
 > **本方案经张老师审批通过后，即为 v6.1.0 版本更新的依据。**
 > 立项时间：2026-09-13 ｜ 基线版本：v6.0.1（commit `dcf7ff3`，tag `v6.0.1`）
 
+> **⚠️ 实施更正说明（2026-09-13 实施时追加）**
+> 1. **手电筒（`self.torch.set`）未实施**：`torch_light 2.0.0` 要求 Dart SDK `^3.12`，本项目为 `3.8.1`，
+>    **依赖解析直接失败**；该项属 D 组最低优先级，权衡后**从本版移除**（其余 4 个依赖全部兼容，`Changed 10 dependencies`）。
+> 2. **截屏（`self.screen.snapshot`）修复**：v6.1.0 初版**漏了"给聊天页根视图包 `RepaintBoundary`"**这一步，
+>    导致 `findRenderObject()` 永远拿不到 boundary、截屏恒返回失败（**独立验证员发现**）。
+>    已在 **v6.1.1** 修复：聊天页 `build()` 根视图包 `RepaintBoundary(key: _snapshotKey)`，
+>    执行器改从该 key 取 boundary（`_snapshotKey.currentContext?.findRenderObject()`）。
+
 ---
 
 ## 0. 决策依据（张老师审批意见）

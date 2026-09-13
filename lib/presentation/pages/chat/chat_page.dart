@@ -131,6 +131,9 @@ class _ChatPageState extends ConsumerState<ChatPage> {
   bool _isAiTyping = false;
   bool _isInVoiceCall = false;
   bool _showVoiceCallOverlay = false;
+
+  /// v6.1.1：页面根视图的 RepaintBoundary key —— 供 `self.screen.snapshot` 工具截屏
+  final GlobalKey _snapshotKey = GlobalKey();
   bool _micMuted = false;
   StreamSubscription<Uint8List>? _callAudioSubscription;
   DateTime? _voiceCallStart;
@@ -192,7 +195,11 @@ class _ChatPageState extends ConsumerState<ChatPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    // v6.1.1：用 RepaintBoundary 包住页面根视图，供 `self.screen.snapshot` 工具截屏
+    // （纯包裹层，不影响视觉与布局）
+    return RepaintBoundary(
+      key: _snapshotKey,
+      child: Scaffold(
       // v6.0.0：通话中隐藏顶端工具栏，使通话界面全屏扩展（微信通话效果）
       appBar: _showVoiceCallOverlay
           ? null
@@ -279,6 +286,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
               }),
             ),
         ],
+      ),
       ),
     );
   }
@@ -1207,7 +1215,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     // 15. 截屏（App 内截屏：走 RenderRepaintBoundary，**不需要 MediaProjection、无系统权限**）
     register(XiaozhiMcpStandardTools.snapshot, (_) async {
       try {
-        final ro = context.findRenderObject();
+        final ro = _snapshotKey.currentContext?.findRenderObject();
         if (ro is! RenderRepaintBoundary) {
           return {'success': false, 'message': '当前界面不支持截屏'};
         }
