@@ -4,7 +4,7 @@ class AppConfig {
 
   // 应用信息
   static const String appName = '小乐'; // v4.0.0：品牌统一（默认智能体名前缀等）
-  static const String appVersion = '6.2.0'; // v6.2.0：一键云端修复设备身份(MAC/设备ID)上传与恢复+恢复后设全局身份+新增「清空云端数据」(配套云端 POST /clear 已上线)；详见 CHANGELOG.md
+  static const String appVersion = '6.2.1'; // v6.2.1：聊天页底部「连接错误」红条改为仅对"需用户处理的错误"弹出；DNS/连接超时等瞬时网络错误由自动重连兜底，不再弹红条(改走顶部状态栏+日志)；详见 CHANGELOG.md
 
   /// v4.4.0 尾音保护：AI 播放结束后丢弃麦克风音频的时长（毫秒）
   static const int defaultTailGuardMs = 300;

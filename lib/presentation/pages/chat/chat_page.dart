@@ -744,6 +744,23 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     );
   }
 
+  /// v6.2.1：判定是否为「瞬时网络层错误」（DNS/连接超时/被拒等）。
+  /// 这类错误由 WS 管理器自动重连兜底，无需弹红条打扰用户。
+  bool _isNetworkTransientError(String text) {
+    const keywords = <String>[
+      'SocketException',
+      'Failed host lookup',
+      'Connection refused',
+      'Network is unreachable',
+      'Connection timed out',
+      'Connection reset',
+      '创建WebSocket失败',
+      'WebSocketChannelException',
+    ];
+    final lower = text.toLowerCase();
+    return keywords.any((k) => lower.contains(k.toLowerCase()));
+  }
+
   /// 执行 OTA 认证获取 WebSocket 连接信息
   Future<bool> _performOtaAuthentication() async {
     try {
@@ -1768,8 +1785,20 @@ class _ChatPageState extends ConsumerState<ChatPage> {
         break;
 
       case XiaozhiEventType.error:
-        logger.severe('WebSocket 错误: ${event.data}');
-        _showError('连接错误: ${event.data}');
+        final errText = event.data?.toString() ?? '';
+        logger.severe('WebSocket 错误: $errText');
+        // v6.2.1：瞬时网络错误（DNS 解析失败 / 连接超时 / 连接被拒等）由 WS 管理器
+        // 自动重连兜底，不再弹红条打扰；仅刷新顶部状态栏 + 记日志。
+        // 需用户处理的错误（身份拒绝 432x、重连超限、认证失败等）仍弹红条。
+        if (_isNetworkTransientError(errText)) {
+          if (mounted) {
+            setState(() {
+              _connectionStatus = '网络异常，正在自动重连…';
+            });
+          }
+        } else {
+          _showError('连接错误: $errText');
+        }
         break;
     }
   }

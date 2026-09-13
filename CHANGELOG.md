@@ -6,6 +6,32 @@
 
 ---
 
+## v6.2.1 · 2026-09-13
+
+**主题：聊天页底部「连接错误」红条降噪（屏蔽瞬时网络错误弹窗）**
+
+### 🐛 修复/优化：DNS/连接类瞬时错误不再弹红条
+
+- **现象**：App 底部偶尔弹出红条「连接错误：WebSocketChannelException: SocketException: Failed host lookup: 'api.tenclass.net' (errno=7)」。
+  （注：`apitenclass.net` 为截图漏点号，实为小智公共服务器 `api.tenclass.net`；`errno=7`=DNS 解析失败。）
+- **根因**：WS 通道 socket 报错 → `xiaozhi_websocket_manager.dart:_onError` 派发 `error` 事件 →
+  `chat_page.dart` 原统一弹红条（`_showError('连接错误: …')`）。
+  这类错误多为**网络瞬时抖动**（WiFi↔流量切换、信号短暂丢失、DNS 暂不可达），**自动重连会恢复**，红条纯属打扰。
+- **修复**（`lib/presentation/pages/chat/chat_page.dart` 仅此一文件）：
+  1. 报错分支新增分类：错误串含 `SocketException`/`Failed host lookup`/`Connection refused`/`Network is unreachable`/
+     `Connection timed out`/`Connection reset`/`创建WebSocket失败`/`WebSocketChannelException` → 判定为**瞬时网络错误**；
+  2. 瞬时网络错误：**不再弹红条**，改为顶部状态栏显示「网络异常，正在自动重连…」+ 记日志（`logger.severe`）；
+  3. **需用户处理的错误仍弹红条**：身份拒绝(432x)、自动重连已达上限、OTA 认证失败等（这些错误串不含上述关键词，天然命中 else 分支）。
+- **不丢信息**：聊天页顶部本就有常驻「连接状态栏」（`chat_page.dart:300–355`，断线时带「重连」按钮），
+  降级后用户仍能看到状态并可手动重连；自动重连成功即恢复正常。
+- **冻结文件未动**：`xiaozhi_websocket_manager.dart` 仅消费其事件，未修改协议/编解码参数。
+
+### ✨ 变更
+
+- `pubspec.yaml` 6.2.0+34 → 6.2.1+35；`app_config.dart` appVersion 6.2.0 → 6.2.1；README 徽章与版本表同步。
+
+---
+
 ## v6.2.0 · 2026-09-13
 
 **主题：一键云端「设备身份」上传与恢复修复 + 新增「清空云端数据」**
