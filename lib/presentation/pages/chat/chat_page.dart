@@ -1220,12 +1220,18 @@ class _ChatPageState extends ConsumerState<ChatPage> {
           return {'success': false, 'message': '当前界面不支持截屏'};
         }
         final img = await ro.toImage(pixelRatio: 1.5);
-        final bytes = await img.toByteData(format: ui.ImageByteFormat.png);
-        if (bytes == null) return {'success': false, 'message': '截屏编码失败'};
-        final f = File('${Directory.systemTemp.path}/xl_snapshot_'
-            '${DateTime.now().millisecondsSinceEpoch}.png');
-        await f.writeAsBytes(bytes.buffer.asUint8List());
-        return {'success': true, 'path': f.path, 'bytes': bytes.lengthInBytes};
+        try {
+          final bytes = await img.toByteData(format: ui.ImageByteFormat.png);
+          if (bytes == null) return {'success': false, 'message': '截屏编码失败'};
+          final f = File('${Directory.systemTemp.path}/xl_snapshot_'
+              '${DateTime.now().millisecondsSinceEpoch}.png');
+          await f.writeAsBytes(bytes.buffer.asUint8List());
+          return {'success': true, 'path': f.path, 'bytes': bytes.lengthInBytes};
+        } finally {
+          // v6.1.2：释放 ui.Image 占用的原生/GPU 内存
+          // （独立验证发现：不 dispose 会导致**每次截屏泄漏一张图**）
+          img.dispose();
+        }
       } catch (e) {
         return {'success': false, 'message': '截屏失败：$e'};
       }

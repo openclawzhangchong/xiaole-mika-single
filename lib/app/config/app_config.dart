@@ -4,7 +4,7 @@ class AppConfig {
 
   // 应用信息
   static const String appName = '小乐'; // v4.0.0：品牌统一（默认智能体名前缀等）
-  static const String appVersion = '6.1.1'; // v6.1.1：修复 v6.1.0 截屏工具失效（聊天页根视图补 RepaintBoundary + GlobalKey，执行器改走该 key）；内容同 v6.1.0（MCP 设备工具 11→26 项）
+  static const String appVersion = '6.1.2'; // v6.1.2：修复截屏的 GPU 资源泄漏（ui.Image 用完未 dispose，独立验证发现）；内容同 v6.1.1/v6.1.0（MCP 设备工具 11→26 项 + 截屏可用）
 
   /// v4.4.0 尾音保护：AI 播放结束后丢弃麦克风音频的时长（毫秒）
   static const int defaultTailGuardMs = 300;
