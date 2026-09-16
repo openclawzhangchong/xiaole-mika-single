@@ -6,6 +6,45 @@
 
 ---
 
+## v6.4.0 · 2026-09-17
+
+**主题：外部 MCP 接入（App 内增删改 + 加前缀桥接给 AI）**
+
+- **新增「🌐 外部 MCP」管理能力**（开发者中心新增入口 → `lib/presentation/pages/external_mcp_page.dart`）
+  - 支持**多条**外部 MCP 服务器配置的增 / 删 / 改 / 停用，配置仅存本机。
+  - 支持**粘贴 JSON 导入**：直接贴 `{"mcpServers":{...}}` 片段即可（自动解析 url / headers / 前缀）。
+  - 列表显示每台服务器的**连接状态**：在线 · N 个工具 / 连接失败原因。
+  - **两级开关**：整台服务器启用开关 + 进入后**逐工具开关**。
+  - 安全默认：会写/删数据的工具在 UI 上标注，其中 `merge_notes`（合并会删数据）**首次探测成功后默认关闭**。
+- **桥接机制**（`lib/core/mcp/external_mcp_client.dart` / `external_mcp_manager.dart` / `external_mcp_store.dart`）
+  - App 兼任 MCP **客户端**，连接外部 streamable-HTTP MCP 服务器；
+  - 外部工具按 **前缀** 暴露给 AI：`{prefix}.{原始工具名}`（如 `notes.search_notes`、`amap.maps_geo`），
+    与设备工具（`self.*`）合并后在 `tools/list` 一并返回，AI 调用时由 App 转发到对应服务器。
+  - 建连时**预拉取**外部工具，确保首轮 `tools/list` 就能看到。
+  - `xiaozhi_mcp_responder.dart` **纯加法**：新增两个可选回调 `extraToolsProvider` / `externalCaller`
+    （为 null 时行为与改动前完全一致）。
+- **`self.location.get_current`（v6.3.0 定位）与高德 MCP 打通**：AI 可取本机 GCJ-02 坐标后调用
+  `amap.maps_around_search` / `maps_direction_*` 等。
+- 版本 `6.3.0+36` → `6.4.0+37`。
+
+### ⚠️ 本版关键坑（实测，务必保留）
+1. **biji-notes 有双重 UA 校验**：Cloudflare + 源站挡非浏览器 UA。
+   `Dart/3.x`、`okhttp`、`curl` → **401**（源站伪装成"凭证格式不正确"），空 UA → **403**。
+   ⇒ 请求**必须**带浏览器式 `User-Agent`。
+2. **amap 的 `Accept` 必须同时含 `application/json` 和 `text/event-stream`**，否则 **406**。
+3. **鉴权失败形态不同**：biji → HTTP **401**；**amap 错误 key 是 HTTP 200 + body `{"status":"0","info":"INVALID_USER_KEY"}`**
+   ⇒ 绝不能只看状态码，必须解析 body。
+4. 响应三态：顶层 `error` / `result.isError` / 正常 `result.content[0].text`；
+   amap 的 text 是 JSON 字符串、biji 是纯文本 —— 一律原样透传。
+5. 两服务器均无状态（无 `Mcp-Session-Id`、无需 `notifications/initialized`）。
+6. Dart **没有 `?[]` 空安全下标运算符**（本版踩到过，须逐层判空）。
+
+### 自检
+- `flutter analyze`：**0 error**；warning 5 条均为既有基线（`app_pages.dart` / `xiaozhi_service.dart`，本次未触碰）。
+- **全量 `flutter test` 25/25 通过**（外部 MCP 单测 13 + 定位 6 + golden AUDIT 1-5 + 冒烟 1；单测用 stub 客户端，不发真实网络）。
+
+---
+
 ## v6.3.0 · 2026-09-16
 
 **主题：设备 MCP 详情页（逐项开关）+ 定位能力（self.location.get_current）**

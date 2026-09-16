@@ -10,6 +10,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:xiaozhi_client_flutter/core/mcp/device_capability_service.dart';
+import 'package:xiaozhi_client_flutter/core/mcp/external_mcp_manager.dart';
 import 'package:xiaozhi_client_flutter/core/mcp/location_service.dart';
 import 'package:xiaozhi_client_flutter/core/network/xiaozhi_ota_service.dart';
 import 'package:xiaozhi_client_flutter/core/network/xiaozhi_mcp_responder.dart';
@@ -908,6 +909,9 @@ class _ChatPageState extends ConsumerState<ChatPage> {
 
       // 第四步半 (v3.0.0)：MCP 设备端——应答服务器 initialize/tools/list/tools/call，
       // 注册 9 项工具让 AI 真实操控设备（协议对齐真机 mcp_server.cc，见 xiaoleweb.md 第五章）
+      // v6.4.0：先预拉取外部 MCP 工具（不等待），让服务器下发 tools/list 时就能看到它们。
+      // 失败不影响设备本地工具，异常全部由 ExternalMcpManager 内部消化。
+      unawaited(ExternalMcpManager.instance.refreshAll());
       _setupMcpResponder();
 
       // 第五步: 使用Agent配置 wsUrl 和 wsToken 连接服务器
@@ -948,6 +952,14 @@ class _ChatPageState extends ConsumerState<ChatPage> {
       serverVersion: '3.0.0',
       // v6.3.0：注入逐项开关过滤器（null=全部启用，保持既有行为不变）
       isToolEnabled: AppFeats.mcpToolEnabled,
+      // v6.4.0：外部 MCP 工具合并下发 + 调用转发
+      extraToolsProvider: ExternalMcpManager.instance.mergedTools,
+      externalCaller: (name, args) async {
+        final mgr = ExternalMcpManager.instance;
+        // 返回 null = 该名字不是外部工具，响应器按"未知工具"处理
+        if (!mgr.isExternal(name)) return null;
+        return await mgr.dispatch(name, args);
+      },
     );
 
     void register(XiaozhiMcpTool tool,

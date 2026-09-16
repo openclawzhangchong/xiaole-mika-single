@@ -47,6 +47,15 @@ class XiaozhiMcpResponder {
   /// 回 -32601（与"不存在"一致，避免暴露被关工具）。
   final bool Function(String name)? isToolEnabled;
 
+  /// v6.4.0：外部 MCP 工具提供者。为 null 表示"不接入外部工具"（保持既有行为完全不变）。
+  /// 返回的外部工具（已带前缀，如 notes.search_notes）会合并进 tools/list 一���下发给 AI。
+  final List<XiaozhiMcpTool> Function()? extraToolsProvider;
+
+  /// v6.4.0：外部 MCP 转发器。命中外部工具名时调用；
+  /// **返回 null 表示该名字不是外部工具**（响应器将按"未知工具"处理）。
+  final Future<Map<String, dynamic>?> Function(
+      String name, Map<String, dynamic> args)? externalCaller;
+
   /// 最近一次工具调用记录（供 UI 展示/日志），仅保留最近 20 条
   final List<String> recentCalls = [];
 
@@ -55,6 +64,8 @@ class XiaozhiMcpResponder {
     this.serverName = 'xiaole-app',
     this.serverVersion = '3.0.0',
     this.isToolEnabled,
+    this.extraToolsProvider,
+    this.externalCaller,
   });
 
   void registerTool(XiaozhiMcpTool tool, McpToolExecutor executor) {
@@ -93,12 +104,18 @@ class XiaozhiMcpResponder {
           break;
 
         case 'tools/list':
-          _sendResult(id, {
-            'tools': _tools.values
-                .where((t) => isToolEnabled?.call(t.name) ?? true)
-                .map((t) => t.toJson())
-                .toList()
-          });
+          // v6.4.0：设备工具 + 外部 MCP 工具（均已受逐项开关 isToolEnabled 过滤）
+          final listed = _tools.values
+              .where((t) => isToolEnabled?.call(t.name) ?? true)
+              .map((t) => t.toJson())
+              .toList();
+          final extra = extraToolsProvider?.call();
+          if (extra != null) {
+            for (final t in extra) {
+              if (isToolEnabled?.call(t.name) ?? true) listed.add(t.toJson());
+            }
+          }
+          _sendResult(id, {'tools': listed});
           break;
 
         case 'tools/call':
@@ -116,6 +133,25 @@ class XiaozhiMcpResponder {
             break;
           }
           if (executor == null) {
+            // 逐项开关同样约束外部工具（被关的工具对 AI 不可见）
+            if (name == null ||
+                (isToolEnabled != null && !isToolEnabled!.call(name))) {
+              _sendError(id, -32601, 'unknown tool: $name');
+              break;
+            }
+            // v6.4.0：尝试转发到外部 MCP 服务器；回调返回 null 表示不是外部工具
+            final external = externalCaller == null
+                ? null
+                : await externalCaller!(name, args);
+            if (external != null) {
+              _logCall('$name ${jsonEncode(args)}');
+              _sendResult(id, {
+                'content': [
+                  {'type': 'text', 'text': jsonEncode(external)}
+                ]
+              });
+              break;
+            }
             _sendError(id, -32601, 'unknown tool: $name');
             break;
           }

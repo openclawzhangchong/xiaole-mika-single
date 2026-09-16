@@ -5,6 +5,7 @@ import 'package:xiaozhi_client_flutter/core/utils/toast_util.dart';
 import '../services/app_feats.dart';
 import '../../core/utils/log_buffer.dart';
 import 'log_category_page.dart';
+import 'external_mcp_page.dart';
 import '../../core/utils/audio_util.dart';
 import '../../core/storage/storage_service.dart';
 import '../../app/config/app_config.dart';
@@ -62,6 +63,19 @@ class _DevCenterPageState extends State<DevCenterPage> {
               subtitle: const Text('26 项能力分组明细（AI 能做什么，一目了然）'),
               trailing: const Icon(Icons.chevron_right),
               onTap: () => _showMcpToolsDialog(isDark),
+            ),
+            // v6.4.0：外部 MCP 服务器管理（可增删改多条，工具带前缀桥接给 AI）
+            ListTile(
+              leading: const Icon(Icons.hub, color: Color(0xFF576B95)),
+              title: const Text('🌐 外部 MCP'),
+              subtitle: const Text('接入外部 MCP 服务器（biji 笔记 / 高德地图…），可逐台逐工具开关'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                      builder: (_) => const ExternalMcpPage()),
+                );
+              },
             ),
             _switchTile(
               isDark,
