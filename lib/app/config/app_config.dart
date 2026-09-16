@@ -4,7 +4,7 @@ class AppConfig {
 
   // 应用信息
   static const String appName = '小乐'; // v4.0.0：品牌统一（默认智能体名前缀等）
-  static const String appVersion = '6.4.0'; // v6.4.0：外部 MCP 接入（App 内增删改 + 加前缀桥接），开发者中心新增「🌐 外部 MCP」入口；详见 CHANGELOG.md
+  static const String appVersion = '6.4.1'; // v6.4.1：内置预置「笔记 + 高德」两台外部 MCP（首次启动自动写入，用户可改 key，删后可用「恢复预置」重载）；详见 CHANGELOG.md
 
   /// v4.4.0 尾音保护：AI 播放结束后丢弃麦克风音频的时长（毫秒）
   static const int defaultTailGuardMs = 300;

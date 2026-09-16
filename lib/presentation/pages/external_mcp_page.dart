@@ -66,20 +66,17 @@ class _ExternalMcpPageState extends State<ExternalMcpPage> {
 
   Future<void> _persist() => ExternalMcpManager.instance.save();
 
-  /// 新增服务器探测成功后，若含 merge_notes 则默认关闭（仅在 disabledTools 为空时）
-  Future<void> _applyDefaultDisabled(List<ExternalMcpServer> added) async {
-    for (final s in added) {
-      final pr = ExternalMcpManager.instance.statusOf(s.id);
-      if (pr == null || !pr.ok) continue;
-      if (s.disabledTools.isNotEmpty) continue;
-      if (!pr.tools.any((t) => t.name == kDefaultDisabledTool)) continue;
-      final idx =
-          ExternalMcpManager.instance.servers.indexWhere((e) => e.id == s.id);
-      if (idx < 0) continue;
-      ExternalMcpManager.instance.servers[idx] =
-          s.copyWith(disabledTools: <String>[kDefaultDisabledTool]);
-    }
-    await _persist();
+  /// 探测成功后把破坏性工具（merge_notes）默认关闭。
+  /// 逻辑统一放在 manager，供新增、导入、预置三条路径共用。
+  Future<void> _applyDefaultDisabled() =>
+      ExternalMcpManager.instance.applyDefaultDisabled();
+
+  /// v6.4.1：重新载入缺失的预置（笔记 + 高德），按 id 去重
+  Future<void> _restoreBuiltins() async {
+    final n = await ExternalMcpManager.instance.restoreBuiltins();
+    if (!mounted) return;
+    setState(() {});
+    ToastUtil.show(n == 0 ? '预置已全部存在' : '已恢复 $n 台预置');
   }
 
   Future<void> _showAddSheet() async {
@@ -144,7 +141,7 @@ class _ExternalMcpPageState extends State<ExternalMcpPage> {
       ExternalMcpManager.instance.servers.addAll(parsed);
       await _persist();
       await _refresh();
-      await _applyDefaultDisabled(parsed);
+      await _applyDefaultDisabled();
       if (!mounted) return;
       setState(() {});
       ToastUtil.show('已导入 ${parsed.length} 台');
@@ -239,7 +236,7 @@ class _ExternalMcpPageState extends State<ExternalMcpPage> {
       list.add(s);
       await _persist();
       await _refresh();
-      await _applyDefaultDisabled(<ExternalMcpServer>[s]);
+      await _applyDefaultDisabled();
     } else {
       final idx = list.indexWhere((e) => e.id == existing.id);
       if (idx >= 0) {
@@ -297,6 +294,15 @@ class _ExternalMcpPageState extends State<ExternalMcpPage> {
             onPressed: _refreshing ? null : _refresh,
           ),
           IconButton(icon: const Icon(Icons.add), onPressed: _showAddSheet),
+          // v6.4.1：预置被删掉后可在此重新载入（笔记 + 高德）
+          PopupMenuButton<String>(
+            onSelected: (v) {
+              if (v == 'restore') _restoreBuiltins();
+            },
+            itemBuilder: (_) => const [
+              PopupMenuItem(value: 'restore', child: Text('恢复预置（笔记/高德）')),
+            ],
+          ),
         ],
       ),
       body: _loading
@@ -332,6 +338,12 @@ class _ExternalMcpPageState extends State<ExternalMcpPage> {
                     color: isDark
                         ? AppColors.textSecondaryDark
                         : AppColors.textSecondary),
+              ),
+              const SizedBox(height: 14),
+              OutlinedButton.icon(
+                icon: const Icon(Icons.download_for_offline),
+                label: const Text('载入预置（笔记 + 高德）'),
+                onPressed: _restoreBuiltins,
               ),
             ],
           ),

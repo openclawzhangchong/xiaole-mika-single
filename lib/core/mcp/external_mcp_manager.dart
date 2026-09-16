@@ -1,6 +1,8 @@
 import 'dart:convert';
 
+import '../storage/storage_service.dart';
 import '../network/xiaozhi_mcp_responder.dart' show XiaozhiMcpTool;
+import 'external_mcp_builtin.dart';
 import 'external_mcp_client.dart';
 import 'external_mcp_store.dart';
 
@@ -36,7 +38,50 @@ class ExternalMcpManager {
     servers
       ..clear()
       ..addAll(ExternalMcpStore.load());
+    await _seedBuiltinsIfNeeded();
     _inited = true;
+  }
+
+  /// v6.4.1：首次启动写入预置（笔记 + 高德），只写一次。
+  /// 之后用户删除不会被自动塞回；需要时用 restoreBuiltins() 重新载入。
+  Future<void> _seedBuiltinsIfNeeded() async {
+    if (StorageService.instance.getBool(ExternalMcpBuiltin.seededKey) == true) {
+      return;
+    }
+    servers.addAll(ExternalMcpBuiltin.presets);
+    await save();
+    await StorageService.instance.setBool(ExternalMcpBuiltin.seededKey, true);
+  }
+
+  /// 重新载入缺失的预置（按 id 去重，不会重复添加）。返回新增条数。
+  Future<int> restoreBuiltins() async {
+    if (!_inited) await init();
+    var added = 0;
+    for (final p in ExternalMcpBuiltin.presets) {
+      if (servers.any((s) => s.id == p.id)) continue;
+      servers.add(p);
+      added++;
+    }
+    if (added > 0) await save();
+    await refreshAll();
+    await applyDefaultDisabled();
+    return added;
+  }
+
+  /// 对含破坏性工具（merge_notes）且尚未配置过逐项开关的服务器，默认关闭该工具。
+  /// 仅在 disabledTools 为空时生效，避免覆盖用户的显式选择。
+  Future<void> applyDefaultDisabled() async {
+    for (final s in servers) {
+      final pr = _probe[s.id];
+      if (pr == null || !pr.ok) continue;
+      if (s.disabledTools.isNotEmpty) continue;
+      if (!pr.tools.any((t) => t.name == 'merge_notes')) continue;
+      final i = servers.indexWhere((e) => e.id == s.id);
+      if (i >= 0) {
+        servers[i] = s.copyWith(disabledTools: <String>['merge_notes']);
+      }
+    }
+    await save();
   }
 
   Future<void> save() => ExternalMcpStore.save(servers);

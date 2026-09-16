@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:xiaozhi_client_flutter/core/mcp/external_mcp_builtin.dart';
 import 'package:xiaozhi_client_flutter/core/mcp/external_mcp_client.dart';
 import 'package:xiaozhi_client_flutter/core/mcp/external_mcp_manager.dart';
 import 'package:xiaozhi_client_flutter/core/mcp/external_mcp_store.dart';
@@ -200,6 +201,35 @@ void main() {
           .dispatch('self.reboot', <String, dynamic>{});
       expect(r['success'], false);
       expect(r['message'], '未找到该外部工具');
+    });
+  });
+
+  group('内置预置（v6.4.1）', () {
+    test('预置两条，前缀固定为 notes / amap', () {
+      final p = ExternalMcpBuiltin.presets;
+      expect(p.length, 2);
+      expect(p.map((e) => e.prefix).toList(), <String>['notes', 'amap']);
+      expect(p.first.url, contains('zhangchong-biji-web.pages.dev'));
+      expect(p.first.headers['Authorization'], startsWith('Bearer '));
+      expect(p.last.url, contains('mcp.amap.com'));
+      expect(p.every((e) => e.enabled), true);
+    });
+
+    test('restoreBuiltins 会补齐且不重复添加', () async {
+      await ExternalMcpManager.instance.init();
+      ExternalMcpManager.instance.clientFactory = (_) => _StubClient(
+            url: 'https://example.com/mcp',
+            probeResult: McpProbeResult(
+                ok: true, tools: <ExternalMcpTool>[_tool('search_notes')]),
+          );
+      ExternalMcpManager.instance.servers.clear();
+
+      expect(await ExternalMcpManager.instance.restoreBuiltins(), 2);
+      expect(await ExternalMcpManager.instance.restoreBuiltins(), 0);
+      expect(ExternalMcpManager.instance.servers.length, 2);
+
+      ExternalMcpManager.instance.clientFactory = null;
+      ExternalMcpManager.instance.servers.clear();
     });
   });
 }
