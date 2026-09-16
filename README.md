@@ -3,7 +3,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Flutter-3.32.2-blue.svg" alt="Flutter">
   <img src="https://img.shields.io/badge/包名-com.zcstudy.xiaole-green.svg" alt="Package">
-  <img src="https://img.shields.io/badge/当前版本-6.2.1-success.svg" alt="Version">
+  <img src="https://img.shields.io/badge/当前版本-6.3.0-success.svg" alt="Version">
 </p>
 
 本仓库是小智客户端 Flutter 版（上游 [eiriksgata/xiaozhi-client-flutter](https://github.com/eiriksgata/xiaozhi-client-flutter)）的**微信风 UI 定制版**，由张老师定制维护。上游的架构与功能说明保留在本文档后半部分，仍然适用。
@@ -44,6 +44,7 @@
 > 每个发布版本真机验证通过后在此登记。**改动出错需要回退时，优先按下表找最近的 ✅ 版本。**
 
 | 版本标签 | 内容 | 包名 | 验证状态 | 验证日期 |
+| `v6.3.0` | 🧰 **设备 MCP 详情页（逐项开关）+ 定位能力**：① 开发者中心「📋 查看已注册的工具清单」由只读弹窗升级为**可操作详情页**——26+1 项 MCP 设备工具**逐项开关**（下行层 `tools/list` 过滤、命中禁用工具 `tools/call` 回 `-32601`；总闸 `mcptools` 关时逐项置灰，逐项设置独立于总闸、不被「全部关闭」清空）；② **新增定位能力** `self.location.get_current`（第 27 项工具）——权限检查/申请 + 定位服务开关检查 + 高精取位（8s 超时降级最近已知位置）+ **WGS-84→GCJ-02 转换**，全程异常内部消化、绝不阻塞 UI，仅 AI 调用时按需取位。依赖新增 `geolocator ^13.0.0`，AndroidManifest 加定位权限。`xiaozhi_mcp_responder.dart` 纯加法。详见 CHANGELOG.md 与 `PLAN_v6.3.0_设备MCP详情页与定位能力.md` | `com.zcstudy.xiaole` | ⏳ 待 analyze + CI | 2026-09-16 |
 | `v6.2.1` | ⭐⭐⭐ **⭐ 当前最正式版本**：**聊天页底部「连接错误」红条降噪**——瞬时网络错误（DNS 解析失败 / 连接超时 / 连接被拒等，典型如 `api.tenclass.net` 偶发 DNS 失败 `errno=7`）不再弹红条打扰，改由顶部状态栏显示「网络异常，正在自动重连…」+ 记日志，自动重连恢复后无感；**身份拒绝(432x)、重连超限、认证失败等需用户处理的错误仍弹红条**。仅改 `chat_page.dart` 一处（报错分支分类 + 新增 `_isNetworkTransientError` 判定）。详见 CHANGELOG.md |
 | `v6.2.0` | ⭐⭐⭐ 上一版：**一键云端修复「设备身份」上传与恢复 + 新增「清空云端数据」**。① **修复 MAC/设备ID 无法恢复**（症状：重装后连不回原智能体）——根因是**上传与恢复两端都没处理身份**（上传只带 fOta/fWs/fToken，恢复只写列表/记录/昵称），现已：上传补 `conf.fMac/fCid`、恢复写回 `AgentIdentityStore`、并**把首个智能体身份设为全局**；云端零改动（`agents` 整体 JSON 透传）。② **新增「🗑 清空云端数据」**：App 端二次确认 → 云端 `POST /clear`（手机号+用户名双因子核验 → 删 `users` 行 + 名下全部 `chat_blocks`），**云端端点已部署上线并验证**。③ **新增 `CHANGELOG.md`**（按张老师要求，此后每次更新均记录）。详见 CHANGELOG.md | `com.zcstudy.xiaole` | ⏳ 待 analyze + CI | 2026-09-13 |
 | `v6.1.3` | ⭐⭐ **历史版本**：开发者中心新增「📋 查看已注册的工具清单」——弹窗分组列出全部 26 项 MCP 设备工具（工具名 + 用途说明）、附「闹钟/日程/短信/拨号/分享需用户确认才生效」提示。**改动范围：仅 `dev_center_page.dart` 一个文件** | `com.zcstudy.xiaole` | ✅ CI 成功 | 2026-09-13 |

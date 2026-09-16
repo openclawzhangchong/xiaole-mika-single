@@ -6,6 +6,48 @@
 
 ---
 
+## v6.3.0 · 2026-09-16
+
+**主题：设备 MCP 详情页（逐项开关）+ 定位能力（self.location.get_current）**
+
+### ✨ 新增：设备 MCP 工具「逐项开关」
+
+- 开发者中心「📋 查看已注册的工具清单」由**只读弹窗**升级为**可操作详情页**（`dev_center_page.dart`）：26+1 项 MCP 设备工具每项行尾带 `Switch`，可独立开启/关闭。
+- `AppFeats` 新增 `mcpToolEnabled(name)` / `setMcpToolEnabled(name, bool)`；持久化键 `xw_mcp_<name>`（工具名中的 `.` 转义为 `_`）。`load()` 一并恢复逐项设置；**逐项键独立于 `keys` 列表，`allOff()` 不清空**（总闸「全部关闭」= 普通用户模式，逐项偏好保留）。
+- `xiaozhi_mcp_responder.dart`（**纯加法**）：新增可选字段 `bool Function(String name)? isToolEnabled`
+  - `tools/list` 用 `.where((t) => isToolEnabled?.call(t.name) ?? true)` 过滤；
+  - `tools/call` 命中被禁用工具 → 回 `-32601 unknown tool`（与"不存在"一致，不暴露被关工具）；
+  - `initialize` 的 `listChanged:false` 等协议字段**保持不变**。
+- `chat_page.dart`：`_setupMcpResponder()` 注入 `isToolEnabled: AppFeats.mcpToolEnabled`（26 处 `register` 全部保留，过滤在下发层做）。
+
+### ✨ 新增：定位能力（self.location.get_current，第 27 项工具）
+
+- 新增 `lib/core/mcp/location_service.dart`（单例）：`getCurrent()` 流程——
+  ① 权限检查/申请（复用 `permission_handler`，拒绝 / 永久拒绝均返回结构化原因）；
+  ② 检查定位服务是否开启（未开返回「请打开定位」）；
+  ③ `geolocator` 高精取位（**超时 8s** 降级到最近已知位置）；
+  ④ **WGS-84 → GCJ-02 转换**（内置纯函数 `wgs84ToGcj02`，已写单测校验已知点）；
+  ⑤ 返回 `{latitude, longitude, accuracy, coordType:'gcj02', provider}`。**所有异常内部消化，绝不抛出或阻塞 UI**。
+- `xiaozhi_mcp_responder.dart` 新增工具定义 `self.location.get_current`（无参 inputSchema）。
+- `chat_page.dart` 注册第 27 项 → 调用 `LocationService.instance.getCurrent()`（取位结果在聊天回显一条系统消息）。
+- `pubspec.yaml` 新增 `geolocator ^13.0.0`（锁定 Flutter 3.32.2 / Dart 3.8.1 兼容版，实测 13.0.4 解析通过）；`AndroidManifest.xml` 新增 `ACCESS_FINE_LOCATION` / `ACCESS_COARSE_LOCATION`。
+
+### 🔒 红线遵守
+
+- `xiaozhi_mcp_responder.dart` 改动为**纯加法**（新增字段 + 两处过滤/拦截分支 + 1 个工具定义）；hello/initialize 既有协议字段、音频编解码参数、既有冻结文件均未触碰。
+- 除 `geolocator` 外**未引入任何新依赖**（`permission_handler` 为既有）。
+
+### ✨ 变更
+
+- `pubspec.yaml` 6.2.1+35 → **6.3.0+36**；`app_config.dart` appVersion 6.2.1 → **6.3.0**；README 徽章与版本表同步。
+- 定位隐私：仅 AI 调用时按需取位，绝不后台采集；纳入逐项开关（可在详情页关闭 `self.location.get_current`）。
+
+### ⚠️ 跨版本依赖（已知）
+
+- IP 粗定位兜底（走高德 `maps.ip_location`）需 v6.4.0 桥接后才生效；本版先实现「提示 + 网络/低精度定位尝试」，IP 兜底占位。
+
+---
+
 ## v6.2.1 · 2026-09-13
 
 **主题：聊天页底部「连接错误」红条降噪（屏蔽瞬时网络错误弹窗）**

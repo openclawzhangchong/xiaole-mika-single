@@ -42,6 +42,11 @@ class XiaozhiMcpResponder {
   /// 开关：关闭时不响应任何 MCP 请求（回到 v1.1.7 前的静默行为）
   bool enabled = true;
 
+  /// v6.3.0：逐项工具开关过滤器。为 null 表示"全部启用"（保持既有行为完全不变）。
+  /// 下发 tools/list 时据此过滤，被关工具对 AI 不可见；tools/call 命中被关工具
+  /// 回 -32601（与"不存在"一致，避免暴露被关工具）。
+  final bool Function(String name)? isToolEnabled;
+
   /// 最近一次工具调用记录（供 UI 展示/日志），仅保留最近 20 条
   final List<String> recentCalls = [];
 
@@ -49,6 +54,7 @@ class XiaozhiMcpResponder {
     required this.send,
     this.serverName = 'xiaole-app',
     this.serverVersion = '3.0.0',
+    this.isToolEnabled,
   });
 
   void registerTool(XiaozhiMcpTool tool, McpToolExecutor executor) {
@@ -87,8 +93,12 @@ class XiaozhiMcpResponder {
           break;
 
         case 'tools/list':
-          _sendResult(id,
-              {'tools': _tools.values.map((t) => t.toJson()).toList()});
+          _sendResult(id, {
+            'tools': _tools.values
+                .where((t) => isToolEnabled?.call(t.name) ?? true)
+                .map((t) => t.toJson())
+                .toList()
+          });
           break;
 
         case 'tools/call':
@@ -96,6 +106,15 @@ class XiaozhiMcpResponder {
           final args = (params['arguments'] as Map?)?.cast<String, dynamic>() ??
               <String, dynamic>{};
           final executor = name == null ? null : _executors[name];
+          // v6.3.0：逐项开关 —— 被禁用的工具对 AI 不可见，命中即回 -32601
+          // （与"不存在"一致，避免暴露被关工具的存在）
+          if (executor != null &&
+              name != null &&
+              isToolEnabled != null &&
+              !isToolEnabled!.call(name)) {
+            _sendError(id, -32601, 'unknown tool: $name');
+            break;
+          }
           if (executor == null) {
             _sendError(id, -32601, 'unknown tool: $name');
             break;
@@ -476,6 +495,21 @@ class XiaozhiMcpStandardTools {
     },
   );
 
+  // ---- 🅔 定位能力（v6.3.0，方案见 PLAN_v6.3.0）----
+  // 坐标统一以 GCJ-02 返回（高德/腾讯/百度地图通用；Android 原生 GPS 是 WGS-84，
+  // 由 LocationService 内部完成 WGS-84→GCJ-02 转换，调用方无需关心）。
+
+  static const locationGetCurrent = XiaozhiMcpTool(
+    name: 'self.location.get_current',
+    description: 'Get the device current location. Returns latitude and longitude '
+        'in GCJ-02 coordinate system (used by Amap/Tencent/Baidu maps), plus '
+        'horizontal accuracy and the provider. Requires the user to have granted '
+        'location permission and enabled location services on the device. '
+        'Use this when the user asks "where am I", needs navigation, or asks '
+        'for nearby recommendations.',
+    inputSchema: {'type': 'object', 'properties': {}},
+  );
+
   /// v6.1.0：本轮新增的 15 项能力
   static List<XiaozhiMcpTool> v61Tools() => [
         // 🅑 官方标准补齐
@@ -524,5 +558,12 @@ class XiaozhiMcpStandardTools {
   static List<XiaozhiMcpTool> allTools() => [
         ...fullSet(),
         ...v61Tools(),
+      ];
+
+  /// v6.3.0：26 项 + 定位能力（self.location.get_current）= **27 项**。
+  /// 供 AppFeats.load() 一并恢复逐项开关状态。
+  static List<XiaozhiMcpTool> allToolsWithLocation() => [
+        ...allTools(),
+        locationGetCurrent,
       ];
 }

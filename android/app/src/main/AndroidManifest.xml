@@ -4,6 +4,10 @@
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
+    <!-- 定位能力（v6.3.0，self.location.get_current）：fine=GPS 高精度，coarse=网络/基站兜底 -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
     
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />

@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 6.2.1+35
+version: 6.3.0+36
 
 environment:
   sdk: ^3.8.0
@@ -74,6 +74,9 @@ dependencies:
   screen_brightness: ^2.1.11         # 屏幕亮度（仅应用级，不申请 WRITE_SETTINGS）
   flutter_tts: ^4.2.5                # 到点语音播报（调用系统自带 TTS 引擎，不下载模型）
   # torch_light: ^2.0.0              # ❌ 2.0.0 要求 Dart SDK ^3.12（本项目 3.8.1）→ 待定兼容版或改为不支持
+
+  # 定位能力（v6.3.0，方案见 PLAN_v6.3.0）：WGS-84→GCJ-02 转换自带；权限复用现有 permission_handler
+  geolocator: ^13.0.0
   
   # 工具类
   logger: ^2.0.2

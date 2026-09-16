@@ -10,6 +10,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:xiaozhi_client_flutter/core/mcp/device_capability_service.dart';
+import 'package:xiaozhi_client_flutter/core/mcp/location_service.dart';
 import 'package:xiaozhi_client_flutter/core/network/xiaozhi_ota_service.dart';
 import 'package:xiaozhi_client_flutter/core/network/xiaozhi_mcp_responder.dart';
 import 'package:xiaozhi_client_flutter/core/network/xiaozhi_mqtt_presence.dart';
@@ -945,6 +946,8 @@ class _ChatPageState extends ConsumerState<ChatPage> {
       send: (text) => _wsManager!.sendMessage(text),
       serverName: 'xiaole-app',
       serverVersion: '3.0.0',
+      // v6.3.0：注入逐项开关过滤器（null=全部启用，保持既有行为不变）
+      isToolEnabled: AppFeats.mcpToolEnabled,
     );
 
     void register(XiaozhiMcpTool tool,
@@ -1362,6 +1365,19 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     // 26. 写剪贴板
     register(XiaozhiMcpStandardTools.clipboardSet, (args) async {
       return caps.setClipboard(args['text'] as String? ?? '');
+    });
+
+    // 27. 定位能力（v6.3.0）：返回 GCJ-02 坐标；权限/服务/超时全部内部消化，绝不阻塞 UI
+    register(XiaozhiMcpStandardTools.locationGetCurrent, (_) async {
+      final loc = await LocationService.instance.getCurrent();
+      if (loc['success'] == true) {
+        _appendOrCreateChatMessage(MessageSender.system,
+            '📍 AI 已获取当前位置（精度 ${loc['accuracy']} 米）');
+      } else {
+        _appendOrCreateChatMessage(MessageSender.system,
+            '📍 获取位置失败：${loc['message']}');
+      }
+      return loc;
     });
 
     _mcpResponder = responder;

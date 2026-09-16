@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:xiaozhi_client_flutter/core/network/xiaozhi_mcp_responder.dart';
 import 'package:xiaozhi_client_flutter/core/storage/storage_service.dart';
 
 /// 开发者功能开关体系（v3.3.0，对齐网页版开发者中心模式，xiaoleweb.md 第十一章）
@@ -67,6 +68,11 @@ class AppFeats {
       final v = StorageService.instance.getBool('xw_feat_$k');
       if (v != null) _cache[k] = v;
     }
+    // v6.3.0：一并恢复逐项 MCP 工具开关（独立于 keys 列表）
+    for (final t in XiaozhiMcpStandardTools.allToolsWithLocation()) {
+      final v = StorageService.instance.getBool(_mcpToolKey(t.name));
+      if (v != null) _mcpToolCache[t.name] = v;
+    }
     _notify();
   }
 
@@ -76,6 +82,25 @@ class AppFeats {
     for (final k in keys) {
       set(k, false);
     }
+    // ⚠️ 不清空逐项 MCP 工具开关（xw_mcp_*）—— 总闸全部关闭＝普通用户模式，
+    // 但逐项设置是用户独立偏好，恢复总闸后原逐项配置应仍生效。
+  }
+
+  // ---------- 逐项 MCP 工具开关（v6.3.0，独立于 keys 列表） ----------
+  /// 存储键：`xw_mcp_<工具名>`（工具名里的 `.` 转义为 `_`，避免 key 冲突）。
+  static String _mcpToolKey(String name) => 'xw_mcp_${name.replaceAll('.', '_')}';
+
+  /// 逐项开关的运行时缓存（与 keys 列表完全隔离）。
+  static final Map<String, bool> _mcpToolCache = {};
+
+  /// 单个 MCP 工具是否启用（默认 true；被显式关闭才记 false）。
+  static bool mcpToolEnabled(String name) =>
+      _mcpToolCache[name] ?? StorageService.instance.getBool(_mcpToolKey(name)) ?? true;
+
+  /// 写回单个 MCP 工具的开关状态（持久化）。
+  static void setMcpToolEnabled(String name, bool v) {
+    _mcpToolCache[name] = v;
+    StorageService.instance.setBool(_mcpToolKey(name), v);
   }
 
   // ---------- 语义化快捷读取（避免散落魔法字符串） ----------

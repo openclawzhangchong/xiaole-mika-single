@@ -253,104 +253,14 @@ class _DevCenterPageState extends State<DevCenterPage> {
     }
   }
 
-  /// v6.1.2：展示已注册给 AI 的**全部 MCP 设备工具（26 项）**，分组 + 用途说明。
-  /// 只读展示，不改动任何工具实现。
+  /// v6.1.2：展示已注册给 AI 的**全部 MCP 设备工具**。
+  /// v6.3.0：由只读弹窗升级为**可操作详情页**——每项行尾带开关，可逐项开关某个工具
+  /// （下行层据此在 tools/list 过滤、tools/call 命中禁用工具回 -32601）。
+  /// 总闸 `mcptools` 关闭时，逐项开关置灰并提示「先开总闸」。
   void _showMcpToolsDialog(bool isDark) {
-    final prim = isDark ? AppColors.textPrimaryDark : AppColors.textPrimary;
-    final sub = isDark ? AppColors.textSecondaryDark : AppColors.textSecondary;
-
-    // 组名 → [ [工具名, 用途], ... ]
-    final groups = <String, List<List<String>>>{
-      '① 基础能力（11 项）': [
-        ['self.get_device_status', '设备状态：音量 / 主题 / 电量 / 网络'],
-        ['self.audio_speaker.set_volume', '调节音量（真实系统媒体音量）'],
-        ['self.screen.set_theme', '切换深色 / 浅色主题'],
-        ['self.timer.create_countdown', '创建倒计时（到点提醒+震动+播报）'],
-        ['self.timer.get_tasks', '查看进行中的倒计时'],
-        ['self.timer.stop_task', '停止指定倒计时'],
-        ['self.schedule.create_event', '创建日程（写入系统日历，App 关了也提醒）'],
-        ['self.schedule.get_events', '查看已创建的日程记录'],
-        ['self.schedule.delete_event', '删除日程记录'],
-        ['self.camera.take_photo', '拍照并识别画面内容'],
-        ['self.screen.preview_image', '在聊天里显示一张图片'],
-      ],
-      '② 官方标准补齐（5 项）': [
-        ['self.screen.set_brightness', '调节屏幕亮度（应用级，免权限）'],
-        ['self.screen.get_info', '屏幕尺寸 / 像素比信息'],
-        ['self.get_system_info', '系统与设备信息：品牌 / 型号 / 安卓版本'],
-        ['self.screen.snapshot', '截取当前界面（不用系统录屏权限）'],
-        ['self.reboot', '重启会话（重新连接 + 清空当前对话）'],
-      ],
-      '③ 系统能力·免权限（5 项）': [
-        ['self.phone.dial', '打开拨号盘并填入号码（需你点拨出）'],
-        ['self.message.send_sms', '发短信：预填号码与内容（需你点发送）'],
-        ['self.map.navigate', '打开地图导航到指定地点'],
-        ['self.system.open_settings', '打开系统设置页：WiFi / 蓝牙 / 声音等'],
-        ['self.system.open_url', '用浏览器打开网页'],
-      ],
-      '④ 提醒与随身工具（5 项）': [
-        ['self.alarm.set_alarm', '设置真实系统闹钟（时钟 App 里可见，关机后仍会响）'],
-        ['self.show_toast', '屏幕轻提示（不打断对话）'],
-        ['self.share.text', '把文字分享到备忘录 / 微信 / 钉钉等'],
-        ['self.clipboard.get', '读取剪贴板内容'],
-        ['self.clipboard.set', '把文字写入剪贴板'],
-      ],
-    };
-
-    showDialog<void>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('MCP 设备工具（共 26 项）'),
-        content: SizedBox(
-          width: double.maxFinite,
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('AI 通过 MCP 协议可直接调用的能力清单：',
-                    style: TextStyle(fontSize: 12, color: sub)),
-                for (final g in groups.entries) ...[
-                  Padding(
-                    padding: const EdgeInsets.only(top: 12, bottom: 6),
-                    child: Text(g.key,
-                        style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.bold,
-                            color: prim)),
-                  ),
-                  for (final t in g.value)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 7),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('• ${t[1]}',
-                              style: TextStyle(fontSize: 13, color: prim)),
-                          Padding(
-                            padding: const EdgeInsets.only(left: 10, top: 1),
-                            child: Text(t[0],
-                                style: TextStyle(fontSize: 11, color: sub)),
-                          ),
-                        ],
-                      ),
-                    ),
-                ],
-                Padding(
-                  padding: const EdgeInsets.only(top: 12),
-                  child: Text(
-                    '⚠️ 闹钟 / 日程 / 短信 / 拨号 / 分享会打开系统界面，'
-                    '需要你确认后才真正生效（安卓的安全设计）。',
-                    style: TextStyle(fontSize: 11, color: sub, height: 1.4),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(ctx), child: const Text('知道了')),
-        ],
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => _McpToolsDetailPage(isDark: isDark),
       ),
     );
   }
@@ -407,6 +317,156 @@ class _DevCenterPageState extends State<DevCenterPage> {
                 isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// v6.3.0：MCP 设备工具详情页（逐项开关）。独立 StatefulWidget，
+/// 其自身 setState 即可实时刷新开关，不必依赖开发者中心页 rebuild。
+class _McpToolsDetailPage extends StatefulWidget {
+  final bool isDark;
+  const _McpToolsDetailPage({required this.isDark});
+
+  @override
+  State<_McpToolsDetailPage> createState() => _McpToolsDetailPageState();
+}
+
+class _McpToolsDetailPageState extends State<_McpToolsDetailPage> {
+  // 组名 → [ [工具名, 用途], ... ]
+  static const List<MapEntry<String, List<List<String>>>> groups = [
+    MapEntry('① 基础能力（11 项）', [
+      ['self.get_device_status', '设备状态：音量 / 主题 / 电量 / 网络'],
+      ['self.audio_speaker.set_volume', '调节音量（真实系统媒体音量）'],
+      ['self.screen.set_theme', '切换深色 / 浅色主题'],
+      ['self.timer.create_countdown', '创建倒计时（到点提醒+震动+播报）'],
+      ['self.timer.get_tasks', '查看进行中的倒计时'],
+      ['self.timer.stop_task', '停止指定倒计时'],
+      ['self.schedule.create_event', '创建日程（写入系统日历，App 关了也提醒）'],
+      ['self.schedule.get_events', '查看已创建的日程记录'],
+      ['self.schedule.delete_event', '删除日程记录'],
+      ['self.camera.take_photo', '拍照并识别画面内容'],
+      ['self.screen.preview_image', '在聊天里显示一张图片'],
+    ]),
+    MapEntry('② 官方标准补齐（5 项）', [
+      ['self.screen.set_brightness', '调节屏幕亮度（应用级，免权限）'],
+      ['self.screen.get_info', '屏幕尺寸 / 像素比信息'],
+      ['self.get_system_info', '系统与设备信息：品牌 / 型号 / 安卓版本'],
+      ['self.screen.snapshot', '截取当前界面（不用系统录屏权限）'],
+      ['self.reboot', '重启会话（重新连接 + 清空当前对话）'],
+    ]),
+    MapEntry('③ 系统能力·免权限（5 项）', [
+      ['self.phone.dial', '打开拨号盘并填入号码（需你点拨出）'],
+      ['self.message.send_sms', '发短信：预填号码与内容（需你点发送）'],
+      ['self.map.navigate', '打开地图导航到指定地点'],
+      ['self.system.open_settings', '打开系统设置页：WiFi / 蓝牙 / 声音等'],
+      ['self.system.open_url', '用浏览器打开网页'],
+    ]),
+    MapEntry('④ 提醒与随身工具（5 项）', [
+      ['self.alarm.set_alarm', '设置真实系统闹钟（时钟 App 里可见，关机后仍会响）'],
+      ['self.show_toast', '屏幕轻提示（不打断对话）'],
+      ['self.share.text', '把文字分享到备忘录 / 微信 / 钉钉等'],
+      ['self.clipboard.get', '读取剪贴板内容'],
+      ['self.clipboard.set', '把文字写入剪贴板'],
+    ]),
+    MapEntry('⑤ 定位能力（1 项）', [
+      ['self.location.get_current', '获取当前 GPS 坐标（GCJ-02，供高德/导航使用）'],
+    ]),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = widget.isDark;
+    final prim = isDark ? AppColors.textPrimaryDark : AppColors.textPrimary;
+    final sub = isDark ? AppColors.textSecondaryDark : AppColors.textSecondary;
+    final masterOn = AppFeats.mcptools;
+
+    return Scaffold(
+      appBar: AppBar(title: const Text('MCP 设备工具')),
+      body: ListView(
+        children: [
+          const SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            child: Text('共 ${_totalCount()} 项能力，逐项开关；关闭后 AI 将看不到该工具',
+                style: TextStyle(fontSize: 12, color: sub)),
+          ),
+          if (!masterOn)
+            Container(
+              margin: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: const Color(0xFF576B95).withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Text(
+                '🧰 总开关「MCP 设备工具」已关闭，下面各项暂不可操作。'
+                '请先返回上一页开启总闸。',
+                style: TextStyle(fontSize: 12, color: Color(0xFF576B95)),
+              ),
+            ),
+          for (final g in groups)
+            _section(g.key, g.value, prim, sub, masterOn),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+            child: Text(
+              '⚠️ 闹钟 / 日程 / 短信 / 拨号 / 分享会打开系统界面，'
+              '需要你确认后才真正生效（安卓的安全设计）。',
+              style: TextStyle(fontSize: 11, color: sub, height: 1.4),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  int _totalCount() => groups.fold(0, (sum, g) => sum + g.value.length);
+
+  Widget _section(String title, List<List<String>> tools, Color prim, Color sub,
+      bool masterOn) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(8, 6, 8, 6),
+            child: Text(title,
+                style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                    color: prim)),
+          ),
+          Material(
+            color: widget.isDark ? AppColors.surfaceDark : AppColors.surface,
+            borderRadius: BorderRadius.circular(12),
+            child: Column(
+              children: [
+                for (final t in tools)
+                  SwitchListTile(
+                    // 总闸关 → 置灰不可操作（逐项设置保留，不清除）
+                    onChanged: masterOn
+                        ? (v) {
+                            AppFeats.setMcpToolEnabled(t[0], v);
+                            setState(() {});
+                          }
+                        : null,
+                    value: AppFeats.mcpToolEnabled(t[0]),
+                    title: Text(t[1],
+                        style: TextStyle(
+                            fontSize: 14,
+                            color: masterOn ? prim : sub)),
+                    subtitle: Padding(
+                      padding: const EdgeInsets.only(top: 2),
+                      child: Text(t[0],
+                          style: TextStyle(fontSize: 11, color: sub)),
+                    ),
+                    activeColor: const Color(0xFF07C160),
+                  ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
