@@ -11,6 +11,12 @@ android {
     ndkVersion = "27.0.12077973"
 
     compileOptions {
+        // v6.8.2：**必须开启 core library desugaring**。
+        // 原因：flutter_local_notifications 的 AAR 元数据显式要求它，
+        // 否则 CI 在 `:app:checkReleaseAarMetadata` 直接失败：
+        //   "Dependency ':flutter_local_notifications' requires core library desugaring to be enabled for :app"
+        // （v6.8.1 就是因此构建失败、没产出 APK。）
+        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
@@ -51,4 +57,10 @@ android {
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    // v6.8.2：配合上面的 isCoreLibraryDesugaringEnabled —— 提供 Java 8+ API 的脱糖实现。
+    // AGP 8.9.1 支持 desugar_jdk_libs 2.1.x。
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 }

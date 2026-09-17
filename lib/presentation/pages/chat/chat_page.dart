@@ -749,10 +749,13 @@ class _ChatPageState extends ConsumerState<ChatPage> {
 
   /// 滚动到底部
   void _scrollToBottom() {
+    // v6.8.2（D 项）：消息列表已改为**倒置**（reverse），"最新处" = offset 0。
+    // 进入聊天页时天然停在最新，不再依赖"延迟滚动够到底部"（原做法在布局未完成时会停在最早消息）。
     if (_scrollController.hasClients) {
       Future.delayed(const Duration(milliseconds: 100), () {
+        if (!_scrollController.hasClients) return; // 延迟期间页面可能已 dispose
         _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
+          0,
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeOut,
         );

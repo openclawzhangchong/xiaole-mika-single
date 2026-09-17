@@ -4,7 +4,7 @@ class AppConfig {
 
   // 应用信息
   static const String appName = '小乐'; // v4.0.0：品牌统一（默认智能体名前缀等）
-  static const String appVersion = '6.8.1'; // v6.8.1：修复「挂断后仍在说话」缺陷（挂断即静音/无条件 abort/挂断后短窗口丢弃迟到音频帧）+ 调整默认开关（27 项 MCP 设备工具仅默认开 5 项、📷 相机按钮默认关，仅对新装用户生效）；详见 CHANGELOG.md
+  static const String appVersion = '6.8.2'; // v6.8.2：真正修复 Android 构建（core library desugaring，v6.8.1 因此无 APK）+ 聊天页进入即显示最新消息（消息列表倒置）；详见 CHANGELOG.md
 
   /// v4.4.0 尾音保护：AI 播放结束后丢弃麦克风音频的时长（毫秒）
   static const int defaultTailGuardMs = 300;

@@ -6,6 +6,43 @@
 
 ---
 
+## v6.8.2 · 2026-09-18
+
+**主题：真正修复 Android 构建失败（补 core library desugaring）+ 聊天页进入即显示最新消息**
+
+> ⚠️ **v6.8.1 构建仍失败、无 APK**：它修对了 workmanager（`:workmanager:compileReleaseKotlin` 不再报错），
+> 但**还差一步**——CI 在 `:app:checkReleaseAarMetadata` 报了新的、也是**真正的**阻断项。本版补齐。
+
+### 🔴 ① 修复 Android 构建失败（**关键**）
+- **v6.8.1 的 CI 报错（run 35243265913）**：
+  ```
+  An issue was found when checking AAR metadata:
+    1. Dependency ':flutter_local_notifications' requires core library desugaring to be enabled for :app.
+  ```
+- **根因**：`flutter_local_notifications` 的 AAR 元数据**强制要求**开启 **core library desugaring**（Java 8+ API 脱糖），
+  而 `android/app/build.gradle.kts` 未开启 ⇒ `:app:checkReleaseAarMetadata` 直接失败。
+- **修复**（`android/app/build.gradle.kts`，新增两处）：
+  - `compileOptions { isCoreLibraryDesugaringEnabled = true ... }`
+  - 新增 `dependencies { coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4") }`（AGP 8.9.1 支持 2.1.x）
+- **说明**：这是**新增 flutter_local_notifications 带来的配置要求**，非我们代码问题；
+  workmanager 的问题已在 v6.8.1 修好（本版不再报 workmanager 错误）。
+
+### 🎯 ② 聊天页进入即显示最新消息（D 项）
+- **现象**：进入聊天页默认停在**最早**消息，要发一句才会滚到最新。
+- **根因**：原实现用"延迟 100ms 后 `animateTo(maxScrollExtent)`"**靠时序**够底部，布局未完成时滚不到位。
+- **修复**：`MessageList` 改为**倒置列表**（`reverse: true`，最新消息即列表起点，**不依赖任何滚动时序**）；
+  索引映射改为 `msgIndex = len-1-(index-typingOffset)`；时间分隔条判据改用 `msgIndex`（与显示方向解耦）；
+  `chat_page._scrollToBottom()` 目标由 `maxScrollExtent` 改为 **offset 0**。
+- **验证**：用 golden 实际渲染图**目视核对消息顺序**（系统→AI→用户→AI→系统，最新在底部）**未弄反**；
+  `goldens/audit_chat_messages.png` 按预期更新。
+- **已知取舍**：消息少于屏幕时内容贴底（微信为贴顶）；长会话无影响。如需贴顶，可后续加"填充撑到顶"布局。
+
+### 自检
+- `flutter analyze`：0 error；全量 `flutter test`：**51/51 通过**。
+- **Android 构建由 CI 验证**（本机沙箱无法构建）。
+
+---
+
 ## v6.8.1 · 2026-09-17
 
 **主题：修复 v6.8.0 的 Android 构建失败（后台化真正可用）+ 修复「挂断后仍在说话」+ 调整默认开关**
