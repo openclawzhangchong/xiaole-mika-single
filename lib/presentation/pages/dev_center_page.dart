@@ -104,6 +104,13 @@ class _DevCenterPageState extends State<DevCenterPage> {
               'AI 对话时的全屏表情动画（v4.3.0 起默认关，可在此开启）',
               'emotion',
             ),
+            // v6.4.4：开发者/普通用户身份分流开关——控制聊天页服务端 alert 的展现方式
+            _switchTile(
+              isDark,
+              '⚠️ 显示服务端原始提示',
+              '开启=开发者模式，聊天页直接显示服务器原文（如 alert 报错）；关闭=普通用户模式，改用友好弹窗',
+              'rawServerAlert',
+            ),
           ]),
           _section(isDark, '诊断', [
             _tailGuardTile(),

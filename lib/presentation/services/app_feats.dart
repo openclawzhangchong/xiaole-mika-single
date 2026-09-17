@@ -23,13 +23,18 @@ class AppFeats {
   /// - mcpDebug（🧪 MCP 调试）：默认关（开=字幕保留 % 工具名原文）
   /// - emotion（😄 表情动画）：v4.3.0 新增，**默认关**（用户拍板：全屏动画移入
   ///   开发者中心，普通用户默认不见；消息内 emoji 前缀不受此开关影响）
+  /// - rawServerAlert（⚠️ 显示服务端原始提示）：v6.4.4 新增，**默认关**。
+  ///   开启=开发者模式，聊天页直接显示服务器 alert 技术原文（如 detect 拒绝长文本报错）；
+  ///   关闭=普通用户模式，改用友好弹窗（不暴露技术细节）。放进 `keys` 是**有意为之**——
+  ///   这样「全部关闭」（`allOff()`）会一并把它关掉，语义正确（一键回到普通用户模式）。
   static const List<String> keys = [
     'mcptools',
     'mqtt',
     'vision',
     'bargein',
     'mcpDebug',
-    'emotion'
+    'emotion',
+    'rawServerAlert',
   ];
   static const Map<String, bool> defaults = {
     'mcptools': true,
@@ -38,6 +43,7 @@ class AppFeats {
     'bargein': false, // v4.4.0：默认关（误触发导致 AI 自问自答，见方案根因③）
     'mcpDebug': false,
     'emotion': false,
+    'rawServerAlert': false, // v6.4.4：默认关 = 普通用户模式（友好弹窗）
   };
 
   static final Map<String, bool> _cache = Map.from(defaults);
@@ -110,4 +116,6 @@ class AppFeats {
   static bool get bargein => get('bargein');
   static bool get mcpDebug => get('mcpDebug');
   static bool get emotion => get('emotion');
+  // v6.4.4：开发者模式=直接显示服务器 alert 原始技术文本；默认 false=普通用户友好模式
+  static bool get rawServerAlert => get('rawServerAlert');
 }

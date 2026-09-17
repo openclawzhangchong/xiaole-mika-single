@@ -746,6 +746,34 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     );
   }
 
+  /// v6.4.4：把服务器 alert 技术原文映射成普通用户能看懂的话（大小写不敏感）。
+  String _friendlyAlertText(String raw) {
+    final lower = raw.toLowerCase();
+    if (lower.contains('long texts') || lower.contains('detect is only')) {
+      return '这条消息有点长，没能发出去～ 把内容缩短一些再发一次吧。';
+    }
+    return '消息没能发送成功，请稍后重试，或换个说法再试一次。';
+  }
+
+  /// v6.4.4：普通用户模式下的友好弹窗（微信风、简洁）。
+  /// 标题「发送失败」，内容为入参 text，单按钮「知道了」关闭。
+  void _showFriendlyAlertDialog(String text) {
+    if (!mounted) return;
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('发送失败'),
+        content: Text(text),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('知道了'),
+          ),
+        ],
+      ),
+    );
+  }
+
   /// v6.2.1：判定是否为「瞬时网络层错误」（DNS/连接超时/被拒等）。
   /// 这类错误由 WS 管理器自动重连兜底，无需弹红条打扰用户。
   bool _isNetworkTransientError(String text) {
@@ -2059,15 +2087,23 @@ class _ChatPageState extends ConsumerState<ChatPage> {
           // v6.4.3：服务器的 alert 此前**完全没有被处理**（落到 default 只记一行日志），
           // 导致「超长文本被 detect 通道拒绝」这类关键提示在 UI 上完全不可见——
           // 用户以为消息发出去了，实际被服务器丢弃。此处显式呈现，让问题可感知。
+          // v6.4.4：按身份分流——开发者看原文（排查用），普通用户看友好提示。
           final alertStatus = (jsonData['status'] ?? '').toString();
           final alertText = (jsonData['message'] ?? '').toString();
           logger.warning('服务端 alert：status=$alertStatus message=$alertText');
-          if (alertText.isNotEmpty) {
+          if (alertText.isEmpty) break;
+          if (AppFeats.get('rawServerAlert')) {
+            // 开发者模式：原文可见（保持 v6.4.3 行为）
             _appendOrCreateChatMessage(
                 MessageSender.system, '⚠️ 服务端提示：$alertText');
             if (alertStatus.toUpperCase() == 'ERROR') {
               _showError(alertText);
             }
+          } else {
+            // 普通用户模式：不暴露技术细节，改成能看懂的说明 + 弹窗
+            final friendly = _friendlyAlertText(alertText);
+            _appendOrCreateChatMessage(MessageSender.system, friendly);
+            _showFriendlyAlertDialog(friendly);
           }
           break;
 

@@ -4,7 +4,7 @@ class AppConfig {
 
   // 应用信息
   static const String appName = '小乐'; // v4.0.0：品牌统一（默认智能体名前缀等）
-  static const String appVersion = '6.4.3'; // v6.4.3：处理服务器 alert 消息（此前漏处理导致「长文本被 detect 拒绝」等提示静默不可见）；详见 CHANGELOG.md
+  static const String appVersion = '6.4.4'; // v6.4.4：服务器 alert 按开发者/普通用户身份分流（开发者模式显示原文，普通用户用友好弹窗）；详见 CHANGELOG.md
 
   /// v4.4.0 尾音保护：AI 播放结束后丢弃麦克风音频的时长（毫秒）
   static const int defaultTailGuardMs = 300;

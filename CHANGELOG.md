@@ -6,6 +6,37 @@
 
 ---
 
+## v6.4.4 · 2026-09-17
+
+**主题：服务器 alert 按开发者 / 普通用户身份分流——开发者看原文、普通用户看友好弹窗**
+
+### 背景
+v6.4.3 虽然让 alert 在 UI 上可见了，但**不管是谁都显示服务器技术原文**（如 `Detect is only for wake words, do not send long texts.`），普通用户看不懂、体验差。张老师要求：**开发者看原文（正确），普通用户看友好弹窗**，用一个开关区分。
+
+### 新增（dev）
+- `lib/presentation/services/app_feats.dart`：`keys` 追加 `'rawServerAlert'`、`defaults` 加 `'rawServerAlert': false`（**默认关 = 普通用户模式**）。放进 `keys` 是**有意为之**——这样「全部关闭」(`allOff()`) 会一并把它关掉，语义正确（一键回到普通用户模式）。并加语义化 getter `AppFeats.rawServerAlert`。
+- `lib/presentation/pages/dev_center_page.dart`：「能力开关」分组内新增一条 `_switchTile`：标题 `⚠️ 显示服务端原始提示`、副标题说明开发者/普通用户双模式、key `'rawServerAlert'`。
+
+### 变更（chat）
+- `lib/presentation/pages/chat/chat_page.dart` 的 `case 'alert':` 按开关分流：
+  - `AppFeats.get('rawServerAlert')` 为真 → 开发者模式：保持 v6.4.3 行为（追加「⚠️ 服务端提示」原文 + ERROR 时弹红条）。
+  - 否则 → 普通用户模式：追加友好气泡 + 弹「发送失败」友好弹窗，**不暴露技术细节**。
+  - `alertText` 为空时直接 `break`（此前为空也走分支，现在提前跳过，行为更干净）。
+- 新增两个私有辅助方法（风格与 `_showError` 一致）：
+  - `String _friendlyAlertText(String raw)`：大小写不敏感地把技术原文映射成人话——含 `long texts` / `detect is only` →「这条消息有点长，没能发出去～ 把内容缩短一些再发一次吧。」；其他 →「消息没能发送成功，请稍后重试，或换个说法再试一次。」
+  - `void _showFriendlyAlertDialog(String text)`：`showDialog` + `AlertDialog`（微信风简洁），标题「发送失败」、内容为入参、单按钮「知道了」关闭；首行 `if (!mounted) return;`。
+
+### 红线遵守
+- 未触碰 `lib/core/network`（仅改 presentation 层 + `app_feats`）。
+- 不改这条消息的发送逻辑、不加客户端长度限制。
+- 未引入新依赖。
+
+### 版本号
+- `pubspec.yaml`：`6.4.3+40` → `6.4.4+41`
+- `lib/app/config/app_config.dart`：`appVersion` → `'6.4.4'`（注释同步）
+
+---
+
 ## v6.4.3 · 2026-09-17
 
 **主题：修复「服务器 alert 未被处理」——长文本被拒等关键提示此前在 UI 上完全不可见**

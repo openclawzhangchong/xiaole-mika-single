@@ -3,7 +3,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Flutter-3.32.2-blue.svg" alt="Flutter">
   <img src="https://img.shields.io/badge/包名-com.zcstudy.xiaole-green.svg" alt="Package">
-  <img src="https://img.shields.io/badge/当前版本-6.4.3-success.svg" alt="Version">
+  <img src="https://img.shields.io/badge/当前版本-6.4.4-success.svg" alt="Version">
 </p>
 
 本仓库是小智客户端 Flutter 版（上游 [eiriksgata/xiaozhi-client-flutter](https://github.com/eiriksgata/xiaozhi-client-flutter)）的**微信风 UI 定制版**，由张老师定制维护。上游的架构与功能说明保留在本文档后半部分，仍然适用。
@@ -44,6 +44,7 @@
 > 每个发布版本真机验证通过后在此登记。**改动出错需要回退时，优先按下表找最近的 ✅ 版本。**
 
 | 版本标签 | 内容 | 包名 | 验证状态 | 验证日期 |
+| `v6.4.4` | 👥 **服务器 alert 按开发者/普通用户身份分流** —— 承接 v6.4.3 的 alert 处理，但当时**不管是谁都显示技术原文**（如 `Detect is only for wake words, do not send long texts.`），普通用户看不懂。改进：新增开发者中心开关「⚠️ 显示服务端原始提示」（`AppFeats.rawServerAlert`，**默认关 = 普通用户模式**）——开启=开发者模式，聊天页直接显示服务器 alert 原文（保持 v6.4.3 行为）；关闭=普通用户模式，改用友好气泡 +「发送失败」弹窗（如「这条消息有点长，没能发出去～把内容缩短一些再发一次吧。」）。该开关**列入 `keys`**，故「全部关闭」(`allOff()`) 会一并关掉，一键回到普通用户模式。改动范围：`app_feats.dart` + `dev_center_page.dart` + `chat_page.dart`（新增 `_friendlyAlertText`/`_showFriendlyAlertDialog` 两个辅助方法），不改发送逻辑、不加客户端长度限制、不引入新依赖。详见 CHANGELOG.md | `com.zcstudy.xiaole` | ⏳ 待 analyze + 全量 test | 2026-09-17 |
 | `v6.4.3` | 🔔 **修「服务器 alert 未被处理」** —— App 所有文字都走 `listen/detect` 通道，官方服务器对 detect 文本有硬上限（实测 16 字通过/18 字被拒），超限回 `type:alert` 报错；但客户端**此前完全没有处理 alert**（落到 switch 的 default 只记日志），导致**长句被服务器静默拒绝、界面上毫无提示**（用户以为发出去了）。修复：`_handleTextMessage` 新增 `case 'alert':` → 记日志 + 追加「⚠️ 服务端提示」系统气泡 + ERROR 时弹提示条。仅 1 文件、不改发送逻辑。详见 CHANGELOG.md | `com.zcstudy.xiaole` | ✅ CI 通过 | 2026-09-17 |
 | `v6.4.2` | 🐞 **修历史遗留 Bug：一键云端恢复后智能体列表不刷新** —— 恢复（pull）后智能体不会立刻出现在首页/聊天列表、要手动新增一个才"顺便"显示。根因：`applyPullResult` 直接写 SharedPreferences 但**未通知** `agentListProvider`（内存列表仍是旧缓存），且 `CloudSyncPage` 原是普通 `StatefulWidget` 拿不到 `ref`；`agentListProvider` 又非 autoDispose，重进页面也不重读磁盘。修复（最小改动，1 文件）：`CloudSyncPage` → `ConsumerStatefulWidget`，恢复后 `await ref.read(agentListProvider.notifier).loadAgents();`（与新增路径的刷新动作等价）。详见 CHANGELOG.md | `com.zcstudy.xiaole` | ✅ CI 通过 | 2026-09-17 |
 | `v6.4.1` | 🎁 **内置预置「笔记 + 高德」两台外部 MCP**：首次启动自动写入预置配置，开箱即用不必手导入；用户可进编辑页改 `headers`（笔记 token）或 `url` 里的 `key=`（高德）换成自己的，**不改就走默认**；删除后不会自动塞回，可用管理页「恢复预置（笔记/高德）」或空列表的「载入预置」按钮重载（按 id 去重）。破坏性工具 `merge_notes` 默认关闭。⚠️ 预置 token/key 会打进 APK（可被提取），建议为高德 key 配白名单与配额。详见 CHANGELOG.md | `com.zcstudy.xiaole` | ✅ CI 通过 | 2026-09-17 |
