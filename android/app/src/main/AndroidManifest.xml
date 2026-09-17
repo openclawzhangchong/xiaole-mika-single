@@ -4,6 +4,14 @@
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
+    <!-- v6.8.0：AI 主动来电「后台化」所需权限 -->
+    <!-- Android 13+ 运行时申请：高优先来电通知 -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- WorkManager 重启后仍能周期唤醒（周期任务跨重启保留） -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- 引导页：打开"电池优化白名单"系统页（部分 ROM 需要此权限才能跳转） -->
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+
     <!-- 定位能力（v6.3.0，self.location.get_current）：fine=GPS 高精度，coarse=网络/基站兜底 -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />

@@ -6,6 +6,47 @@
 
 ---
 
+## v6.8.0 · 2026-09-17
+
+**主题：AI 主动来电「后台化」—— 退出 App / 锁屏后也能巡检并触发来电（WorkManager 周期唤醒 + 高优先通知）**
+
+> 本版即原方案里的"二期"。它**不是"才做主动来电"，而是"让 v6.5.0 已做好的主动来电，在用户退出 App 之后也能继续跑"**。技术路线采用 **V1 主推：WorkManager 周期唤醒**（无常驻通知、无前台服务，最省电、最抗杀）；**V2「常驻通知 + 前台服务」本次不做**，留待后续真机存活率实测对比。
+
+### 新增（核心能力）
+- **后台周期唤醒**：`workmanager` 注册 `PeriodicTask`（task name `proactive_poll`），系统按周期拉起 App 跑**一轮**巡检再睡；命中触发时用**高优先临时通知**（标题"小乐想和你通话"，正文用开场白或退化文案"点开听听它想说什么"）呈现，点通知进入来电流程。
+- **后台入口** `lib/core/proactive/proactive_background.dart`（`@pragma('vm:entry-point') callbackDispatcher`）：
+  - 按顺序最小初始化 `WidgetsFlutterBinding.ensureInitialized()` → `StorageService.instance.init()` → `AppFeats.load()` → `ProactiveScriptStore.init()`；任一步失败 catch 住安全退出，**绝不崩**。
+  - **总开关守卫**：`AppFeats.proactive` 为 false → 直接返回、零流量、零网络请求。
+  - **只跑一轮**：后台**绝不**调用 `start()`（那是常驻 Timer），跑完即返回。
+  - **前后台互斥**：读前台"心跳"时间戳（`xw_proactive_fg_heartbeat`，前台 `_tick` 每次更新），若最近 ~5 分钟内更新过 → 本轮跳过，避免重复巡检。
+  - 命中 `trigger_call`：把开场白 + agentId/agentName 持久化为"待处理来电"（`xw_proactive_pending_call`），再发高优先通知（后台 isolate 无 UI，不能直接弹来电页）。
+- **与总开关联动**：开关开启 → 注册周期任务；关闭 → `cancelByUniqueName`（保证关闭=零唤醒、零流量）。App 启动（`main.dart`）与开发者中心开关、以及"全部关闭"均调用 `ProactiveBackground.syncWithSwitch()`。
+
+### 新增（通知）
+- `flutter_local_notifications` 高优先通知渠道（`importance: high` + 声音/震动），点击默认拉起 App；App 启动/回到前台时读"待处理来电"→ 自动进入 `IncomingCallPage`（复用已有来电页）。
+- Android 13+ 运行时申请 `POST_NOTIFICATIONS`（用已有 `permission_handler`）；被拒不崩溃，置标记 `xw_proactive_notif_denied` 并在开发者中心 AI 主动联系区块提示"通知被禁，来电无法提醒"。
+
+### 新增（引导页）
+- `lib/presentation/pages/background_guide_page.dart`：**三步引导**（① 电池优化白名单 ② 自启动 ③ 后台运行限制），每步一行说明 + "去设置"按钮（`android_intent_plus` 打开系统页）。**查不到各厂商 ROM 状态则不展示伪造状态，只给入口**。入口放在开发者中心「AI 主动联系」区块内。
+
+### 守卫复用（关键工程约束）
+- 抽出顶层函数 `checkGuardReason()` 为**三守卫唯一实现**：①允许来电时段外 ②冷却期内 ③语音通话中。前台 `_tick()` 与后台 `runGuardedRoundForBackground()` **共用同一份**，杜绝复制粘贴两份（详见 `lib/core/proactive/proactive_poll_service.dart`）。`runGuardedRoundForBackground()` 为新增"带守卫的单轮入口"，返回是否命中触发。
+
+### 依赖与配置
+- `pubspec.yaml`：版本 `6.7.1+44` → `6.8.0+45`；**新增依赖 `workmanager ^0.5.2`、`flutter_local_notifications ^17.2.0`**（均为 Flutter 3.32.2 / Dart 3.8.1 兼容版）。
+- `android/app/src/main/AndroidManifest.xml`：新增 `POST_NOTIFICATIONS` / `RECEIVE_BOOT_COMPLETED` / `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS`。
+
+### 红线遵守
+- 未改动前台主动来电（v6.5.0）既有行为；未触碰 `lib/core/network`；未写用户真实笔记库（biji）；Device-Id 恒为 MAC 小写、巡检 Client-Id 每轮新生成（沿用既有逻辑）；任何后台异常均被 catch，不影响 App 启动。
+
+### ⚠️ 本机无法验证、必须真机验证的项
+- 后台唤醒是否真的在锁屏/退后台后按计划触发（受 WorkManager 最小 15 分钟周期与厂商 ROM 管控影响）。
+- 锁屏存活率、通知点击拉起、厂商 ROM 对后台任务的杀进程行为。
+- 各厂商"电池优化/自启动/后台运行限制"设置页跳转路径是否准确。
+- 高优先通知在锁屏/勿扰下的呈现（heads-up 行为因 ROM 而异）。
+
+---
+
 ## v6.7.1 · 2026-09-17
 
 **主题：用户协议/隐私政策页 —— 品牌名纠正（9 处）+ 产品定位文案新增 + 权限清单排版自适应**

@@ -6,6 +6,7 @@ import '../../presentation/pages/agent_config/agent_config_page.dart';
 import '../../presentation/pages/settings/settings_page.dart';
 import '../../presentation/pages/incoming_call_page.dart';
 import '../../presentation/pages/proactive_script_page.dart';
+import '../../core/proactive/proactive_background.dart';
 import 'app_routes.dart';
 
 /// 应用路由配置
@@ -13,6 +14,8 @@ class AppPages {
   AppPages._();
 
   static final GoRouter router = GoRouter(
+    // v6.8.0：根导航键 —— 后台通知点击 / 待处理来电进入来电页时，无需 context 即可 push
+    navigatorKey: appRootNavigatorKey,
     initialLocation: AppRoutes.main,
     routes: [
       // 主页面（包含底部导航）

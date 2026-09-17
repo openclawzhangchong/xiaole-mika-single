@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:xiaozhi_client_flutter/app/themes/app_colors.dart';
@@ -14,6 +16,8 @@ import 'external_mcp_page.dart';
 import 'proactive_script_page.dart';
 import '../../core/proactive/proactive_poll_service.dart';
 import '../../core/proactive/proactive_script_store.dart';
+import '../../core/proactive/proactive_background.dart';
+import 'background_guide_page.dart';
 
 /// 开发者中心（v3.3.0，对齐网页版模式，xiaoleweb.md 第十一章）
 /// ------------------------------------------------------------
@@ -110,6 +114,7 @@ class _DevCenterPageState extends State<DevCenterPage> {
             ),
           ]),
           // v6.5.0：AI 主动来电（方案 D —— 口令存本地，设备 MCP 工具取回）
+          // v6.8.0：后台化（WorkManager 周期唤醒 + 高优先通知）
           _section(isDark, 'AI 主动联系', [
             // 总开关：核心层不自查开关，必须由这里直接启停巡检服务（关闭=零流量）
             SwitchListTile(
@@ -117,7 +122,7 @@ class _DevCenterPageState extends State<DevCenterPage> {
               activeColor: AppColors.primary,
               title: const Text('🤖 AI 主动联系'),
               subtitle: const Text(
-                  '前台定时巡检：由小乐读本地口令判断是否值得主动来电（仅 App 在前台时生效）'),
+                  '前台定时巡检 + 退到后台/锁屏后由系统周期唤醒（WorkManager，最小 15 分钟），命中即高优先通知来电'),
               onChanged: (v) async {
                 AppFeats.set('proactive', v);
                 if (v) {
@@ -125,16 +130,47 @@ class _DevCenterPageState extends State<DevCenterPage> {
                 } else {
                   await ProactivePollService.instance.stop();
                 }
+                // v6.8.0：与总开关联动注册/取消后台周期任务（含通知权限申请）
+                await ProactiveBackground.syncWithSwitch();
                 if (!mounted) return;
                 setState(() {});
                 ToastUtil.show(v ? 'AI 主动联系 已开启' : 'AI 主动联系 已关闭');
+              },
+            ),
+            // v6.8.0：通知被拒提示（优雅降级，不崩溃）
+            if (AppFeats.get('proactive') &&
+                ProactiveBackground.isNotificationDenied())
+              Container(
+                margin: const EdgeInsets.fromLTRB(12, 0, 12, 4),
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE64340).withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Text(
+                  '⚠️ 通知权限被禁用，主动来电将无法提醒。请在系统设置中允许小乐发送通知。',
+                  style: TextStyle(fontSize: 12, color: Color(0xFFE64340)),
+                ),
+              ),
+            // v6.8.0：后台保活引导入口
+            ListTile(
+              leading: const Icon(Icons.battery_charging_full,
+                  color: Color(0xFF576B95)),
+              title: const Text('🔋 后台保活引导'),
+              subtitle: const Text('电池优化白名单 / 自启动 / 后台运行限制（提升锁屏存活率）'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                      builder: (_) => const BackgroundGuidePage()),
+                );
               },
             ),
             ListTile(
               leading: const Icon(Icons.schedule, color: Color(0xFF576B95)),
               title: const Text('⏱ 巡检间隔'),
               subtitle: Text(
-                  '每 ${ProactivePollService.instance.intervalMinutes} 分钟一次'),
+                  '每 ${ProactivePollService.instance.intervalMinutes} 分钟一次（后台最小 15 分钟）'),
               trailing: const Icon(Icons.chevron_right),
               onTap: _pickProactiveInterval,
             ),
@@ -227,6 +263,8 @@ class _DevCenterPageState extends State<DevCenterPage> {
               subtitle: const Text('关闭所有开发者功能（等效普通用户模式）'),
               onTap: () {
                 AppFeats.allOff();
+                // v6.8.0：总开关被关闭 → 取消后台周期任务（保证关闭=零唤醒）
+                unawaited(ProactiveBackground.syncWithSwitch());
                 setState(() {});
                 ToastUtil.show('已全部关闭');
               },

@@ -11,6 +11,34 @@ import 'package:xiaozhi_client_flutter/core/utils/xiaozhi_device_info_util.dart'
 import 'package:xiaozhi_client_flutter/core/storage/storage_service.dart';
 import 'package:xiaozhi_client_flutter/core/proactive/proactive_script_store.dart';
 
+/// 前台巡检"心跳"时间戳键（每次 tick 更新）。
+/// 后台入口据此判断"前台是否正在巡检"——若在最近阈值内更新过，
+/// 说明前台已在工作，后台本轮应跳过（前后台互斥，避免重复巡检）。
+const String kFgHeartbeatKey = 'xw_proactive_fg_heartbeat';
+
+/// 三守卫（前后台共用同一份实现，禁止复制粘贴两份）。
+///
+/// 返回 `null` 表示放行（应通过守卫）；返回非 `null` 字符串表示跳过原因
+/// （窗口外 / 冷却期内 / 语音通话中）。[nowMin] 为当日分钟数。
+///
+/// 抽出为顶层函数，便于被 `_tick`（前台）与 `runGuardedRoundForBackground`
+/// （后台）共用，也便于无网络单测。
+String? checkGuardReason({
+  required int nowMin,
+  required ProactiveWindow window,
+  required DateTime? lastTriggerAt,
+  required int cooldownMinutes,
+  required bool voiceActive,
+}) {
+  if (!window.contains(nowMin)) return '窗口外';
+  if (lastTriggerAt != null) {
+    final elapsed = DateTime.now().difference(lastTriggerAt).inMinutes;
+    if (elapsed < cooldownMinutes) return '冷却期内';
+  }
+  if (voiceActive) return '语音通话中';
+  return null;
+}
+
 /// AI 主动来电巡检服务（核心层）
 ///
 /// 行为严格对照 PLAN_v6.5.0 §一：
@@ -42,6 +70,8 @@ class ProactivePollService {
   bool _gotToolCall = false;
   String? _opening;
   DateTime? _lastTriggerAt;
+  // 最近一轮是否命中 trigger_call（runGuardedRoundForBackground 用其判结果）
+  bool _lastRoundTriggered = false;
 
   /// 正在进行的巡检轮收尾回调（stop 时用于强制结束）
   Future<void> Function(String)? _currentEndRound;
@@ -117,25 +147,65 @@ class ProactivePollService {
     await _runInspectionRound();
   }
 
+  /// 后台单轮入口：**只跑一轮**（绝不调用 [start] 的常驻 Timer）。
+  ///
+  /// 复用与 [_tick] 完全相同的三守卫（[checkGuardReason]），命中触发时通过
+  /// [onTriggered] 回调（后台需自行设置它来持久化"待处理来电"）。返回 true 表示
+  /// 命中 trigger_call；false 表示跳过 / skip / 超时。
+  ///
+  /// 任何异常由 [_runInspectionRound] 内部兜底，不会抛出。
+  Future<bool> runGuardedRoundForBackground() async {
+    final now = DateTime.now();
+    final nowMin = now.hour * 60 + now.minute;
+    final skip = checkGuardReason(
+      nowMin: nowMin,
+      window: ProactiveScriptStore.window,
+      lastTriggerAt: _lastTriggerAt,
+      cooldownMinutes: _cooldownMinutes,
+      // 后台 isolate 无 XiaozhiService 实例（未初始化）→ 视为未通话；
+      // 真正的"通话中互斥"已由前台心跳判定在前置环节处理。
+      voiceActive: false,
+    );
+    if (skip != null) {
+      _logger.info('后台巡检跳过：$skip');
+      return false;
+    }
+    if (_busy) {
+      _logger.info('后台巡检：上一轮尚未结束，跳过本轮');
+      return false;
+    }
+    await _runInspectionRound();
+    return _lastRoundTriggered;
+  }
+
   // ---------- 内部 ----------
+
+  /// 写"前台心跳"时间戳——后台据此判断前台是否正在巡检（前后台互斥）。
+  void _touchFgHeartbeat() {
+    try {
+      StorageService.instance.setInt(
+        kFgHeartbeatKey,
+        DateTime.now().millisecondsSinceEpoch,
+      );
+    } catch (e) {
+      // 持久化失败不应影响巡检流程
+    }
+  }
 
   /// 周期 tick：先过三守卫，再过才建立巡检会话。
   void _tick() {
+    _touchFgHeartbeat();
     final now = DateTime.now();
     final nowMin = now.hour * 60 + now.minute;
-    if (!ProactiveScriptStore.window.contains(nowMin)) {
-      _logger.info('窗口外（$nowMin 分），跳过本轮巡检');
-      return;
-    }
-    if (_lastTriggerAt != null) {
-      final elapsed = now.difference(_lastTriggerAt!).inMinutes;
-      if (elapsed < _cooldownMinutes) {
-        _logger.info('冷却期内（剩余 ${_cooldownMinutes - elapsed} 分钟），跳过本轮巡检');
-        return;
-      }
-    }
-    if (XiaozhiService.instance?.isVoiceCallActive == true) {
-      _logger.info('语音通话进行中，跳过本轮巡检');
+    final skip = checkGuardReason(
+      nowMin: nowMin,
+      window: ProactiveScriptStore.window,
+      lastTriggerAt: _lastTriggerAt,
+      cooldownMinutes: _cooldownMinutes,
+      voiceActive: XiaozhiService.instance?.isVoiceCallActive == true,
+    );
+    if (skip != null) {
+      _logger.info('$skip（$nowMin 分），跳过本轮巡检');
       return;
     }
     unawaited(_runInspectionRound());
@@ -150,6 +220,7 @@ class ProactivePollService {
     _detectSent = false;
     _gotToolCall = false;
     _opening = null;
+    _lastRoundTriggered = false;
 
     final done = Completer<void>();
     var ended = false;
@@ -251,6 +322,7 @@ class ProactivePollService {
           _gotToolCall = true;
           final String message = (args['message'] as String?) ?? '';
           _opening = message;
+          _lastRoundTriggered = true;
           _logger.info('AI 触发来电，开场白: $message');
           try {
             onTriggered?.call(message);

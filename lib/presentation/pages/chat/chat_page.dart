@@ -14,6 +14,7 @@ import 'package:xiaozhi_client_flutter/core/mcp/external_mcp_manager.dart';
 import 'package:xiaozhi_client_flutter/core/mcp/location_service.dart';
 import 'package:xiaozhi_client_flutter/core/proactive/proactive_poll_service.dart';
 import 'package:xiaozhi_client_flutter/core/proactive/proactive_script_store.dart';
+import 'package:xiaozhi_client_flutter/core/proactive/proactive_background.dart';
 import 'package:xiaozhi_client_flutter/core/network/xiaozhi_ota_service.dart';
 import 'package:xiaozhi_client_flutter/core/network/xiaozhi_mcp_responder.dart';
 import 'package:xiaozhi_client_flutter/core/network/xiaozhi_mqtt_presence.dart';
@@ -758,6 +759,9 @@ class _ChatPageState extends ConsumerState<ChatPage> {
               : 'https://api.tenclass.net/xiaozhi/ota/',
         );
       });
+      // v6.8.0：记录"最近一次前台活跃 agent"，供后台巡检命中时回填待处理来电的
+      // agentId/agentName（后台 isolate 无 UI 上下文，无法得知当前 agent）。
+      await ProactiveBackground.rememberForegroundAgent(agent.id, agent.name);
       // Agent 加载完成后，初始化 WebSocket
       _initializeWebSocket();
     } else {

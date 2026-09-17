@@ -3,7 +3,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Flutter-3.32.2-blue.svg" alt="Flutter">
   <img src="https://img.shields.io/badge/包名-com.zcstudy.xiaole-green.svg" alt="Package">
-  <img src="https://img.shields.io/badge/当前版本-6.7.1-success.svg" alt="Version">
+  <img src="https://img.shields.io/badge/当前版本-6.8.0-success.svg" alt="Version">
 </p>
 
 本仓库是小智客户端 Flutter 版（上游 [eiriksgata/xiaozhi-client-flutter](https://github.com/eiriksgata/xiaozhi-client-flutter)）的**微信风 UI 定制版**，由张老师定制维护。上游的架构与功能说明保留在本文档后半部分，仍然适用。
@@ -44,6 +44,7 @@
 > 每个发布版本真机验证通过后在此登记。**改动出错需要回退时，优先按下表找最近的 ✅ 版本。**
 
 | 版本标签 | 内容 | 包名 | 验证状态 | 验证日期 |
+| `v6.8.0` | ✨ **本版本新增：AI 主动来电「后台化」** —— 让已做好的主动来电在用户退出 App / 锁屏后也能巡检并触发来电。采用 WorkManager 周期唤醒（无常驻通知/前台服务，最省电抗杀）：系统按最小 15 分钟周期拉起 App 跑一轮巡检再睡；命中触发时用高优先临时通知「小乐想和你通话」呈现，点通知进入来电页；总开关关闭即取消后台任务（零唤醒、零流量）。新增①后台入口 `proactive_background.dart`（@pragma 入口 + 最小初始化 + 总开关守卫 + 前后台互斥）+ ②高优先通知渠道与展示（Android 13+ 运行时申请 POST_NOTIFICATIONS，被拒优雅降级并在开发者中心提示）+ ③后台保活引导页（电池优化白名单/自启动/后台运行限制三步，android_intent_plus 跳系统页）+ ④三守卫复用（`checkGuardReason` 前后台共用同一份实现，新增带守卫单轮入口 `runGuardedRoundForBackground`）。**V2 常驻通知+前台服务本次不做**（留待实测对比）。版本号 `6.7.1+44` → `6.8.0+45`，`appVersion` → `6.8.0`。新增依赖 `workmanager ^0.5.2`、`flutter_local_notifications ^17.2.0`。详见 CHANGELOG.md | `com.zcstudy.xiaole` | 🟡 已实现待发布 | 2026-09-17 |
 | `v6.7.1` | ✨ **本版本新增：用户协议/隐私政策页的「品牌名纠正 + 文案与排版完善」** —— ① 全仓 9 处用户可见 UI 文案的「小智」统一改为「小乐」（用户协议页 6 处、隐私政策页 2 处、开发者中心 AI 主动联系副标题 1 处）；底层注释/日志/协议表述（小智服务器/硬件/协议等 22 处）一律不动。② 用户协议页新增「产品定位」段落（小乐适合哪两类人 + 7 条能力，含多设备协作端、存网盘/发微信等规划能力，按张老师要求原样写入）。③ 隐私政策「权限清单」改为上下堆叠自适应布局（权限名在上、用途/后果在下，任意屏宽自动换行、不溢出、不截断，深浅色均正常）。版本号 `6.7.0+43` → `6.7.1+44`，`appVersion` → `6.7.1`。详见 CHANGELOG.md | `com.zcstudy.xiaole` | 🟡 已实现待发布 | 2026-09-17 |
 | `v6.7.0` | 🎨 **「我」页与开发者中心分层重构（V2 方案）** —— 「我」页纯普通用户化：资料头 → 账号与云（提顶）→ 通用（主题+音量合并）→ 关于 → 开发者，**设备身份编辑全部迁出**；开发者中心重排 6 组：①设备身份（MAC/ClientID/型号迁入，⚠️ MAC 强制小写语义不变）②AI 能力（原「能力开关」拆分）③AI 主动联系 ④连接与音频（MQTT/AEC 单点/尾音保护）⑤调试（+音频能力检测迁入）⑥管理（清除授权+全部关闭合并）。AEC 收敛为单点消除双重控制。新增「用户协议」（功能介绍 10 大能力，只讲能力不讲机制不暴露上游）与「隐私政策」（权限引导 + 电池优化/自启动保活指引）两个真实内容页（原为 TODO 空壳）；`_editDeviceField` 抽公共组件 `device_edit_dialog.dart`。me 页 golden 基线已重生成（仅 `audit_profile_page.png` 变化），全量测试 37/37 通过。版本号变更说明：AI 主动来电后台化原预留 v6.6.0，为避免撞号本版改号 v6.7.0，后台化仍归 v6.6.0。详见 CHANGELOG.md 与 `PLAN_v6.7.0_我的页与开发者中心重构.md` | `com.zcstudy.xiaole` | ✅ CI 通过 | 2026-09-17 |
 | `v6.5.0` | 🤖 **AI 主动来电（方案 D：口令存本地 + 设备 MCP 工具取回）** —— 前台定时巡检：小智调 `self.proactive.get_script` 取回**本地口令**→自主判断→命中则调 `trigger_call` 弹**全屏模拟来电**（450Hz 回铃音+震动+30s 倒计时）→接听后小智调 `get_opening` **先开口说开场白**→进入双向对话。关键实测结论驱动设计：**detect 只有 16 字**（长指令走工具返回值）、**服务器按 Device-Id 记住执行过**（故**多条口令轮换**，实测轮换 5/6 vs 固定 0/6）、**同设备并发双 WSS 必须用不同 Client-Id**（否则旧连接 1005 被踢）、**biji 笔记只能新建不能删**（故本方案**完全不写笔记**）。新增口令管理页（增删改查/恢复默认/≤16字）+ 开发者中心「AI 主动联系」区块（总开关/间隔/来电时段）；零新增依赖。回滚锚点 `anchor-pre-v6.5.0`。详见 CHANGELOG.md | `com.zcstudy.xiaole` | ✅ CI 通过 | 2026-09-17 |

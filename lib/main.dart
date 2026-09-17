@@ -10,6 +10,7 @@ import 'package:logging/logging.dart';
 import 'package:opus_flutter/opus_flutter.dart' as opus_flutter;
 import 'core/utils/log_buffer.dart';
 import 'core/utils/audio_util.dart';
+import 'core/proactive/proactive_background.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -41,15 +42,49 @@ void main() async {
 
   initOpus(await opus_flutter.load());
   debugPrint('Opus初始化成功: ${getOpusVersion()}');
-  
+
+  // v6.8.0：AI 主动来电「后台化」——与总开关联动注册/取消 WorkManager 周期任务。
+  // 启动期不申请通知权限（用户在开发者中心开启开关时才会申请）。
+  await ProactiveBackground.syncWithSwitch(requestPermission: false);
+
   runApp(const ProviderScope(child: MyApp()));
 }
 
-class MyApp extends ConsumerWidget {
+class MyApp extends ConsumerStatefulWidget {
   const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    // 启动即检查"待处理来电"（后台命中触发、App 被通知拉起）
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ProactiveBackground.maybeShowPendingCallOnForeground();
+    });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // 回到前台时检查"待处理来电"（后台命中触发、用户点通知回前台）
+    if (state == AppLifecycleState.resumed) {
+      ProactiveBackground.maybeShowPendingCallOnForeground();
+    }
+    super.didChangeAppLifecycleState(state);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final themeMode = ref.watch(themeModeProvider);
 
     return MaterialApp.router(
