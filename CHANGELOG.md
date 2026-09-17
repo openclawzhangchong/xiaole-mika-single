@@ -6,6 +6,50 @@
 
 ---
 
+## v6.4.2 · 2026-09-17
+
+**主题：修复历史遗留 Bug ——「一键云端」恢复到本机后，智能体不立刻出现在首页/聊天列表**
+
+### 现象
+从云端恢复（pull）后，**恢复下来的智能体不会立即出现在 App 首页/聊天列表**；
+必须**再手动新增一个智能体**，云端恢复的那些才"顺便"一起显示出来。
+
+### 根因（两名诊断员独立复核 + lead 亲自核对代码行，结论一致）
+- 列表的状态源是 Riverpod 的 `agentListProvider`（`lib/core/providers/agent_provider.dart:15-18`），
+  `ConversationPage` 用 `ref.watch(agentListProvider)` 响应式渲染。
+- **新增/修改/删除**三条路径都经由 `AgentListNotifier.addAgent/updateAgent/deleteAgent`，
+  它们在写存储后都会 **`await loadAgents()`**（`agent_provider.dart:29-47`）把存储重读进 `state`
+  —— 这就是"刷新动作"。
+- 而**云端恢复**走 `CloudSyncService.applyPullResult()`（`lib/presentation/services/cloud_sync_service.dart:340-399`），
+  它**直接往 SharedPreferences 写 `agent_list` / `chat_history_*` / 身份等**（数据完整、await 无遗漏），
+  但**完全不碰 `agentListProvider`**，没有任何通知内存状态的动作。
+- 且 `CloudSyncPage` 原本是普通 `StatefulWidget`（**没有 `ref`**），结构上无法调用 provider；
+  恢复后仅 `_load()` 刷新了本页的"云端绑定状态"。
+- 另：`agentListProvider` **不是 autoDispose**，所以"返回首页/重进页面"**也不会重读磁盘**。
+  ⇒ 只有当用户新增智能体触发 `loadAgents()` 时，才会读到已含恢复数据的存储。
+
+### 修复（最小改动，1 个文件）
+`lib/presentation/pages/cloud_sync_page.dart`：
+1. `CloudSyncPage` 由 `StatefulWidget` → **`ConsumerStatefulWidget`**（`_CloudSyncPageState` → `ConsumerState<CloudSyncPage>`），以获得 `ref`；
+2. 在 `_pull()` 中 `await CloudSyncService.applyPullResult(result: r);` 之后补一行
+   **`await ref.read(agentListProvider.notifier).loadAgents();`**
+   —— 与 `addAgent` 内部的刷新动作完全等价；
+3. 新增 `import 'package:flutter_riverpod/flutter_riverpod.dart';` 与 `'../../core/providers/agent_provider.dart'`。
+
+数据格式、云端协议、存储 key **均未改动**；不涉及下拉刷新等额外改动（按"最小改动"要求）。
+
+### 自检
+- `flutter analyze`：**0 error**；warning 仍为既有 5 条基线（`app_pages.dart` / `xiaozhi_service.dart`，未触碰）。
+- **全量 `flutter test` 连跑 3 次：2 次 27/27 全绿，1 次仅在 `AUDIT 5` 报 0.28% / 14,706px** ——
+  **与本仓记录的固有 flaky 数值完全一致**（我页/设置页 FutureBuilder 时序漂移），与本次改动无关；
+  且 golden 文件**未发生任何变更**。CI 不跑测试，不阻塞。
+- 版本 `6.4.1+38` → `6.4.2+39`。
+
+### 真机验收
+从云端恢复完成后，**应立刻**在首页/聊天列表看到恢复下来的智能体（无需再新增一个触发）。
+
+---
+
 ## v6.4.1 · 2026-09-17
 
 **主题：内置预置「笔记 + 高德」两台外部 MCP（开箱即用，用户可改 key）**

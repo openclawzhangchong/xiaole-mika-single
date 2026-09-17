@@ -3,11 +3,13 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logging/logging.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../app/config/app_config.dart';
 import '../../app/themes/app_colors.dart';
+import '../../core/providers/agent_provider.dart';
 import '../../data/models/agent_model.dart';
 import '../../data/models/message_model.dart';
 import '../services/chat_history_store.dart';
@@ -18,14 +20,16 @@ import '../services/cloud_sync_service.dart';
 /// 未绑定：手机号 + 用户名 → 绑定建档；
 /// 已绑定：上传（⬆ 全部智能体聊天+配置）/ 恢复（⬇ 覆盖本机，需确认）/ 解除绑定。
 /// 手机号是云端唯一身份；绑定后用户名锁定（重绑须同名）。
-class CloudSyncPage extends StatefulWidget {
+/// v6.4.2：由 StatefulWidget 改为 ConsumerStatefulWidget —— 恢复完成后需要拿到 `ref`
+/// 去刷新 `agentListProvider`（见 `_pull()` 内 `loadAgents()` 调用）。
+class CloudSyncPage extends ConsumerStatefulWidget {
   const CloudSyncPage({super.key});
 
   @override
-  State<CloudSyncPage> createState() => _CloudSyncPageState();
+  ConsumerState<CloudSyncPage> createState() => _CloudSyncPageState();
 }
 
-class _CloudSyncPageState extends State<CloudSyncPage> {
+class _CloudSyncPageState extends ConsumerState<CloudSyncPage> {
   final CloudSyncService _svc = CloudSyncService();
   final TextEditingController _phoneCtl = TextEditingController();
   final TextEditingController _nameCtl = TextEditingController();
@@ -242,6 +246,9 @@ class _CloudSyncPageState extends State<CloudSyncPage> {
         return;
       }
       await CloudSyncService.applyPullResult(result: r);
+      // v6.4.2：applyPullResult 只写盘、不通知内存状态，导致恢复后列表不刷新
+      // （要再新增一个智能体才"顺带"显示）。此处补一次与 addAgent 完全等价的刷新动作。
+      await ref.read(agentListProvider.notifier).loadAgents();
       await _load();
       if (!mounted) return;
       setState(() {

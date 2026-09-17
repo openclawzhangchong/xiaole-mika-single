@@ -3,7 +3,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Flutter-3.32.2-blue.svg" alt="Flutter">
   <img src="https://img.shields.io/badge/包名-com.zcstudy.xiaole-green.svg" alt="Package">
-  <img src="https://img.shields.io/badge/当前版本-6.4.1-success.svg" alt="Version">
+  <img src="https://img.shields.io/badge/当前版本-6.4.2-success.svg" alt="Version">
 </p>
 
 本仓库是小智客户端 Flutter 版（上游 [eiriksgata/xiaozhi-client-flutter](https://github.com/eiriksgata/xiaozhi-client-flutter)）的**微信风 UI 定制版**，由张老师定制维护。上游的架构与功能说明保留在本文档后半部分，仍然适用。
@@ -44,6 +44,7 @@
 > 每个发布版本真机验证通过后在此登记。**改动出错需要回退时，优先按下表找最近的 ✅ 版本。**
 
 | 版本标签 | 内容 | 包名 | 验证状态 | 验证日期 |
+| `v6.4.2` | 🐞 **修历史遗留 Bug：一键云端恢复后智能体列表不刷新** —— 恢复（pull）后智能体不会立刻出现在首页/聊天列表、要手动新增一个才"顺便"显示。根因：`applyPullResult` 直接写 SharedPreferences 但**未通知** `agentListProvider`（内存列表仍是旧缓存），且 `CloudSyncPage` 原是普通 `StatefulWidget` 拿不到 `ref`；`agentListProvider` 又非 autoDispose，重进页面也不重读磁盘。修复（最小改动，1 文件）：`CloudSyncPage` → `ConsumerStatefulWidget`，恢复后 `await ref.read(agentListProvider.notifier).loadAgents();`（与新增路径的刷新动作等价）。详见 CHANGELOG.md | `com.zcstudy.xiaole` | ✅ CI 通过 | 2026-09-17 |
 | `v6.4.1` | 🎁 **内置预置「笔记 + 高德」两台外部 MCP**：首次启动自动写入预置配置，开箱即用不必手导入；用户可进编辑页改 `headers`（笔记 token）或 `url` 里的 `key=`（高德）换成自己的，**不改就走默认**；删除后不会自动塞回，可用管理页「恢复预置（笔记/高德）」或空列表的「载入预置」按钮重载（按 id 去重）。破坏性工具 `merge_notes` 默认关闭。⚠️ 预置 token/key 会打进 APK（可被提取），建议为高德 key 配白名单与配额。详见 CHANGELOG.md | `com.zcstudy.xiaole` | ✅ CI 通过 | 2026-09-17 |
 | `v6.4.0` | 🌐 **外部 MCP 接入（App 内增删改 + 加前缀桥接给 AI）**：开发者中心新增「🌐 外部 MCP」入口——支持**多条**外部 MCP 服务器配置的增/删/改/停用，**可粘贴 `{"mcpServers":{...}}` JSON 导入**，显示每台连接状态（在线·N 工具 / 失败原因），支持**整台开关 + 逐工具开关**。桥接层：App 兼任 MCP 客户端连接外部 streamable-HTTP 服务器，外部工具按**前缀**暴露给 AI（`notes.search_notes` / `amap.maps_geo`），与设备工具合并下发，AI 调用时转发；建连时预拉取确保首轮 `tools/list` 可见。`xiaozhi_mcp_responder.dart` 纯加法（新增可选回调，为 null 时行为不变）。⚠️ 实测关键坑：**biji 有双重 UA 校验（非浏览器 UA 401/403）**、**amap 的 Accept 必须含 text/event-stream（否则 406）**、**amap 错误 key 是 HTTP 200 + body 报错（不能只看状态码）**。详见 CHANGELOG.md 与 `PLAN_v6.4.0_外部MCP接入.md` | `com.zcstudy.xiaole` | ✅ CI 通过 | 2026-09-17 |
 | `v6.3.0` | 🧰 **设备 MCP 详情页（逐项开关）+ 定位能力**：① 开发者中心「📋 查看已注册的工具清单」由只读弹窗升级为**可操作详情页**——26+1 项 MCP 设备工具**逐项开关**（下行层 `tools/list` 过滤、命中禁用工具 `tools/call` 回 `-32601`；总闸 `mcptools` 关时逐项置灰，逐项设置独立于总闸、不被「全部关闭」清空）；② **新增定位能力** `self.location.get_current`（第 27 项工具）——权限检查/申请 + 定位服务开关检查 + 高精取位（8s 超时降级最近已知位置）+ **WGS-84→GCJ-02 转换**，全程异常内部消化、绝不阻塞 UI，仅 AI 调用时按需取位。依赖新增 `geolocator ^13.0.0`，AndroidManifest 加定位权限。`xiaozhi_mcp_responder.dart` 纯加法。详见 CHANGELOG.md 与 `PLAN_v6.3.0_设备MCP详情页与定位能力.md` | `com.zcstudy.xiaole` | ✅ CI 通过 | 2026-09-16 |
