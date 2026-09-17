@@ -27,8 +27,8 @@ class PrivacyPolicyPage extends StatelessWidget {
                 '放心授权后，App 会越来越好用、越来越稳定。'),
           ]),
           _section(isDark, '权限清单', [
-            _perm(isDark, '🎤 麦克风', '与小智语音对话的核心通道', '只能打字交流，无法语音通话'),
-            _perm(isDark, '📷 相机', '拍照识物', '无法拍照让小智识别'),
+            _perm(isDark, '🎤 麦克风', '与小乐语音对话的核心通道', '只能打字交流，无法语音通话'),
+            _perm(isDark, '📷 相机', '拍照识物', '无法拍照让小乐识别'),
             _perm(isDark, '🔔 通知', '接收 AI 回复与主动来电提醒', '收不到提醒、可能错过主动来电'),
             _perm(isDark, '📅 日历', '写入日程提醒', '日程功能不可用'),
             _perm(isDark, '📍 位置', '导航与位置相关能力', '无法使用导航/定位功能'),
@@ -61,13 +61,20 @@ class PrivacyPolicyPage extends StatelessWidget {
     final sub = isDark ? AppColors.textSecondaryDark : AppColors.textSecondary;
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
+      // 上下堆叠：权限名在上，用途/后果在下，任意屏宽均自动换行、不溢出、不截断。
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(name, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: prim)),
+          Text(name,
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: prim),
+              softWrap: true),
           const SizedBox(height: 2),
-          Text('为什么需要：$why', style: TextStyle(fontSize: 13, height: 1.4, color: sub)),
-          Text('不授权会怎样：$impact', style: TextStyle(fontSize: 13, height: 1.4, color: sub)),
+          Text('为什么需要：$why',
+              style: TextStyle(fontSize: 13, height: 1.4, color: sub),
+              softWrap: true),
+          Text('不授权会怎样：$impact',
+              style: TextStyle(fontSize: 13, height: 1.4, color: sub),
+              softWrap: true),
         ],
       ),
     );

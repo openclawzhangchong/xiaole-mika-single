@@ -4,7 +4,7 @@ class AppConfig {
 
   // 应用信息
   static const String appName = '小乐'; // v4.0.0：品牌统一（默认智能体名前缀等）
-  static const String appVersion = '6.5.0'; // v6.5.0：AI 主动来电（方案 D：口令存本地 + self.proactive.get_script 取回、轮换口令、每轮新 Client-Id、来电页+开场白回放）；详见 CHANGELOG.md
+  static const String appVersion = '6.7.1'; // v6.7.1：品牌名纠正（9 处用户可见 UI 文案统一为「小乐」，注释/日志/协议表述未动）+ 用户协议新增「产品定位」段落 + 隐私政策权限清单排版自适应；详见 CHANGELOG.md
 
   /// v4.4.0 尾音保护：AI 播放结束后丢弃麦克风音频的时长（毫秒）
   static const int defaultTailGuardMs = 300;

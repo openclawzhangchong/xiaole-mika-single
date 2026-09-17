@@ -117,7 +117,7 @@ class _DevCenterPageState extends State<DevCenterPage> {
               activeColor: AppColors.primary,
               title: const Text('🤖 AI 主动联系'),
               subtitle: const Text(
-                  '前台定时巡检：由小智读本地口令判断是否值得主动来电（仅 App 在前台时生效）'),
+                  '前台定时巡检：由小乐读本地口令判断是否值得主动来电（仅 App 在前台时生效）'),
               onChanged: (v) async {
                 AppFeats.set('proactive', v);
                 if (v) {
