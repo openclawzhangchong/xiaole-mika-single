@@ -2055,6 +2055,22 @@ class _ChatPageState extends ConsumerState<ChatPage> {
           }
           break;
 
+        case 'alert':
+          // v6.4.3：服务器的 alert 此前**完全没有被处理**（落到 default 只记一行日志），
+          // 导致「超长文本被 detect 通道拒绝」这类关键提示在 UI 上完全不可见——
+          // 用户以为消息发出去了，实际被服务器丢弃。此处显式呈现，让问题可感知。
+          final alertStatus = (jsonData['status'] ?? '').toString();
+          final alertText = (jsonData['message'] ?? '').toString();
+          logger.warning('服务端 alert：status=$alertStatus message=$alertText');
+          if (alertText.isNotEmpty) {
+            _appendOrCreateChatMessage(
+                MessageSender.system, '⚠️ 服务端提示：$alertText');
+            if (alertStatus.toUpperCase() == 'ERROR') {
+              _showError(alertText);
+            }
+          }
+          break;
+
         default:
           logger.warning('未知消息类型: $type , 内容: $message');
       }

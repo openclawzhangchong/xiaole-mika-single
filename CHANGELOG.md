@@ -6,6 +6,41 @@
 
 ---
 
+## v6.4.3 · 2026-09-17
+
+**主题：修复「服务器 alert 未被处理」——长文本被拒等关键提示此前在 UI 上完全不可见**
+
+### 背景（一个真实存在的静默 Bug）
+App 发出的**所有文字**（含平时打字聊天）都走同一条通道：`listen` + `state:"detect"`
+（写死在 `lib/core/network/xiaozhi_websocket_manager.dart:279-299` 的 `sendTextRequest`，
+全文无任何长度检查/截断）。官方服务器对 detect 文本有硬性长度上限（实测 **16 字通过 / 18 字被拒**），
+超限会回：
+```json
+{"type":"alert","status":"ERROR","message":"Detect is only for wake words, do not send long texts."}
+```
+**但客户端此前完全没有处理 `alert` 消息** —— `_handleTextMessage` 的 switch 只有
+`tts / stt / hello / llm / mcp` 分支，`alert` 落到 `default` 只记一行日志后丢弃。
+⇒ **用户发长句时消息被服务器静默拒绝，界面上毫无提示**，用户以为已经发出去了。
+
+### 修复（最小改动，1 个文件）
+`lib/presentation/pages/chat/chat_page.dart` 的 `_handleTextMessage` 新增 `case 'alert':`：
+- 记 warning 日志（含 status 与 message 原文）；
+- 非空时追加一条**系统气泡**「⚠️ 服务端提示：<原文>」（持久可见、可回溯）；
+- `status == ERROR` 时额外弹一次提示条，让问题**立刻可见**。
+
+不改发送逻辑、不加客户端长度限制（避免臆测阈值；阈值以服务端实际返回为准，现在服务端会明说）。
+
+### 自检
+- `flutter analyze`：0 error；warning 仍为既有 5 条基线。
+- 全量 `flutter test` 回归（见提交说明）。
+- 版本 `6.4.2+39` → `6.4.3+40`。
+
+### 真机验收
+在聊天框发一条**超过 20 字**的消息 → 现在应能看到「⚠️ 服务端提示：Detect is only for wake words…」
+（此前完全无提示）。若不再出现该提示，说明服务端策略已变，另行核对。
+
+---
+
 ## v6.4.2 · 2026-09-17
 
 **主题：修复历史遗留 Bug ——「一键云端」恢复到本机后，智能体不立刻出现在首页/聊天列表**
