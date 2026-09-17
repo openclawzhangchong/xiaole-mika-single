@@ -39,7 +39,9 @@
 
 ### 自检
 - `flutter analyze`：0 error；全量 `flutter test`：**51/51 通过**。
-- **Android 构建由 CI 验证**（本机沙箱无法构建）。
+- **Android 构建已由 CI 验证通过** ✅ —— run `35245226751`（`conclusion=success`），
+  Release `v6.8.2` 已产出 `app-release.apk`（40,739,666 bytes ≈ 38.9 MB），已下载到桌面 `xiaole-client-v6.8.2.apk`。
+  ⇒ **Android 构建失败问题至此彻底解决**（v6.8.0 的 workmanager Kotlin 问题 + v6.8.1 暴露的 desugaring 问题，两步修完）。
 
 ---
 
