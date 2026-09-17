@@ -158,52 +158,75 @@ class AgentAvatarStore {
     return AgentAvatarConfig(paletteIndex: p);
   }
 
-  /// 同步读取（可能返回默认值并触发异步加载）。永不抛异常。
+  /// 同步读取（首次会顺带把已落盘配置读进缓存）。永不抛异常。
+  ///
+  /// ⚠️ 两个必须守住的点（v6.8.3 实测踩过）：
+  /// 1. `_lazyLoad` 会**同步**把存储里的真值写进缓存，所以这里读回缓存再返回，
+  ///    **不能**在这之后用"默认值"覆盖缓存 —— 否则用户保存过的头像配置会永远失效；
+  /// 2. `read()` 可能在 **build 期间**被调用（`AgentAvatar` 内部），所以**绝不能同步
+  ///    notify**，否则触发 `setState() or markNeedsBuild() called during build`。
   static AgentAvatarConfig read(String agentId) {
     final cached = _cache[agentId];
     if (cached != null) return cached;
     _lazyLoad(agentId);
+    final loaded = _cache[agentId];
+    if (loaded != null) return loaded;
     final d = defaultConfig(agentId);
     _cache[agentId] = d;
     return d;
   }
 
-  /// 异步加载权威配置（配置页编辑时使用，确保拿到已落盘的值）。
+  /// 读取**权威**配置（配置页编辑时使用，确保拿到已落盘的值）。
+  ///
+  /// ⚠️ 必须**总是**回读存储，而不能只信缓存：`read()` 在首次调用时会先塞入
+  /// "默认值"占位并标记已加载，若这里直接返回缓存，配置页会显示成默认值
+  /// （而真实的已保存配置要等异步加载完才出现，此时编辑区已不会刷新）。
+  /// 存储不可用时回落缓存/默认值，绝不抛异常。
   static Future<AgentAvatarConfig> load(String agentId) async {
-    final cached = _cache[agentId];
-    if (cached != null && _loaded.contains(agentId)) return cached;
     try {
       final raw = StorageService.instance.getString(_key(agentId));
       if (raw != null) {
         final cfg = AgentAvatarConfig.fromString(raw);
+        final changed = _cache[agentId]?.toJsonString() != cfg.toJsonString();
         _cache[agentId] = cfg;
         _loaded.add(agentId);
+        if (changed) revision.value++;
         return cfg;
       }
     } catch (_) {
-      // 存储不可用：降级为默认
+      // 存储不可用：降级为缓存/默认值
     }
-    final d = defaultConfig(agentId);
+    final d = _cache[agentId] ?? defaultConfig(agentId);
     _cache[agentId] = d;
     _loaded.add(agentId);
     return d;
   }
 
+  /// 惰性加载：把已落盘配置**同步**读进缓存（SharedPreferences 的读是同步的）。
+  ///
+  /// 为什么要同步读进缓存：`read()` 首次调用发生在 `AgentAvatar.build()` 里，
+  /// 若此处只做异步加载，首帧会先用默认色板/默认取字渲染，之后才纠正（闪烁）。
+  /// 同步读进缓存 ⇒ **首帧就是正确的文字头像**（需求要求"不闪烁"）。
+  ///
+  /// ⚠️ 但**刷新通知必须推迟到微任务**：build 期间同步 `revision.value++` 会让
+  /// 正在构建的 `ValueListenableBuilder` 被 `markNeedsBuild`，触发
+  /// `setState() or markNeedsBuild() called during build` 断言。
+  /// 又因为缓存已同步更新、当前这帧读到的就是新值，首次填充时**根本不需要通知**。
   static void _lazyLoad(String agentId) {
     if (_loaded.contains(agentId)) return;
     _loaded.add(agentId);
-    () async {
-      try {
-        final raw = StorageService.instance.getString(_key(agentId));
-        if (raw != null) {
-          final cfg = AgentAvatarConfig.fromString(raw);
-          _cache[agentId] = cfg;
-          revision.value++;
-        }
-      } catch (_) {
-        // 存储不可用：保持默认，不抛异常
-      }
-    }();
+    try {
+      final raw = StorageService.instance.getString(_key(agentId));
+      if (raw == null) return;
+      final cfg = AgentAvatarConfig.fromString(raw);
+      final prev = _cache[agentId];
+      if (prev != null && prev.toJsonString() == cfg.toJsonString()) return;
+      _cache[agentId] = cfg;
+      if (prev == null) return; // 首次填充：当前这帧已读新值，无需额外通知
+      Future<void>.microtask(() => revision.value++);
+    } catch (_) {
+      // 存储不可用：保持默认，不抛异常
+    }
   }
 
   /// 保存配置并触发刷新。存储失败时仅更新内存缓存，不抛异常。
@@ -280,5 +303,12 @@ class AgentAvatarStore {
     } catch (_) {
       // 忽略
     }
+  }
+
+  /// 测试辅助：清空内存缓存与加载标记（**不影响**持久化存储）。
+  /// 用于验证"存 → 清内存 → 再读"能否正确回读已落盘配置。
+  static void resetForTest() {
+    _cache.clear();
+    _loaded.clear();
   }
 }

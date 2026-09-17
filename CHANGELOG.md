@@ -79,10 +79,32 @@
 - `test/ui_audit_test.dart` 的 `MessageList` 调用由 `avatarStyleIndex` 改为 `agentId` + `agentName`。
 - **新增单测** `test/proactive_round_log_test.dart`（4 例）：环形缓冲截断、JSON 往返、`toPlainText` 字段完整、跳过原因具体化。
 
+### 🐞 ④ lead 复核阶段发现并修复的 2 个**真 bug**（C 项核心路径）
+
+`AgentAvatarStore` 初版有两个**会让"保存过的头像配置完全不生效"**的缺陷，均已修复并补**回归测试**守住：
+
+1. **`read()` 用默认值覆盖了刚读进来的已存配置**
+   `read()` 原本是"先 `_lazyLoad()` → 再无条件 `_cache[id] = 默认值`"。
+   而 `_lazyLoad()` 的存储读取是**同步完成**的（会把真值写进缓存），紧接着就被默认值覆盖
+   ⇒ **每个 agent 的首次 `read()` 都返回默认值，且此后缓存被钉死为默认值**，
+   用户保存过的"取字模式 / 色板 / 图片"永远不生效。
+   **修复**：`_lazyLoad()` 之后**读回缓存**，只有真的没有已存值时才回落默认值。
+2. **`_lazyLoad()` 在 build 期间同步 `revision.value++`**
+   `read()` 在 `AgentAvatar.build()` 里被调用，同步 notify 会让正在构建的
+   `ValueListenableBuilder` 被 `markNeedsBuild`
+   ⇒ 触发 `setState() or markNeedsBuild() called during build` 断言（存过配置后必现）。
+   **修复**：**同步把已存配置写进缓存**（保证首帧就是正确的文字头像、不闪烁），
+   但**刷新通知推迟到微任务**；首次填充时当前帧已读到新值，**根本无需通知**。
+3. 顺带修复：配置页 `AgentAvatarStore.load()` 原本只信缓存，会显示成默认值 ——
+   改为**总是回读存储**（存储不可用时才回落缓存/默认）。
+
+新增 `test/agent_avatar_store_test.dart`（**10 例**）专门守这两条：
+"存 → 清内存 → 再读必须拿回已存值"、色板安全字色约束、取字模式与越界回落、脏数据不崩。
+
 ### 自检
 
 - `flutter analyze --no-pub`：**0 error / 0 warning**（既有 info 级风格提示不计，未引入新问题）。
-- 全量 `flutter test`：**55 / 55 通过**（v6.8.2 为 51，本版 +4 = 新增的电话日志单测）。
+- 全量 `flutter test`：**65 / 65 通过**（v6.8.2 为 51；本版 +4 电话日志单测 +10 头像单测）。
 
 ### 版本号
 
