@@ -46,7 +46,8 @@
 ### 自检
 - `flutter analyze --no-pub`：**0 error**（warning 5 条为既有基线，未新增）
 - 全量 `flutter test`：**65/65 通过**（本页不在 golden 覆盖范围内，基线不受影响）
-- Android 构建由 CI 验证。
+- **Android 构建已由 CI 验证通过** ✅ —— run `35283801890`（`conclusion=success`），
+  Release `v6.9.0` 已产出 `app-release.apk`（41,018,286 B ≈ 39.1 MB），已下载到桌面 `xiaole-client-v6.9.0.apk`。
 
 ---
 
