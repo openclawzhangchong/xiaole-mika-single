@@ -2,21 +2,30 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:xiaozhi_client_flutter/app/themes/app_colors.dart';
 import 'package:xiaozhi_client_flutter/core/utils/toast_util.dart';
+import 'package:xiaozhi_client_flutter/core/utils/xiaozhi_device_info_util.dart';
 import '../services/app_feats.dart';
 import '../../core/utils/log_buffer.dart';
+import '../../core/utils/audio_util.dart';
+import '../../core/storage/storage_service.dart';
+import '../../app/config/app_config.dart';
+import '../widgets/device_edit_dialog.dart';
 import 'log_category_page.dart';
 import 'external_mcp_page.dart';
 import 'proactive_script_page.dart';
 import '../../core/proactive/proactive_poll_service.dart';
 import '../../core/proactive/proactive_script_store.dart';
-import '../../core/utils/audio_util.dart';
-import '../../core/storage/storage_service.dart';
-import '../../app/config/app_config.dart';
 
 /// 开发者中心（v3.3.0，对齐网页版模式，xiaoleweb.md 第十一章）
 /// ------------------------------------------------------------
 /// 入口：「我」→ 开发者选项 → 未授权先弹密码门（本机记住授权，页面内可清除）。
-/// Cell 列表：左标题+副标题说明、右开关；顶部「N 项开启」；底部全部关闭/清除授权。
+///
+/// v6.7.0 分层重构后结构（6 组）：
+/// ① 设备身份（自「我」页迁入：MAC/ClientID/型号编辑，⚠️ MAC 强制小写）
+/// ② AI 能力（原「能力开关」拆分：MCP 总闸/工具清单/外部 MCP/视觉/表情）
+/// ③ AI 主动联系（原样）
+/// ④ 连接与音频（MQTT/AEC/尾音保护）
+/// ⑤ 调试（MCP 调试/原始提示/音频能力检测【自「我」页迁入】/运行日志/日志分类）
+/// ⑥ 管理（原「安全」+「危险操作」合并：清除授权/全部关闭）
 class DevCenterPage extends StatefulWidget {
   const DevCenterPage({super.key});
 
@@ -52,7 +61,14 @@ class _DevCenterPageState extends State<DevCenterPage> {
             ),
           ),
           const SizedBox(height: 8),
-          _section(isDark, '能力开关', [
+          // v6.7.0：设备身份组（自「我」页迁入）
+          _section(isDark, '设备身份', [
+            _deviceMacTile(),
+            _deviceClientIdTile(),
+            _deviceModelTile(),
+          ]),
+          // v6.7.0：原「能力开关」拆分——AI 能力
+          _section(isDark, 'AI 能力', [
             _switchTile(
               isDark,
               '🧰 MCP 设备工具',
@@ -82,37 +98,15 @@ class _DevCenterPageState extends State<DevCenterPage> {
             ),
             _switchTile(
               isDark,
-              '📡 MQTT 常驻在线',
-              '长连接保后台在线 + 接收远程配置；下次连接生效（限流风险默认关）',
-              'mqtt',
-            ),
-            _switchTile(
-              isDark,
               '📷 视觉识物',
               '聊天栏相机按钮：拍照问 AI 这是什么',
               'vision',
-            ),
-            // v4.4.0：原「🎤 抢话打断」开关已移除——其用未消回声的振幅判断会误触发，
-            // 导致 AI 自问自答（方案根因③）。此处改为 AEC 通话通路开关。
-            _aecTile(isDark),
-            _switchTile(
-              isDark,
-              '🧪 MCP 调试',
-              '开启=字幕保留 % 工具名原文；关闭=自动过滤',
-              'mcpDebug',
             ),
             _switchTile(
               isDark,
               '😄 表情动画',
               'AI 对话时的全屏表情动画（v4.3.0 起默认关，可在此开启）',
               'emotion',
-            ),
-            // v6.4.4：开发者/普通用户身份分流开关——控制聊天页服务端 alert 的展现方式
-            _switchTile(
-              isDark,
-              '⚠️ 显示服务端原始提示',
-              '开启=开发者模式，聊天页直接显示服务器原文（如 alert 报错）；关闭=普通用户模式，改用友好弹窗',
-              'rawServerAlert',
             ),
           ]),
           // v6.5.0：AI 主动来电（方案 D —— 口令存本地，设备 MCP 工具取回）
@@ -165,8 +159,36 @@ class _DevCenterPageState extends State<DevCenterPage> {
               },
             ),
           ]),
-          _section(isDark, '诊断', [
+          // v6.7.0：原「能力开关」拆分——连接与音频（尾音保护自「诊断」迁入）
+          _section(isDark, '连接与音频', [
+            _switchTile(
+              isDark,
+              '📡 MQTT 常驻在线',
+              '长连接保后台在线 + 接收远程配置；下次连接生效（限流风险默认关）',
+              'mqtt',
+            ),
+            // v4.4.0：原「🎤 抢话打断」开关已移除——其用未消回声的振幅判断会误触发，
+            // 导致 AI 自问自答（方案根因③）。此处改为 AEC 通话通路开关。
+            _aecTile(isDark),
             _tailGuardTile(),
+          ]),
+          // v6.7.0：原「能力开关」拆分——调试（+ 音频能力检测自「我」页迁入）
+          _section(isDark, '调试', [
+            _switchTile(
+              isDark,
+              '🧪 MCP 调试',
+              '开启=字幕保留 % 工具名原文；关闭=自动过滤',
+              'mcpDebug',
+            ),
+            // v6.4.4：开发者/普通用户身份分流开关——控制聊天页服务端 alert 的展现方式
+            _switchTile(
+              isDark,
+              '⚠️ 显示服务端原始提示',
+              '开启=开发者模式，聊天页直接显示服务器原文（如 alert 报错）；关闭=普通用户模式，改用友好弹窗',
+              'rawServerAlert',
+            ),
+            // v6.7.0：音频能力检测（自「我」页迁入，只读展示）
+            _audioCapabilitiesTile(),
             ListTile(
               leading:
                   const Icon(Icons.receipt_long_outlined, color: Color(0xFF576B95)),
@@ -187,7 +209,8 @@ class _DevCenterPageState extends State<DevCenterPage> {
               },
             ),
           ]),
-          _section(isDark, '安全', [
+          // v6.7.0：原「安全」+「危险操作」合并为「管理」
+          _section(isDark, '管理', [
             ListTile(
               leading: const Icon(Icons.lock_outline, color: Color(0xFF576B95)),
               title: const Text('🔒 清除授权'),
@@ -198,8 +221,6 @@ class _DevCenterPageState extends State<DevCenterPage> {
                 Navigator.of(context).pop();
               },
             ),
-          ]),
-          _section(isDark, '危险操作', [
             ListTile(
               leading: const Icon(Icons.close, color: Color(0xFFE64340)),
               title: const Text('全部关闭'),
@@ -214,6 +235,192 @@ class _DevCenterPageState extends State<DevCenterPage> {
           const SizedBox(height: 24),
         ],
       ),
+    );
+  }
+
+  // ===== v6.7.0：设备身份组（自「我」页原样迁入，行为不变） =====
+
+  /// 微信风图标色块（28px 圆角方块 + 白色图标，对齐原型 v7 settings-icon）
+  Widget _iconTile(IconData icon, Color color) {
+    return Container(
+      width: 28,
+      height: 28,
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(7),
+      ),
+      alignment: Alignment.center,
+      child: Icon(icon, size: 18, color: Colors.white),
+    );
+  }
+
+  /// 虚拟 MAC 地址（编辑 + 点按复制）
+  /// ⚠️ MAC 强制小写：服务器 WS 侧按 device-id 查设备区分大小写，
+  /// 大写 MAC 会 OTA 激活成功但连上即被静默踢线（close code=1005）
+  Widget _deviceMacTile() {
+    return ListTile(
+      leading: _iconTile(Icons.confirmation_num_outlined, const Color(0xFF576B95)),
+      title: const Text('虚拟MAC地址'),
+      trailing: IconButton(
+        icon: const Icon(Icons.edit, size: 20),
+        tooltip: '编辑',
+        onPressed: () => showDeviceEditDialog(
+          context,
+          title: '编辑虚拟MAC地址',
+          getCurrent: XiaozhiDeviceInfoUtil.instance.getDeviceMacAddress,
+          onSave: (v) => XiaozhiDeviceInfoUtil.instance
+              .setDeviceMacAddress(v.trim().toLowerCase()),
+        ),
+      ),
+      subtitle: FutureBuilder<String>(
+        future: XiaozhiDeviceInfoUtil.instance.getDeviceMacAddress(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Text('加载中...');
+          }
+          if (snapshot.hasError) {
+            return const Text('获取失败');
+          }
+          return Text(snapshot.data ?? '未知');
+        },
+      ),
+      onTap: () async {
+        final macAddress =
+            await XiaozhiDeviceInfoUtil.instance.getDeviceMacAddress();
+        Clipboard.setData(ClipboardData(text: macAddress));
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('已复制到剪贴板'),
+            duration: Duration(seconds: 1),
+          ),
+        );
+      },
+    );
+  }
+
+  /// 虚拟 Client ID（编辑 + 点按复制）
+  Widget _deviceClientIdTile() {
+    return ListTile(
+      leading: _iconTile(Icons.badge_outlined, const Color(0xFF576B95)),
+      title: const Text('虚拟Client ID'),
+      trailing: IconButton(
+        icon: const Icon(Icons.edit, size: 20),
+        tooltip: '编辑',
+        onPressed: () => showDeviceEditDialog(
+          context,
+          title: '编辑虚拟Client ID',
+          getCurrent: XiaozhiDeviceInfoUtil.instance.getDeviceClientId,
+          onSave: XiaozhiDeviceInfoUtil.instance.setDeviceClientId,
+        ),
+      ),
+      subtitle: FutureBuilder<String>(
+        future: XiaozhiDeviceInfoUtil.instance.getDeviceClientId(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Text('加载中...');
+          }
+          if (snapshot.hasError) {
+            return const Text('获取失败');
+          }
+          return Text(snapshot.data ?? '未知');
+        },
+      ),
+      onTap: () async {
+        final clientId =
+            await XiaozhiDeviceInfoUtil.instance.getDeviceClientId();
+        Clipboard.setData(ClipboardData(text: clientId));
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('已复制到剪贴板'),
+            duration: Duration(seconds: 1),
+          ),
+        );
+      },
+    );
+  }
+
+  /// 设备型号（编辑）
+  /// v4.3.0：单跳只读展示（golden 稳定性：多跳矫正链会让截图在
+  /// 「加载中/值」间漂移）。全局矫正入口在聊天页 initState +
+  /// 添加/编辑智能体页加载设备字段两处，覆盖日常全部路径。
+  Widget _deviceModelTile() {
+    return ListTile(
+      leading: _iconTile(Icons.phone_android_outlined, AppColors.primary),
+      title: const Text('设备型号'),
+      trailing: IconButton(
+        icon: const Icon(Icons.edit, size: 20),
+        tooltip: '编辑',
+        onPressed: () => showDeviceEditDialog(
+          context,
+          title: '编辑设备型号',
+          getCurrent: XiaozhiDeviceInfoUtil.instance.getDeviceModel,
+          onSave: XiaozhiDeviceInfoUtil.instance.setDeviceModel,
+        ),
+      ),
+      subtitle: FutureBuilder<String>(
+        future: XiaozhiDeviceInfoUtil.instance.getDeviceModel(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Text('加载中...');
+          }
+          if (snapshot.hasError) {
+            return const Text('获取失败');
+          }
+          return Text(snapshot.data ?? '未知');
+        },
+      ),
+    );
+  }
+
+  /// v6.7.0：音频能力检测（自「我」页原样迁入，只读展示）
+  Widget _audioCapabilitiesTile() {
+    return FutureBuilder<Map<String, bool>>(
+      future: AudioUtil.checkAudioCapabilities(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const ListTile(
+            leading: Icon(Icons.graphic_eq),
+            title: Text('音频能力检测'),
+            subtitle: Text('检测中...'),
+          );
+        }
+
+        final capabilities = snapshot.data ?? {};
+        final aecSupported = capabilities['aecSupported'] ?? false;
+        final noiseSuppress = capabilities['noiseSuppressSupported'] ?? false;
+        final autoGain = capabilities['autoGainSupported'] ?? false;
+
+        return Column(
+          children: [
+            ListTile(
+              leading: Icon(
+                aecSupported ? Icons.check_circle : Icons.cancel,
+                color: aecSupported ? Colors.green : Colors.red,
+              ),
+              title: const Text('AEC 回声消除'),
+              subtitle: Text(aecSupported ? '支持' : '不支持'),
+            ),
+            ListTile(
+              leading: Icon(
+                noiseSuppress ? Icons.check_circle : Icons.cancel,
+                color: noiseSuppress ? Colors.green : Colors.red,
+              ),
+              title: const Text('噪声抑制'),
+              subtitle: Text(noiseSuppress ? '支持' : '不支持'),
+            ),
+            ListTile(
+              leading: Icon(
+                autoGain ? Icons.check_circle : Icons.cancel,
+                color: autoGain ? Colors.green : Colors.red,
+              ),
+              title: const Text('自动增益控制'),
+              subtitle: Text(autoGain ? '支持' : '不支持'),
+            ),
+          ],
+        );
+      },
     );
   }
 
