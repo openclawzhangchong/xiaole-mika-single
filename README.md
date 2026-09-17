@@ -3,7 +3,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Flutter-3.32.2-blue.svg" alt="Flutter">
   <img src="https://img.shields.io/badge/包名-com.zcstudy.xiaole-green.svg" alt="Package">
-  <img src="https://img.shields.io/badge/当前版本-6.8.2-success.svg" alt="Version">
+  <img src="https://img.shields.io/badge/当前版本-6.8.3-success.svg" alt="Version">
 </p>
 
 本仓库是小智客户端 Flutter 版（上游 [eiriksgata/xiaozhi-client-flutter](https://github.com/eiriksgata/xiaozhi-client-flutter)）的**微信风 UI 定制版**，由张老师定制维护。上游的架构与功能说明保留在本文档后半部分，仍然适用。
@@ -44,6 +44,7 @@
 > 每个发布版本真机验证通过后在此登记。**改动出错需要回退时，优先按下表找最近的 ✅ 版本。**
 
 | 版本标签 | 内容 | 包名 | 验证状态 | 验证日期 |
+| `v6.8.3` | ✨ **本版本新增：AI 主动来电「电话日志」跟踪 + 智能体头像升级（第二版-下 A/C 两项收官）** —— **① A 项 MCP 电话日志**：新增**旁路记录层** `proactive_round_log.dart`（**不改动巡检任何行为**），把**每一轮**巡检结构化留痕 —— 含**被守卫跳过的轮次及其具体原因**（时段外 / 冷却中 / 语音通话中 / 上一轮未结束 / 服务未初始化 / WS 地址为空）、本轮实际发出的**口令**（detect + 12s 重发）、**是否被调用 get_script**、**是否收到 trigger_call/skip**、**开场白原文**、**本轮耗时**、**close code**、**服务器 alert**；**最近 50 轮环形缓冲** + **持久化**（App 重启仍在）；新增开发者中心「AI 主动联系」→「📞 电话日志」页，支持**一键复制全部**（纯文本，整段可贴给 AI 诊断）与清空。**② C 项 头像升级**：头像由「固定底色 + 固定符号」升级为**文字头像**（取智能体名字**第 N 字**，默认第 1 字，可选 2/3/末字/自填一字）+ **12 套预设高对比色板**（深底白字 / 浅底深灰字，**不做任意取色器**，保证任何底色下文字清晰）+ **本地图片头像**（优先级 图片 > 文字，可一键清除回落）；**全部仅存本地**（SharedPreferences + App 私有目录，**绝不写入 AgentModel、绝不碰 cloud_sync_service**）⇒ **重装 App 自动回落文字头像、换设备恢复云端数据不会带过去**；会话列表 / 聊天页 / 来电页 / 通话页**全场景统一**（同一组件），编辑入口在智能体配置页；**「我」页用户头像本次不动**。自检：analyze 0 error、全量测试 55/55（golden `audit_chat_messages` / `audit_conversation_list` 已按预期更新并经**目视核对**——isolated diff 仅落在 3 个头像方块内，无布局位移）。版本号 `6.8.2+47` → `6.8.3+48`，`appVersion` → `6.8.3`。详见 CHANGELOG.md | `com.zcstudy.xiaole` | ✅ CI 通过 | 2026-09-18 |
 | `v6.8.2` | 🔧 **真正修复 Android 构建（补 core library desugaring）+ 聊天页进入即显示最新** —— ① v6.8.1 修对了 workmanager 但仍构建失败：CI 在 `:app:checkReleaseAarMetadata` 报 `Dependency ':flutter_local_notifications' requires core library desugaring to be enabled`；本版在 `android/app/build.gradle.kts` 开启 `isCoreLibraryDesugaringEnabled` 并加 `coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")`。② 聊天页消息列表改**倒置**（`reverse: true`），进入即在**最新**消息处，不再依赖"延迟滚动"时序；`_scrollToBottom` 目标改为 offset 0。自检：analyze 0 error、全量测试 51/51。⚠️ 已知取舍：消息少于屏幕时内容贴底（微信为贴顶）。详见 CHANGELOG.md | `com.zcstudy.xiaole` | ✅ CI 通过 | 2026-09-18 |
 
 | `v6.8.1` | 🔧 **修复 v6.8.0 的 Android 构建失败（后台化真正可用）+ 修「挂断后仍在说话」+ 调整默认开关** —— ① **构建修复**：`workmanager ^0.5.2` 被 Dart 的 0.x caret 语义钉死在 2023 年旧版，其 Kotlin 与 Flutter 3.32 嵌入层不兼容 → `compileReleaseKotlin` 失败（v6.8.0 因此没产出 APK）。逐个实测排除（0.10.x 需 Flutter≥3.38、0.9.x 的 apple 与 platform_interface 签名不匹配）后，**锁定 `workmanager: 0.8.0`**（要求 Flutter≥3.32 且版本组合一致）+ API 适配 `ExistingWorkPolicy.replace`。② **挂断修复**：挂断即 `AudioUtil.stopPlaying()` 静音 + `abort` 去掉门控改为无条件发送 + 挂断后**5 秒静默窗口**丢弃迟到音频帧（文字聊天共用同一音频路径，故不用全局守卫，只做窗口丢弃；发消息/新通话/接听来电会立即解除窗口）。③ **默认值**：27 项 MCP 工具仅默认开 5 项（定位/闹钟/导航/亮度/音量），📷 相机按钮默认关；**仅对新装用户生效**。自检：analyze 0 error、全量测试 51/51。详见 CHANGELOG.md | `com.zcstudy.xiaole` | ✅ CI 通过 | 2026-09-17 |

@@ -114,7 +114,9 @@ void main() {
       MessageList(
         messages: messages,
         scrollController: ScrollController(),
-        avatarStyleIndex: 3,
+        // C 项（v6.8.3）：头像升级后由 agentId + 名字驱动文字头像
+        agentId: 'xiaole',
+        agentName: 'XiaoLe',
       ),
     ));
     await tester.pump(const Duration(milliseconds: 400));

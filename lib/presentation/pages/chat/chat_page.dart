@@ -315,8 +315,9 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                   messages: _messages,
                   scrollController: _scrollController,
                   isTyping: _isAiTyping,
-                  avatarStyleIndex:
-                      widget.agentId.hashCode.abs() % kAgentAvatarStyles.length,
+                  // C 项：头像统一走 AgentAvatar（文字/图片），全场景一致
+                  agentId: widget.agentId,
+                  agentName: _agentName,
                 ),
               ),
 
@@ -2513,8 +2514,6 @@ class _ChatPageState extends ConsumerState<ChatPage> {
 
   /// 语音通话全屏覆盖层（对齐原型 v6）
   Widget _buildVoiceCallOverlay() {
-    final styleIndex =
-        widget.agentId.hashCode.abs() % kAgentAvatarStyles.length;
     return Material(
       color: Colors.black,
       child: Container(
@@ -2553,7 +2552,8 @@ class _ChatPageState extends ConsumerState<ChatPage> {
               ),
               const Spacer(),
               AgentAvatar(
-                styleIndex: styleIndex,
+                agentId: widget.agentId,
+                name: _agentName,
                 size: 96,
                 radius: 48,
                 showOnlineDot: true,

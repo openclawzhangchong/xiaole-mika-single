@@ -110,10 +110,10 @@ class ConversationPage extends ConsumerWidget {
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        // 头像（原型 v7：10 套渐变 + 符号，圆角方形 48/6px）
+                        // 头像（原型 v7：文字/图片头像，圆角方形 48/6px）
                         AgentAvatar(
-                          styleIndex:
-                              agent.id.hashCode.abs() % kAgentAvatarStyles.length,
+                          agentId: agent.id,
+                          name: agent.name,
                           size: 48,
                           radius: 6,
                         ),

@@ -10,12 +10,14 @@ import '../../../widgets/agent_avatar.dart';
 /// 时间戳移至列表层居中分隔条（本组件不再渲染时间）。
 class MessageBubble extends StatelessWidget {
   final MessageModel message;
-  final int? avatarStyleIndex;
+  final String? agentId;
+  final String? agentName;
 
   const MessageBubble({
     super.key,
     required this.message,
-    this.avatarStyleIndex,
+    this.agentId,
+    this.agentName,
   });
 
   bool get isUser => message.sender == MessageSender.user;
@@ -51,7 +53,8 @@ class MessageBubble extends StatelessWidget {
       return const UserAvatar(name: '我', size: 40);
     }
     return AgentAvatar(
-      styleIndex: avatarStyleIndex ?? 0,
+      agentId: agentId,
+      name: agentName,
       size: 40,
     );
   }

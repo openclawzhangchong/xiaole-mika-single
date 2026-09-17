@@ -14,6 +14,7 @@ import '../widgets/device_edit_dialog.dart';
 import 'log_category_page.dart';
 import 'external_mcp_page.dart';
 import 'proactive_script_page.dart';
+import 'proactive_log_page.dart';
 import '../../core/proactive/proactive_poll_service.dart';
 import '../../core/proactive/proactive_script_store.dart';
 import '../../core/proactive/proactive_background.dart';
@@ -191,6 +192,19 @@ class _DevCenterPageState extends State<DevCenterPage> {
                 Navigator.of(context).push(
                   MaterialPageRoute(
                       builder: (_) => const ProactiveScriptPage()),
+                );
+              },
+            ),
+            // v6.8.3（A 项）：电话日志入口（诊断用，旁路记录层，不改动巡检行为）
+            ListTile(
+              leading: const Icon(Icons.call, color: Color(0xFF576B95)),
+              title: const Text('📞 电话日志'),
+              subtitle: const Text(
+                  '每轮巡检的完整过程（含跳过原因/口令/开场白），最近 50 轮，可一键复制'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const ProactiveLogPage()),
                 );
               },
             ),

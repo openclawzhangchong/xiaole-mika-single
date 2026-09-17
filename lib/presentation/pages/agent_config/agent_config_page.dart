@@ -1,7 +1,11 @@
+import 'dart:io';
 import 'dart:math';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:uuid/uuid.dart';
 import '../../../data/models/agent_model.dart';
 import '../../../core/providers/agent_provider.dart';
@@ -12,6 +16,7 @@ import '../../../app/themes/app_colors.dart';
 import '../../widgets/agent_avatar.dart';
 import '../../widgets/activation_dialog.dart';
 import '../../services/agent_identity_store.dart';
+import '../../services/agent_avatar_store.dart';
 
 /// 智能体配置页面（对齐原型 v6 的添加智能体弹窗）
 class AgentConfigPage extends ConsumerStatefulWidget {
@@ -44,17 +49,30 @@ class _AgentConfigPageState extends ConsumerState<AgentConfigPage> {
       TextEditingController(text: kUnifiedDeviceModel);
   bool _isLoading = false;
   bool _advancedExpanded = false;
-  int _previewStyleIndex = 0;
+
+  // C 项：头像编辑器本地状态
+  int _avatarMode = 0; // 0 第1字 / 1 第2字 / 2 第3字 / -2 末字 / -1 自填
+  String _avatarCustomChar = '';
+  int _avatarPalette = 0;
+  String? _avatarImagePath;
+  final _customCharController = TextEditingController();
 
   bool get isEdit => widget.agentId != null;
 
   @override
   void initState() {
     super.initState();
-    _previewStyleIndex = Random().nextInt(kAgentAvatarStyles.length);
     _loadDeviceFields();
     if (isEdit) {
       _loadAgent();
+      // 同步先用缓存/默认值渲染，异步再确认已落盘配置
+      final cfg = AgentAvatarStore.read(widget.agentId!);
+      _avatarMode = cfg.mode;
+      _avatarCustomChar = cfg.customChar;
+      _avatarPalette = cfg.paletteIndex;
+      _avatarImagePath = cfg.imagePath;
+      _customCharController.text = cfg.customChar;
+      _loadAvatarConfig();
     }
   }
 
@@ -105,6 +123,7 @@ class _AgentConfigPageState extends ConsumerState<AgentConfigPage> {
     _macController.dispose();
     _clientIdController.dispose();
     _modelController.dispose();
+    _customCharController.dispose();
     super.dispose();
   }
 
@@ -137,45 +156,15 @@ class _AgentConfigPageState extends ConsumerState<AgentConfigPage> {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            // 头像预览 + 随机换头像
-            Row(
-              children: [
-                AgentAvatar(
-                  styleIndex: _previewStyleIndex,
-                  size: 72,
-                  radius: 12,
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      TextButton.icon(
-                        onPressed: () => setState(() {
-                          _previewStyleIndex =
-                              (_previewStyleIndex + 1) % kAgentAvatarStyles.length;
-                        }),
-                        icon: const Text('✨', style: TextStyle(fontSize: 16)),
-                        label: const Text('随机换头像'),
-                      ),
-                      const SizedBox(height: 4),
-                      const Text(
-                        '新建后头像按 ID 自动分配',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+            // C 项：头像编辑器（取字 / 底色 / 图片）
+            _buildAvatarEditor(),
             const SizedBox(height: 20),
 
             // 名称
             TextFormField(
               controller: _nameController,
+              // 输入名字时实时刷新上方头像预览（文字头像取字来源就是名字）
+              onChanged: (_) => setState(() {}),
               decoration: const InputDecoration(
                 labelText: '名称',
                 hintText: '给智能体起个名字',
@@ -346,6 +335,204 @@ class _AgentConfigPageState extends ConsumerState<AgentConfigPage> {
     return const Uuid().v4(); // 形如 1257d6dc-7b0b-4772-aacc-9b27e33778ac（合法 UUID）
   }
 
+  // ---- C 项：头像编辑器 ----
+
+  AgentAvatarConfig _buildAvatarConfig() => AgentAvatarConfig(
+        mode: _avatarMode,
+        customChar: _avatarCustomChar,
+        paletteIndex: _avatarPalette,
+        imagePath: _avatarImagePath,
+      );
+
+  /// 异步确认已落盘配置（编辑模式 initState 调用）
+  Future<void> _loadAvatarConfig() async {
+    if (widget.agentId == null) return;
+    final cfg = await AgentAvatarStore.load(widget.agentId!);
+    if (!mounted) return;
+    setState(() {
+      _avatarMode = cfg.mode;
+      _avatarCustomChar = cfg.customChar;
+      _avatarPalette = cfg.paletteIndex;
+      _avatarImagePath = cfg.imagePath;
+      _customCharController.text = cfg.customChar;
+    });
+  }
+
+  /// 编辑模式即时落盘；新建模式仅本地暂存（待 identityAgentId 确定后再存）
+  Future<void> _persistAvatar() async {
+    if (isEdit && widget.agentId != null) {
+      await AgentAvatarStore.save(widget.agentId!, _buildAvatarConfig());
+    }
+  }
+
+  void _setMode(int mode) {
+    setState(() => _avatarMode = mode);
+    _persistAvatar();
+  }
+
+  void _setPalette(int index) {
+    setState(() => _avatarPalette = index);
+    _persistAvatar();
+  }
+
+  Future<void> _pickAvatarImage() async {
+    try {
+      final picked = await ImagePicker().pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 512,
+        maxHeight: 512,
+      );
+      if (picked == null) return;
+      final agentKey = widget.agentId ?? '__new__';
+      final path = await AgentAvatarStore.saveImage(
+        agentKey,
+        File(picked.path),
+        oldPath: _avatarImagePath,
+      );
+      setState(() => _avatarImagePath = path);
+      await _persistAvatar();
+    } catch (e) {
+      ToastUtil.error('选择图片失败: $e');
+    }
+  }
+
+  Future<void> _clearAvatarImage() async {
+    await AgentAvatarStore.deleteImage(_avatarImagePath);
+    setState(() => _avatarImagePath = null);
+    await _persistAvatar();
+  }
+
+  Widget _modeChip(int mode, String label) {
+    return ChoiceChip(
+      label: Text(label),
+      selected: _avatarMode == mode,
+      onSelected: (_) => _setMode(mode),
+    );
+  }
+
+  Widget _buildAvatarEditor() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            AgentAvatar(
+              configOverride: _buildAvatarConfig(),
+              name: _nameController.text.isEmpty ? '小乐' : _nameController.text,
+              size: 80,
+              radius: 12,
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('头像预览',
+                      style:
+                          TextStyle(fontSize: 13, color: AppColors.textSecondary)),
+                  const SizedBox(height: 6),
+                  Text(
+                    _avatarImagePath != null ? '当前：本地图片头像' : '当前：文字头像',
+                    style: const TextStyle(
+                        fontSize: 12, color: AppColors.textSecondary),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 18),
+        const Text('取字',
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          children: [
+            _modeChip(0, '第1字'),
+            _modeChip(1, '第2字'),
+            _modeChip(2, '第3字'),
+            _modeChip(-2, '末字'),
+            _modeChip(-1, '自填'),
+          ],
+        ),
+        if (_avatarMode == -1) ...[
+          const SizedBox(height: 10),
+          SizedBox(
+            width: 80,
+            child: TextField(
+              controller: _customCharController,
+              maxLength: 1,
+              textAlign: TextAlign.center,
+              inputFormatters: [LengthLimitingTextInputFormatter(1)],
+              decoration: const InputDecoration(
+                hintText: '字',
+                counterText: '',
+              ),
+              onChanged: (v) {
+                _avatarCustomChar = v;
+                _persistAvatar();
+              },
+            ),
+          ),
+        ],
+        const SizedBox(height: 18),
+        const Text('底色',
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: List.generate(kAgentAvatarPalette.length, (i) {
+            final p = kAgentAvatarPalette[i];
+            final selected = _avatarPalette == i;
+            return GestureDetector(
+              onTap: () => _setPalette(i),
+              child: Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: p.bg,
+                  ),
+                  shape: BoxShape.circle,
+                  border: selected
+                      ? Border.all(color: AppColors.primary, width: 3)
+                      : Border.all(color: Colors.transparent, width: 3),
+                ),
+                child: selected
+                    ? Icon(Icons.check, color: p.fg, size: 18)
+                    : null,
+              ),
+            );
+          }),
+        ),
+        const SizedBox(height: 18),
+        Row(
+          children: [
+            TextButton.icon(
+              onPressed: _pickAvatarImage,
+              icon: const Icon(Icons.photo_outlined),
+              label: const Text('🖼 从相册选择'),
+            ),
+            if (_avatarImagePath != null)
+              TextButton.icon(
+                onPressed: _clearAvatarImage,
+                icon: const Icon(Icons.delete_outline),
+                label: const Text('🗑 清除图片'),
+              ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        const Text(
+          '头像仅保存在本机，不会同步到云端；重装 App 后会回到文字头像',
+          style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+        ),
+      ],
+    );
+  }
+
   /// 保存智能体 + 写入设备身份，然后弹出激活轮询弹窗
   void _saveAndActivate() async {
     if (!_formKey.currentState!.validate()) {
@@ -367,6 +554,8 @@ class _AgentConfigPageState extends ConsumerState<AgentConfigPage> {
 
       // v1.1.5：同时按 agentId 存一份独立身份，进入对话时切换，避免多智能体串号
       final identityAgentId = widget.agentId ?? const Uuid().v4();
+      // C 项：头像配置写入本地（仅本地，不入云）。新建模式此时才拿到确定 agentId。
+      await AgentAvatarStore.save(identityAgentId, _buildAvatarConfig());
       await AgentIdentityStore.save(
         identityAgentId,
         mac: mac, // 已小写化

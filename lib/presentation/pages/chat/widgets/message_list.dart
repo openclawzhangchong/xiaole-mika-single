@@ -13,14 +13,16 @@ class MessageList extends StatelessWidget {
   final List<MessageModel> messages;
   final ScrollController scrollController;
   final bool isTyping;
-  final int? avatarStyleIndex;
+  final String? agentId;
+  final String? agentName;
 
   const MessageList({
     super.key,
     required this.messages,
     required this.scrollController,
     this.isTyping = false,
-    this.avatarStyleIndex,
+    this.agentId,
+    this.agentName,
   });
 
   /// 分钟级时间键（同一分钟内不重复显示时间分隔条）
@@ -129,7 +131,8 @@ class MessageList extends StatelessWidget {
             if (divider != null) divider,
             MessageBubble(
               message: msg,
-              avatarStyleIndex: avatarStyleIndex,
+              agentId: agentId,
+              agentName: agentName,
             ),
           ],
         );

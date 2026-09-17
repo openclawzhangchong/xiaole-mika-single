@@ -91,9 +91,6 @@ class _IncomingCallPageState extends State<IncomingCallPage> {
 
   @override
   Widget build(BuildContext context) {
-    final styleIndex =
-        widget.agentId.isEmpty ? 0 : widget.agentId.hashCode.abs() % kAgentAvatarStyles.length;
-
     return PopScope(
       // 来电页不允许用返回键悄悄跳过；走"拒绝"语义
       canPop: false,
@@ -119,7 +116,8 @@ class _IncomingCallPageState extends State<IncomingCallPage> {
               children: [
                 const Spacer(flex: 2),
                 AgentAvatar(
-                  styleIndex: styleIndex,
+                  agentId: widget.agentId.isEmpty ? null : widget.agentId,
+                  name: widget.agentName,
                   size: 120,
                   showOnlineDot: false,
                 ),

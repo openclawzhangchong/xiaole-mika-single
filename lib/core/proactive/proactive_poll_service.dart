@@ -10,6 +10,7 @@ import 'package:xiaozhi_client_flutter/core/network/xiaozhi_mcp_responder.dart';
 import 'package:xiaozhi_client_flutter/core/utils/xiaozhi_device_info_util.dart';
 import 'package:xiaozhi_client_flutter/core/storage/storage_service.dart';
 import 'package:xiaozhi_client_flutter/core/proactive/proactive_script_store.dart';
+import 'package:xiaozhi_client_flutter/core/proactive/proactive_round_log.dart';
 
 /// 前台巡检"心跳"时间戳键（每次 tick 更新）。
 /// 后台入口据此判断"前台是否正在巡检"——若在最近阈值内更新过，
@@ -37,6 +38,21 @@ String? checkGuardReason({
   }
   if (voiceActive) return '语音通话中';
   return null;
+}
+
+/// 把守卫返回的原始原因映射为「📞 电话日志」里展示的**具体跳过原因**文案。
+/// 守卫返回：窗口外/冷却期内/语音通话中 → 时段外/冷却中/语音通话中。
+String _mapGuardReasonToSkip(String raw) {
+  switch (raw) {
+    case '窗口外':
+      return '时段外';
+    case '冷却期内':
+      return '冷却中';
+    case '语音通话中':
+      return '语音通话中';
+    default:
+      return raw;
+  }
 }
 
 /// AI 主动来电巡检服务（核心层）
@@ -168,10 +184,12 @@ class ProactivePollService {
     );
     if (skip != null) {
       _logger.info('后台巡检跳过：$skip');
+      ProactiveRoundLog.recordSkip(skipReason: _mapGuardReasonToSkip(skip), source: 'bg'); // ★ 旁路记录
       return false;
     }
     if (_busy) {
       _logger.info('后台巡检：上一轮尚未结束，跳过本轮');
+      ProactiveRoundLog.recordSkip(skipReason: '上一轮未结束', source: 'bg'); // ★ 旁路记录
       return false;
     }
     await _runInspectionRound();
@@ -206,6 +224,7 @@ class ProactivePollService {
     );
     if (skip != null) {
       _logger.info('$skip（$nowMin 分），跳过本轮巡检');
+      ProactiveRoundLog.recordSkip(skipReason: _mapGuardReasonToSkip(skip), source: 'tick'); // ★ 旁路记录
       return;
     }
     unawaited(_runInspectionRound());
@@ -214,6 +233,7 @@ class ProactivePollService {
   Future<void> _runInspectionRound() async {
     if (_busy) {
       _logger.info('上一轮巡检尚未结束，跳过本轮');
+      ProactiveRoundLog.recordSkip(skipReason: '上一轮未结束', source: 'busy'); // ★ 旁路记录
       return;
     }
     _busy = true;
@@ -221,6 +241,11 @@ class ProactivePollService {
     _gotToolCall = false;
     _opening = null;
     _lastRoundTriggered = false;
+
+    // ★ 旁路记录器：本轮若真正建立会话，会由 endRound 收尾时落盘；
+    //   若在此之后因服务未初始化/WS 地址为空而提前 return，则置 null 并改记"跳过"
+    //   （finally 的 endRound 看到 rec==null 即不重复记巡检轮）。
+    ProactiveRoundRecorder? rec = ProactiveRoundRecorder();
 
     final done = Completer<void>();
     var ended = false;
@@ -242,6 +267,15 @@ class ProactivePollService {
         } catch (e) {
           _logger.warning('断开巡检会话异常（忽略）: $e');
         }
+        // ★ 旁路：短暂等待断开事件（disconnected）到达，收集 close code；
+        //   绝不抛异常、绝不卡死，最多 ~200ms（即使拿不到也记 —）。
+        try {
+          await Future.delayed(const Duration(milliseconds: 200));
+        } catch (_) {}
+      }
+      // ★ 旁路：本轮真正建立了会话才落盘（rec 不为 null 表示过了服务/WS 校验）
+      if (rec != null) {
+        ProactiveRoundLog.recordInspection(rec: rec, endReason: reason);
       }
       _busy = false;
       _currentEndRound = null;
@@ -253,12 +287,16 @@ class ProactivePollService {
       final svc = XiaozhiService.instance;
       if (svc == null) {
         _logger.warning('XiaozhiService 未初始化，跳过本轮巡检');
+        ProactiveRoundLog.recordSkip(skipReason: '服务未初始化', source: 'inspect'); // ★ 旁路记录
+        rec = null; // ★ 避免 finally 的 endRound 重复记巡检轮
         return;
       }
       final url = svc.websocketUrl;
       final token = svc.token;
       if (url.isEmpty) {
         _logger.warning('WebSocket 地址为空，跳过本轮巡检');
+        ProactiveRoundLog.recordSkip(skipReason: 'WS 地址为空', source: 'inspect'); // ★ 旁路记录
+        rec = null; // ★ 避免 finally 的 endRound 重复记巡检轮
         return;
       }
 
@@ -299,6 +337,7 @@ class ProactivePollService {
         (Map<String, dynamic> args) async {
           _gotToolCall = true;
           _logger.info('AI 调用 get_script');
+          rec?.markGetScript(); // ★ 旁路记录
           return <String, dynamic>{'text': _buildProactiveScript()};
         },
       );
@@ -324,6 +363,7 @@ class ProactivePollService {
           _opening = message;
           _lastRoundTriggered = true;
           _logger.info('AI 触发来电，开场白: $message');
+          rec?.markTrigger(message); // ★ 旁路记录（开场白原文）
           try {
             onTriggered?.call(message);
           } catch (e) {
@@ -348,6 +388,7 @@ class ProactivePollService {
         (Map<String, dynamic> args) async {
           _gotToolCall = true;
           _logger.info('AI 判定无需联系（skip）');
+          rec?.markSkip(); // ★ 旁路记录
           await endRound('skip');
           return <String, dynamic>{'status': 'ok'};
         },
@@ -372,6 +413,15 @@ class ProactivePollService {
       );
 
       ws.addListener((XiaozhiEvent event) {
+        // ★ 旁路：记录 close code（断线事件，绝不改变其他逻辑）
+        if (event.type == XiaozhiEventType.disconnected) {
+          final code = event.data as String?;
+          if (code != null && code.isNotEmpty) {
+            rec?.setCloseCode(code);
+            _logger.info('巡检会话断开 code=$code');
+          }
+          return;
+        }
         // 音频帧一律丢弃，绝不调用 AudioUtil / FlutterPcmSound
         if (event.type == XiaozhiEventType.binaryMessage) return;
         if (event.type != XiaozhiEventType.message) return;
@@ -383,7 +433,19 @@ class ProactivePollService {
         } catch (e) {
           return;
         }
-        if (msg == null || msg['type'] != 'mcp') return;
+        if (msg == null) return;
+        // ★ 旁路：服务器 alert 帧（聊天页 chat_page.dart:2182 同款处理）
+        if (msg['type'] == 'alert') {
+          final status = msg['status']?.toString() ?? '';
+          final message = msg['message']?.toString() ?? '';
+          final text = '$status $message'.trim();
+          if (text.isNotEmpty) {
+            rec?.setAlert(text);
+            _logger.warning('巡检轮服务端 alert：$text');
+          }
+          return;
+        }
+        if (msg['type'] != 'mcp') return;
         final payload = msg['payload'];
         if (payload is! Map) return;
         final method = payload['method'];
@@ -393,6 +455,7 @@ class ProactivePollService {
         if (isToolsList && !_detectSent) {
           _detectSent = true;
           final String text = ProactiveScriptStore.nextRotatingText();
+          rec?.addCommand(text); // ★ 旁路记录：口令 #1
           _logger.info('发送巡检口令(detect): $text');
           try {
             ws.sendTextRequest(text);
@@ -416,6 +479,7 @@ class ProactivePollService {
       repingTimer = Timer(const Duration(seconds: 12), () {
         if (ended || _gotToolCall) return;
         final String text = ProactiveScriptStore.nextRotatingText();
+        rec?.addCommand(text); // ★ 旁路记录：口令 #2（重发）
         _logger.info('12s 未收到工具调用，轮换口令重试: $text');
         try {
           ws.sendTextRequest(text);
