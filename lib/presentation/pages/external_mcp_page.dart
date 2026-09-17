@@ -353,12 +353,16 @@ class _ExternalMcpPageState extends State<ExternalMcpPage> {
   Widget _buildTile(ExternalMcpServer s, bool isDark) {
     final pr = ExternalMcpManager.instance.statusOf(s.id);
     final online = s.enabled && pr != null && pr.ok;
+    // v6.9.0：列表上直接显示「已启用几个 / 共几个」，不必点进去才知道能逐工具管理
+    final enabledToolCount = pr == null
+        ? 0
+        : pr.tools.where((t) => !s.disabledTools.contains(t.name)).length;
     final statusText = !s.enabled
         ? '已停用'
         : (pr == null
             ? '未探测'
             : pr.ok
-                ? '在线 · ${pr.toolCount} 个工具'
+                ? '在线 · 已启用 $enabledToolCount/${pr.tools.length} 个工具'
                 : '连接失败：${pr.error ?? '未知'}');
     final statusColor = online ? AppColors.statusOnline : AppColors.textSecondary;
 
@@ -453,11 +457,41 @@ class _ExternalMcpToolsPageState extends State<_ExternalMcpToolsPage> {
     setState(() {});
   }
 
+  /// v6.9.0：批量开关。
+  /// - 全部关闭（enable=false）→ 把**当前在线的全部工具名**写进 disabledTools
+  /// - 全部开启（enable=true） → 清空 disabledTools
+  /// 适用场景：一个外部 MCP 有几十上百个工具，只想挑一两个用 ——
+  /// 先「全部关闭」再逐个开，比挨个关掉几十个快得多。
+  Future<void> _toggleAll(bool enable) async {
+    final s = _current;
+    final pr = ExternalMcpManager.instance.statusOf(s.id);
+    final List<String> next;
+    if (enable) {
+      next = <String>[];
+    } else {
+      next = (pr?.tools ?? const <ExternalMcpTool>[])
+          .map((t) => t.name)
+          .toList();
+    }
+    final idx =
+        ExternalMcpManager.instance.servers.indexWhere((e) => e.id == s.id);
+    if (idx >= 0) {
+      ExternalMcpManager.instance.servers[idx] =
+          s.copyWith(disabledTools: next);
+    }
+    await ExternalMcpManager.instance.save();
+    if (!mounted) return;
+    setState(() {});
+    ToastUtil.show(enable ? '已全部开启' : '已全部关闭（可再逐个挑要用的）');
+  }
+
   @override
   Widget build(BuildContext context) {
     final s = _current;
     final pr = ExternalMcpManager.instance.statusOf(s.id);
     final tools = pr?.tools ?? const <ExternalMcpTool>[];
+    final enabledCount =
+        tools.where((t) => !s.disabledTools.contains(t.name)).length;
 
     return Scaffold(
       appBar: AppBar(
@@ -471,6 +505,18 @@ class _ExternalMcpToolsPageState extends State<_ExternalMcpToolsPage> {
               setState(() {});
             },
           ),
+          // v6.9.0：批量开关（工具多时「先全关再挑」远快于逐个关）
+          if (tools.isNotEmpty)
+            PopupMenuButton<String>(
+              onSelected: (v) {
+                if (v == 'off') _toggleAll(false);
+                if (v == 'on') _toggleAll(true);
+              },
+              itemBuilder: (_) => const [
+                PopupMenuItem(value: 'off', child: Text('全部关闭')),
+                PopupMenuItem(value: 'on', child: Text('全部开启')),
+              ],
+            ),
         ],
       ),
       body: tools.isEmpty
@@ -486,11 +532,25 @@ class _ExternalMcpToolsPageState extends State<_ExternalMcpToolsPage> {
               children: [
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
-                  child: Text(
-                    '工具名前缀：${s.prefix}.  （暴露给 AI 的名称如 '
-                    '${s.prefix}.${tools.first.name}）',
-                    style: TextStyle(
-                        fontSize: 12, color: AppColors.textSecondary),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '工具名前缀：${s.prefix}.  （暴露给 AI 的名称如 '
+                        '${s.prefix}.${tools.first.name}）',
+                        style: TextStyle(
+                            fontSize: 12, color: AppColors.textSecondary),
+                      ),
+                      const SizedBox(height: 4),
+                      // v6.9.0：让「启用多少 / 一共多少」一目了然，并提示可批量
+                      Text(
+                        '已启用 $enabledCount / 共 ${tools.length} 个'
+                        '；关闭的工具不会下发给 AI。工具很多时可先「全部关闭」'
+                        '（右上角 ⋮）再挑要用的。',
+                        style: TextStyle(
+                            fontSize: 12, color: AppColors.textSecondary),
+                      ),
+                    ],
                   ),
                 ),
                 ...tools.map((t) {

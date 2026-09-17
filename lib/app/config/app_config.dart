@@ -4,7 +4,7 @@ class AppConfig {
 
   // 应用信息
   static const String appName = '小乐'; // v4.0.0：品牌统一（默认智能体名前缀等）
-  static const String appVersion = '6.8.3'; // v6.8.3：电话日志跟踪（A 项，巡检每轮留痕含跳过原因/口令/开场白/close code/alert，环形 50 轮且持久化，开发者中心可一键复制）+ 头像升级（C 项，文字头像取名字第 N 字 + 12 套高对比预设色板 + 本地图片头像，仅存本地不入云，重装回落）；详见 CHANGELOG.md
+  static const String appVersion = '6.9.0'; // v6.9.0：外部 MCP 逐工具开关更好用 —— 服务器列表显示「已启用 N/M 个工具」，工具页右上角增「全部关闭/全部开启」批量操作（解决「20 个只要 1 个要手动关 19 次」）；改动仅 external_mcp_page.dart 一个文件，数据层/管理器/协议层未动。详见 CHANGELOG.md
 
   /// v4.4.0 尾音保护：AI 播放结束后丢弃麦克风音频的时长（毫秒）
   static const int defaultTailGuardMs = 300;
