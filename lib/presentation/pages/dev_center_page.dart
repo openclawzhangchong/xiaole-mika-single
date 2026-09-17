@@ -6,6 +6,9 @@ import '../services/app_feats.dart';
 import '../../core/utils/log_buffer.dart';
 import 'log_category_page.dart';
 import 'external_mcp_page.dart';
+import 'proactive_script_page.dart';
+import '../../core/proactive/proactive_poll_service.dart';
+import '../../core/proactive/proactive_script_store.dart';
 import '../../core/utils/audio_util.dart';
 import '../../core/storage/storage_service.dart';
 import '../../app/config/app_config.dart';
@@ -110,6 +113,56 @@ class _DevCenterPageState extends State<DevCenterPage> {
               '⚠️ 显示服务端原始提示',
               '开启=开发者模式，聊天页直接显示服务器原文（如 alert 报错）；关闭=普通用户模式，改用友好弹窗',
               'rawServerAlert',
+            ),
+          ]),
+          // v6.5.0：AI 主动来电（方案 D —— 口令存本地，设备 MCP 工具取回）
+          _section(isDark, 'AI 主动联系', [
+            // 总开关：核心层不自查开关，必须由这里直接启停巡检服务（关闭=零流量）
+            SwitchListTile(
+              value: AppFeats.get('proactive'),
+              activeColor: AppColors.primary,
+              title: const Text('🤖 AI 主动联系'),
+              subtitle: const Text(
+                  '前台定时巡检：由小智读本地口令判断是否值得主动来电（仅 App 在前台时生效）'),
+              onChanged: (v) async {
+                AppFeats.set('proactive', v);
+                if (v) {
+                  await ProactivePollService.instance.start();
+                } else {
+                  await ProactivePollService.instance.stop();
+                }
+                if (!mounted) return;
+                setState(() {});
+                ToastUtil.show(v ? 'AI 主动联系 已开启' : 'AI 主动联系 已关闭');
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.schedule, color: Color(0xFF576B95)),
+              title: const Text('⏱ 巡检间隔'),
+              subtitle: Text(
+                  '每 ${ProactivePollService.instance.intervalMinutes} 分钟一次'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: _pickProactiveInterval,
+            ),
+            ListTile(
+              leading: const Icon(Icons.bedtime_outlined,
+                  color: Color(0xFF576B95)),
+              title: const Text('🌙 允许来电时段'),
+              subtitle: Text(_proactiveWindowLabel()),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: _pickProactiveWindow,
+            ),
+            ListTile(
+              leading: const Icon(Icons.edit_note, color: Color(0xFF576B95)),
+              title: const Text('📝 巡检口令管理'),
+              subtitle: const Text('多条轮换使用（可增删改查 / 恢复默认 / ≤16 字）'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                      builder: (_) => const ProactiveScriptPage()),
+                );
+              },
             ),
           ]),
           _section(isDark, '诊断', [
@@ -284,6 +337,119 @@ class _DevCenterPageState extends State<DevCenterPage> {
         builder: (_) => _McpToolsDetailPage(isDark: isDark),
       ),
     );
+  }
+
+  // ===== v6.5.0：AI 主动来电 —— 巡检间隔 / 允许来电时段 =====
+
+  String _fmtMinOfDay(int m) =>
+      '${(m ~/ 60).toString().padLeft(2, '0')}:${(m % 60).toString().padLeft(2, '0')}';
+
+  String _proactiveWindowLabel() {
+    final w = ProactiveScriptStore.window;
+    if (w.allDay) return '全天';
+    return '${_fmtMinOfDay(w.startMin)}–${_fmtMinOfDay(w.endMin)}';
+  }
+
+  Future<void> _pickProactiveInterval() async {
+    const opts = <int>[15, 30, 60, 120, 240];
+    final cur = ProactivePollService.instance.intervalMinutes;
+    final picked = await showModalBottomSheet<int>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 12),
+              child: Text('巡检间隔', style: TextStyle(fontWeight: FontWeight.w500)),
+            ),
+            ...opts.map((m) => ListTile(
+                  title: Text('每 $m 分钟'),
+                  trailing: m == cur ? const Icon(Icons.check) : null,
+                  onTap: () => Navigator.pop(ctx, m),
+                )),
+          ],
+        ),
+      ),
+    );
+    if (picked == null) return;
+    await ProactivePollService.instance.setIntervalMinutes(picked);
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _pickProactiveWindow() async {
+    final w = ProactiveScriptStore.window;
+    var allDay = w.allDay;
+    var start = w.startMin;
+    var end = w.endMin;
+    final ok = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setSheet) => SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 12),
+                child: Text('允许来电时段',
+                    style: TextStyle(fontWeight: FontWeight.w500)),
+              ),
+              SwitchListTile(
+                title: const Text('全天允许'),
+                value: allDay,
+                activeColor: AppColors.primary,
+                onChanged: (v) => setSheet(() => allDay = v),
+              ),
+              if (!allDay) ...[
+                ListTile(
+                  title: const Text('开始时间'),
+                  trailing: Text(_fmtMinOfDay(start)),
+                  onTap: () async {
+                    final t = await showTimePicker(
+                      context: ctx,
+                      initialTime: TimeOfDay(
+                          hour: start ~/ 60, minute: start % 60),
+                    );
+                    if (t != null) setSheet(() => start = t.hour * 60 + t.minute);
+                  },
+                ),
+                ListTile(
+                  title: const Text('结束时间'),
+                  trailing: Text(_fmtMinOfDay(end)),
+                  onTap: () async {
+                    final t = await showTimePicker(
+                      context: ctx,
+                      initialTime: TimeOfDay(hour: end ~/ 60, minute: end % 60),
+                    );
+                    if (t != null) setSheet(() => end = t.hour * 60 + t.minute);
+                  },
+                ),
+                const Padding(
+                  padding: EdgeInsets.fromLTRB(16, 4, 16, 12),
+                  child: Text('支持跨午夜（如 22:00–08:00）',
+                      style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                ),
+              ],
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    onPressed: () => Navigator.pop(ctx, true),
+                    child: const Text('保存'),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (ok != true) return;
+    await ProactiveScriptStore.setWindow(
+        ProactiveWindow(allDay: allDay, startMin: start, endMin: end));
+    if (mounted) setState(() {});
   }
 
   Widget _section(bool isDark, String title, List<Widget> children) {

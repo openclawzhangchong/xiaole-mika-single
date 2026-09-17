@@ -37,6 +37,7 @@ class LogBuffer {
     'ota',
     'audio',
     'ui',
+    'proactive', // v6.5.0：AI 主动来电巡检链路
   ];
 
   /// 分类中文显示名
@@ -48,9 +49,10 @@ class LogBuffer {
     'ota': '🔑 OTA 认证',
     'audio': '🔊 音频',
     'ui': '🖥 界面与其他',
+    'proactive': '🤖 AI 主动来电',
   };
 
-  /// 默认开关：默认只开**识图排查链路 + 音频**（张老师拍板 v4.4.0 增加 audio）
+  /// 默认开关：默认只开**识图排查链路 + 音频 + AI 主动来电**（张老师拍板 v4.4.0 增加 audio）
   static const Map<String, bool> defaultCategoryEnabled = <String, bool>{
     'vision': true,
     'ws': true,
@@ -59,6 +61,7 @@ class LogBuffer {
     'ota': false,
     'audio': true, // v4.4.0：排查语音「自问自答」需要，默认开
     'ui': false,
+    'proactive': true, // v6.5.0：巡检轮日志默认开（静默轮/触发轮均留痕，便于验收）
   };
 
   static const String _kPrefix = 'xw_logcat_';
@@ -100,6 +103,11 @@ class LogBuffer {
   static String inferCategory(String tag, String message) {
     final both = '$tag $message';
     final lower = both.toLowerCase();
+    // 0) AI 主动来电（v6.5.0）——核心层用 Logger('ProactivePoll') / Logger('ProactiveRingtone')，
+    //    名字里带 Proactive，整条巡检链路（静默轮/触发轮/回铃音）统一归入 proactive 分类。
+    if (tag.startsWith('Proactive') || lower.contains('proactive')) {
+      return 'proactive';
+    }
     // 1) 识图（照片）——最高优先
     if (both.contains('识图') ||
         both.contains('拍照') ||

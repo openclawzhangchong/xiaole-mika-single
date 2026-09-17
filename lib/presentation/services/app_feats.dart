@@ -27,6 +27,9 @@ class AppFeats {
   ///   开启=开发者模式，聊天页直接显示服务器 alert 技术原文（如 detect 拒绝长文本报错）；
   ///   关闭=普通用户模式，改用友好弹窗（不暴露技术细节）。放进 `keys` 是**有意为之**——
   ///   这样「全部关闭」（`allOff()`）会一并把它关掉，语义正确（一键回到普通用户模式）。
+  /// - proactive（🤖 AI 主动来电）：v6.5.0 新增，**默认关**。
+  ///   开启=前台定时巡检，由小智判断后主动来电（方案 D：口令存本地 + 设备 MCP 工具取回）。
+  ///   放进 `keys` 是**有意为之**——「全部关闭」会一并关掉，一键回到普通用户模式。
   static const List<String> keys = [
     'mcptools',
     'mqtt',
@@ -35,6 +38,7 @@ class AppFeats {
     'mcpDebug',
     'emotion',
     'rawServerAlert',
+    'proactive',
   ];
   static const Map<String, bool> defaults = {
     'mcptools': true,
@@ -44,6 +48,7 @@ class AppFeats {
     'mcpDebug': false,
     'emotion': false,
     'rawServerAlert': false, // v6.4.4：默认关 = 普通用户模式（友好弹窗）
+    'proactive': false, // v6.5.0：默认关（AI 主动来电属增强功能，需用户主动开启）
   };
 
   static final Map<String, bool> _cache = Map.from(defaults);
@@ -118,4 +123,6 @@ class AppFeats {
   static bool get emotion => get('emotion');
   // v6.4.4：开发者模式=直接显示服务器 alert 原始技术文本；默认 false=普通用户友好模式
   static bool get rawServerAlert => get('rawServerAlert');
+  // v6.5.0：AI 主动来电总开关；默认 false=普通用户模式（不巡检、零流量）
+  static bool get proactive => get('proactive');
 }

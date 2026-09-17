@@ -6,6 +6,62 @@
 
 ---
 
+## v6.5.0 · 2026-09-17
+
+**主题：AI 主动来电（方案 D —— 口令存本地 + 设备 MCP 工具取回）**
+
+### 功能
+前台定时巡检 → 小智读**本地口令**自主判断 → 命中则弹**全屏模拟来电**（回铃音+震动+30s 倒计时）
+→ 用户接听后小智**先开口说开场白** → 进入正常双向对话。
+
+### 架构（经 5 个实机探针逐步验证后定稿）
+```
+Timer → 三守卫(时段/冷却/非通话中) → 新建独立短 WSS 会话
+  Device-Id = 设备 MAC（小写不变）｜Client-Id = 每轮全新 UUID v4
+  注册 4 个设备工具：self.proactive.get_script / trigger_call / skip / get_opening
+  → 发【轮换短口令】(≤16字) → 小智调 get_script 取回指令全文 → 判定
+  → trigger_call(message=开场白) → 来电页 → 接听 → 发「说开场白」→ 小智调 get_opening 读出
+```
+
+### 为何是这套（关键实测结论，务必保留）
+1. **detect 文本硬上限 16 字** ⇒ 长指令只能经**工具返回值**下发，不能走文本；
+2. **服务器按 Device-Id 维护长期记忆** ⇒ 同一条固定指令重复发只有第一次生效
+   ⇒ **必须多条口令轮换**（实测：轮换 5/6 明确二选一 vs 固定 0/6 触发）；
+3. **同设备并发双 WSS 仅在 Client-Id 不同时允许**（相同则旧连接 1005 被踢约 388ms）；
+4. **biji 笔记只能新建、不能改删** ⇒ 笔记通道必然堆积 ⇒ **本方案完全不写笔记**。
+
+### 新增文件
+| 文件 | 内容 |
+|---|---|
+| `lib/core/proactive/proactive_script_store.dart` | 口令多条 CRUD + **轮换游标** + 允许来电时段 + 恢复默认 |
+| `lib/core/proactive/proactive_poll_service.dart` | 巡检服务：Timer + 三守卫 + 每轮新 Client-Id 短会话 + 4 工具注册 + 22s 超时 + 12s 未调则换口令重发 |
+| `lib/core/proactive/proactive_ringtone.dart` | `flutter_pcm_sound` 合成 450Hz 断续回铃音（**零新增依赖**） |
+| `lib/presentation/pages/incoming_call_page.dart` | 全屏来电页（30s 环形倒计时 + 接听/拒绝 + 资源释放幂等） |
+| `lib/presentation/pages/proactive_script_page.dart` | 口令管理页（增删改查/启用停用/设为当前/恢复默认，**≤16 字**限制） |
+| `test/proactive_test.dart` | 10 条单测（时段窗口含跨午夜、轮换与回退、序列化往返） |
+
+### 改动文件
+- `dev_center_page.dart`：新增「🤖 AI 主动联系」区块（总开关 + 巡检间隔 + 允许来电时段 + 口令管理入口）
+- `chat_page.dart`：启停巡检 + `onTriggered` 弹来电页 + **接听后经 `self.proactive.get_opening` 回放开场白**
+- `app_feats.dart`：新增 `proactive` 开关（默认关，入 `keys` 使「全部关闭」一并关掉）
+- `log_buffer.dart`：新增 `proactive` 日志分类（默认开）
+- `app_routes.dart` / `app_pages.dart`：新增 `incomingCall` / `proactiveScript` 路由
+
+### 红线
+🔒 冻结区零改动；⚠️ **`lib/core/network` 零行为变更**（manager/responder 仅按实例复用公开 API）；
+**不写任何笔记**；巡检会话音频帧一律丢弃、绝不调用 `AudioUtil`；**不引入新依赖**。
+**Device-Id 恒定小写不变，仅 Client-Id 每轮新生成。**
+
+### 已知限制（一期）
+巡检仅**前台/聊天页**生效（后台化留 v6.6.0）；离开聊天页会停止巡检。
+
+### 自检
+- `flutter analyze`：**0 error**；warning 5 条均为既有基线（`app_pages.dart` / `xiaozhi_service.dart`）。
+- 单测 `test/proactive_test.dart` 10/10 通过；全量测试见提交说明（`AUDIT5` 为已知固有 flaky）。
+- 回滚锚点：tag `anchor-pre-v6.5.0`（= v6.4.4 `30f52956`）。
+
+---
+
 ## v6.4.4 · 2026-09-17
 
 **主题：服务器 alert 按开发者 / 普通用户身份分流——开发者看原文、普通用户看友好弹窗**

@@ -12,6 +12,8 @@ import 'package:go_router/go_router.dart';
 import 'package:xiaozhi_client_flutter/core/mcp/device_capability_service.dart';
 import 'package:xiaozhi_client_flutter/core/mcp/external_mcp_manager.dart';
 import 'package:xiaozhi_client_flutter/core/mcp/location_service.dart';
+import 'package:xiaozhi_client_flutter/core/proactive/proactive_poll_service.dart';
+import 'package:xiaozhi_client_flutter/core/proactive/proactive_script_store.dart';
 import 'package:xiaozhi_client_flutter/core/network/xiaozhi_ota_service.dart';
 import 'package:xiaozhi_client_flutter/core/network/xiaozhi_mcp_responder.dart';
 import 'package:xiaozhi_client_flutter/core/network/xiaozhi_mqtt_presence.dart';
@@ -34,6 +36,7 @@ import '../../../core/utils/toast_util.dart';
 import '../../widgets/agent_avatar.dart';
 import '../../services/agent_identity_store.dart';
 import '../../services/app_feats.dart';
+import '../incoming_call_page.dart';
 import '../../services/chat_history_store.dart';
 import 'widgets/message_list.dart';
 import 'widgets/chat_input_bar.dart';
@@ -144,6 +147,10 @@ class _ChatPageState extends ConsumerState<ChatPage> {
   bool _isSpeakerOn = false;
   String _callStatus = '等待连接...';
 
+  /// v6.5.0：本轮"主动来电"要由小智说出的开场白
+  /// （接通后小智调用 self.proactive.get_opening 取回，再经 TTS 说出）
+  String _proactiveOpeningForReplay = '';
+
   @override
   void initState() {
     super.initState();
@@ -160,6 +167,45 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     // v4.3.3：页面生命周期打点——相机 Activity 可能触发页面重建，
     // 用 initState / dispose 时间戳可判定"识图过程中页面是否被销毁"（会中断识图流程）
     logger.info('聊天页 initState（页面挂载）agentId=${widget.agentId}');
+    // v6.5.0：AI 主动来电 —— 初始化口令存储、挂触发回调、按总开关同步巡检服务
+    unawaited(ProactiveScriptStore.init());
+    ProactivePollService.instance.onTriggered = _handleProactiveTriggered;
+    _syncProactiveService();
+  }
+
+  /// v6.5.0：按总开关启停巡检服务（核心层不自查开关，故关闭=零流量由这里保证）
+  void _syncProactiveService() {
+    final svc = ProactivePollService.instance;
+    if (AppFeats.get('proactive')) {
+      unawaited(svc.start());
+    } else {
+      unawaited(svc.stop());
+    }
+  }
+
+  /// v6.5.0：巡检命中 → 弹全屏来电页；用户接听则回放开场白
+  Future<void> _handleProactiveTriggered(String opening) async {
+    if (!mounted) return;
+    _appendOrCreateChatMessage(MessageSender.system, '📞 小乐发起了主动来电');
+    final answered = await Navigator.of(context).push<String>(
+      MaterialPageRoute(
+        builder: (_) => IncomingCallPage(
+          opening: opening,
+          agentId: widget.agentId,
+          agentName: _currentAgent?.name ?? '小乐',
+        ),
+      ),
+    );
+    if (!mounted || answered == null || answered.isEmpty) return;
+    _playProactiveOpening(answered);
+  }
+
+  /// v6.5.0：接听后让小智"先开口"——把开场白存入内存，发短口令让它调用 get_opening 读出来
+  void _playProactiveOpening(String opening) {
+    _proactiveOpeningForReplay = opening;
+    _appendOrCreateChatMessage(MessageSender.system, '📞 已接通，小乐正在开口…');
+    // 短口令（≤16 字）：经 listen/detect 通道发送，触发小智取回并说出开场白
+    _wsManager?.sendTextRequest('说开场白');
   }
 
   /// v1.1.6: 加载本地聊天记录（进入对话即显示历史）
@@ -174,6 +220,8 @@ class _ChatPageState extends ConsumerState<ChatPage> {
 
   @override
   void dispose() {
+    // v6.5.0：离开聊天页即停止巡检（一期巡检仅在前台/聊天页生效）
+    unawaited(ProactivePollService.instance.stop());
     _textController.dispose();
     _scrollController.dispose();
     _aiPlayingTimer?.cancel();
@@ -1419,6 +1467,23 @@ class _ChatPageState extends ConsumerState<ChatPage> {
       }
       return loc;
     });
+
+    // 28. v6.5.0：AI 主动来电 —— 开场白回放（接通后小智调它取回要说的那句话）
+    register(
+      const XiaozhiMcpTool(
+        name: 'self.proactive.get_opening',
+        description: '取回本轮主动来电要说的开场白。收到「说开场白」时调用它，'
+            '然后用口语把返回内容原样说给用户听。',
+        inputSchema: {'type': 'object', 'properties': <String, dynamic>{}},
+      ),
+      (_) async {
+        final text = _proactiveOpeningForReplay;
+        return {
+          'success': true,
+          'text': text.isEmpty ? '（当前没有待说的开场白）' : '请用口语把下面这句说给用户听：$text',
+        };
+      },
+    );
 
     _mcpResponder = responder;
     logger.info('MCP 设备端就绪：注册 ${responder.toolCount} 项工具');
