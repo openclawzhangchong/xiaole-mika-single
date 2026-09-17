@@ -43,12 +43,25 @@ class AppFeats {
   static const Map<String, bool> defaults = {
     'mcptools': true,
     'mqtt': false,
-    'vision': true,
+    'vision': false, // v6.8.1（E 项）：📷 相机按钮（视觉识物）默认关（原来默认开）
     'bargein': false, // v4.4.0：默认关（误触发导致 AI 自问自答，见方案根因③）
     'mcpDebug': false,
     'emotion': false,
     'rawServerAlert': false, // v6.4.4：默认关 = 普通用户模式（友好弹窗）
     'proactive': false, // v6.5.0：默认关（AI 主动来电属增强功能，需用户主动开启）
+  };
+
+  /// v6.8.1（E 项）：27 项 MCP 设备工具中**仅默认开启的 5 项白名单**。
+  /// 其余 22 项默认关（仅对新装用户生效；已装用户本地已存的开关不会被覆盖）。
+  /// `self.proactive.*`（get_script / trigger_call / skip / get_opening）属来电链路内部工具，
+  /// 不在 27 项逐项开关之列，故不在此列。
+  /// ⚠️ 集中管理，日后调整默认值只改这一处。
+  static const Set<String> mcpDefaultOnTools = {
+    'self.location.get_current', // 定位能力
+    'self.alarm.set_alarm', // 设置真实闹钟
+    'self.map.navigate', // 打开地图导航
+    'self.screen.set_brightness', // 调节屏幕亮度
+    'self.audio_speaker.set_volume', // 调节系统音量
   };
 
   static final Map<String, bool> _cache = Map.from(defaults);
@@ -104,9 +117,19 @@ class AppFeats {
   /// 逐项开关的运行时缓存（与 keys 列表完全隔离）。
   static final Map<String, bool> _mcpToolCache = {};
 
-  /// 单个 MCP 工具是否启用（默认 true；被显式关闭才记 false）。
-  static bool mcpToolEnabled(String name) =>
-      _mcpToolCache[name] ?? StorageService.instance.getBool(_mcpToolKey(name)) ?? true;
+  /// 单个 MCP 工具是否启用。
+  /// v6.8.1（E 项）：默认白名单——白名单内的 5 项 `?? true`，其余一律 `?? false`。
+  /// 优先级：运行时缓存 > 已持久化存储值 > 默认白名单（保证"已存值不被默认值回滚"）。
+  static bool mcpToolEnabled(String name) {
+    final cached = _mcpToolCache[name];
+    if (cached != null) return cached;
+    final stored = StorageService.instance.getBool(_mcpToolKey(name));
+    if (stored != null) return stored;
+    return mcpDefaultOnTools.contains(name);
+  }
+
+  /// 测试辅助：清空逐项 MCP 工具运行时缓存（不影响持久化存储）。
+  static void resetMcpToolCache() => _mcpToolCache.clear();
 
   /// 写回单个 MCP 工具的开关状态（持久化）。
   static void setMcpToolEnabled(String name, bool v) {

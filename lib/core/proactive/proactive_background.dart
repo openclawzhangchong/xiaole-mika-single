@@ -244,6 +244,9 @@ class ProactiveBackground {
       kWorkManagerTaskName,
       kWorkManagerTaskName,
       frequency: Duration(minutes: interval),
+      // v6.8.1：workmanager 锁 0.8.0（0.9.x 的 apple 子包与平台接口不匹配、Dart 编译失败；
+      // 0.10.x 需 Flutter>=3.38）。0.8.0 用 ExistingWorkPolicy；
+      // 选 replace 而非 keep —— 用户在 App 内改巡检间隔时需要按新频率重建任务。
       existingWorkPolicy: ExistingWorkPolicy.replace,
     );
     _logger.info(

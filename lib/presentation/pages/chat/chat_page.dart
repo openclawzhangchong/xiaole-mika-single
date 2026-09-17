@@ -148,6 +148,19 @@ class _ChatPageState extends ConsumerState<ChatPage> {
   bool _isSpeakerOn = false;
   String _callStatus = '等待连接...';
 
+  /// v6.8.1（B 项）：最近一次"挂断语音通话"的时间戳。
+  /// 挂断后的一个短窗口内，迟到（已在网络/服务器缓冲中）的音频帧一律丢弃，
+  /// 解决"说完拜拜挂断后它又补一句"。
+  /// ⚠️ 关键判定：纯文字聊天也经 `_handleBinaryMessage()` 播放 TTS 音频，
+  /// 故**不能**用"非通话就全丢"的全局守卫（会误伤主会话文字聊天），
+  /// 只能做"挂断后短窗口丢弃"的弱化方案。
+  DateTime? _voiceHangupAt;
+  static const Duration _voiceHangupMuteWindow = Duration(seconds: 5);
+
+  /// v6.8.1（B 项）：用户主动发起新交互（发文字 / 进通话 / 接听来电）→ 解除挂断静默窗口，
+  /// 保证文字聊天与后续通话的 TTS 不被误伤（窗口只在挂断后的短暂"迟到帧"期生效）。
+  void _liftVoiceMuteWindow() => _voiceHangupAt = null;
+
   /// v6.5.0：本轮"主动来电"要由小智说出的开场白
   /// （接通后小智调用 self.proactive.get_opening 取回，再经 TTS 说出）
   String _proactiveOpeningForReplay = '';
@@ -203,6 +216,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
 
   /// v6.5.0：接听后让小智"先开口"——把开场白存入内存，发短口令让它调用 get_opening 读出来
   void _playProactiveOpening(String opening) {
+    _liftVoiceMuteWindow(); // v6.8.1（B 项）：接听主动来电，解除挂断静默窗口
     _proactiveOpeningForReplay = opening;
     _appendOrCreateChatMessage(MessageSender.system, '📞 已接通，小乐正在开口…');
     // 短口令（≤16 字）：经 listen/detect 通道发送，触发小智取回并说出开场白
@@ -474,6 +488,9 @@ class _ChatPageState extends ConsumerState<ChatPage> {
   void _sendTextMessage() {
     final text = _textController.text.trim();
     if (text.isEmpty) return;
+
+    // v6.8.1（B 项）：用户主动发消息 → 解除挂断静默窗口，保证文字聊天 TTS 不被误伤
+    _liftVoiceMuteWindow();
 
     // v3.1.0：想打就打（xiaoleweb.md §2.6）——未连接时自动连接，hello ACK 后自动发送
     if (!_isConnected) {
@@ -1930,8 +1947,15 @@ class _ChatPageState extends ConsumerState<ChatPage> {
 
   /// 处理二进制消息（音频数据）
   void _handleBinaryMessage(List<int> data) {
+    // v6.8.1（B 项）：挂断后静默窗口——丢弃挂断后短窗口内到达的迟到音频帧。
+    // 文字聊天也经此路径播放 TTS，故不能"非通话就全丢"，只做挂断后短窗口丢弃。
+    if (_voiceHangupAt != null &&
+        DateTime.now().difference(_voiceHangupAt!) < _voiceHangupMuteWindow) {
+      return;
+    }
+
     //logger.info('收到音频数据: ${data.length} 字节');
-    
+
     // 标记 AI 开始播放
     if (!_isAiPlaying) {
       setState(() {
@@ -2336,6 +2360,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
   /// 开始语音通话（复用现有连续监听 + 音频链路，不改通信层）
   void _startVoiceCall() {
     if (_isInVoiceCall) return;
+    _liftVoiceMuteWindow(); // v6.8.1（B 项）：新通话开启，解除挂断静默窗口
     if (!_isConnected) {
       // v3.1.0：想打就打——未连接时自动连接，hello ACK 后自动进通话
       _ensureConnectedThen(_startVoiceCall, '进入通话');
@@ -2400,13 +2425,20 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     if (AudioUtil.isRecording) {
       AudioUtil.stopRecording();
     }
-    // v3.1.0：挂断时若 AI 还在说话，先发 abort 让服务器立刻停止合成（xiaoleweb.md §4.4）
-    if (_isAiPlaying && _wsManager != null && _isConnected) {
+    // v6.8.1（B 项）：挂断即静音——立即释放音频播放引擎，
+    // 避免已进入播放缓冲的 PCM 继续外放（根因①）。
+    AudioUtil.stopPlaying();
+    // v6.8.1（B 项）：挂断即通知——无条件向服务器发 abort 停止合成。
+    // 旧逻辑被 _isAiPlaying 门控，挂断瞬间该标志常已为 false，导致指令发不出，
+    // 服务器后续仍推 TTS ⇒ 挂断后"补一句"（根因②）。改为只要连着就发。
+    if (_wsManager != null && _isConnected) {
       _wsManager!.sendMessage(jsonEncode({'type': 'abort'}));
-      logger.info('已发送 abort（AI 说话中挂断，服务器停止 TTS）');
+      logger.info('已发送 abort（挂断即通知服务器停止 TTS 合成）');
       _isAiPlaying = false;
       _aiPlayingTimer?.cancel();
     }
+    // v6.8.1（B 项）：记录挂断时刻，开启"迟到音频帧丢弃"静默窗口（根因④）。
+    _voiceHangupAt = DateTime.now();
     _handleContinuousListenStop(); // 复用现有停止逻辑
     if (mounted) {
       setState(() {

@@ -4,7 +4,7 @@ class AppConfig {
 
   // 应用信息
   static const String appName = '小乐'; // v4.0.0：品牌统一（默认智能体名前缀等）
-  static const String appVersion = '6.8.0'; // v6.8.0：AI 主动来电「后台化」——WorkManager 周期唤醒（退到后台/锁屏后照常巡检）+ 高优先来电通知（"小乐想和你通话"）+ 后台保活引导页 + 前后台互斥；详见 CHANGELOG.md
+  static const String appVersion = '6.8.1'; // v6.8.1：修复「挂断后仍在说话」缺陷（挂断即静音/无条件 abort/挂断后短窗口丢弃迟到音频帧）+ 调整默认开关（27 项 MCP 设备工具仅默认开 5 项、📷 相机按钮默认关，仅对新装用户生效）；详见 CHANGELOG.md
 
   /// v4.4.0 尾音保护：AI 播放结束后丢弃麦克风音频的时长（毫秒）
   static const int defaultTailGuardMs = 300;

@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 6.8.0+45
+version: 6.8.1+46
 
 environment:
   sdk: ^3.8.0
@@ -70,7 +70,11 @@ dependencies:
   # v6.8.0：AI 主动来电「后台化」（WorkManager 周期唤醒 + 高优先通知）
   # ⚠️ 本项目 Flutter 3.32.2 / Dart 3.8.1：下列版本均为兼容版（workmanager 0.5.x 与
   # flutter_local_notifications 17.x 均要求 Dart SDK >=3.3.0 <4.0.0，与本项目匹配）。
-  workmanager: ^0.5.2                    # 后台周期任务（最小 15 分钟，无常驻通知/前台服务）
+  workmanager: 0.8.0   # v6.8.1 修正根因：0.5.2 太旧(Kotlin 与 Flutter 3.32 嵌入层不兼容→构建失败)；
+                       # 0.9.x 的 workmanager_apple 与 platform_interface 不匹配(Dart 编译失败)；
+                       # 0.10.x 需 Flutter>=3.38。0.8.0 要求 flutter>=3.32.0，版本组合内部一致。
+                       # 而 0.5.2 的 Kotlin 与 Flutter 3.32 嵌入层不兼容 → CI 构建失败。
+                       # 0.9.0 要求 flutter>=3.32.0 与本项目匹配；0.9.2+1/0.9.3 因 workmanager_apple 需 Flutter>=3.38 不可用，故精确锁定 0.9.0。
   flutter_local_notifications: ^17.2.0   # 高优先来电通知 + 通知渠道
 
   # MCP 设备工具能力（v6.1.0，方案见 PLAN_v6.1.0_MCP设备工具能力扩展.md）
