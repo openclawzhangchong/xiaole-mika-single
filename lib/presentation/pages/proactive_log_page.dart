@@ -132,9 +132,10 @@ class _ProactiveLogPageState extends State<ProactiveLogPage> {
 
   Widget _buildCard(ProactiveRoundLogEntry e, Color prim, Color sub) {
     final isSkip = e.decision == 'skip';
-    final label = isSkip ? '跳过' : _inspectLabel(e);
+    final label = isSkip ? '跳过' : _decisionLabel(e);
+    // 跳过用深琥珀（AppColors.warning 的黄色在浅色底上做文字对比度不足，读不清）
     final accent = isSkip
-        ? AppColors.warning
+        ? const Color(0xFFB25E00)
         : (e.triggerCalled ? AppColors.primary : AppColors.info);
 
     return Card(
@@ -223,7 +224,8 @@ class _ProactiveLogPageState extends State<ProactiveLogPage> {
     );
   }
 
-  String _inspectLabel(ProactiveRoundLogEntry e) {
+  /// 判定标签（与 `ProactiveRoundLog._decisionLabel` 保持同一口径）
+  String _decisionLabel(ProactiveRoundLogEntry e) {
     if (e.triggerCalled) return '触发来电';
     if (e.skipCalled) return '静默';
     if (e.endReason == 'timeout') return '超时';
