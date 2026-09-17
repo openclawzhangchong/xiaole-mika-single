@@ -106,6 +106,75 @@
 - `flutter analyze --no-pub`：**0 error / 0 warning**（既有 info 级风格提示不计，未引入新问题）。
 - 全量 `flutter test`：**65 / 65 通过**（v6.8.2 为 51；本版 +4 电话日志单测 +10 头像单测）。
 
+### 🧪 ⑤ 测试网加固：色板对比度从「亮度代理」升级为「真算 WCAG 对比度」
+
+原断言只查"白字要求底色亮度 < 0.45"，**这是个会漏判的代理指标**：
+亮度 0.448 的底色配白字只有 **2.1:1**，肉眼基本读不清，却仍能通过断言。
+现改为**直接计算 WCAG 2.x 对比度** `(L亮+0.05)/(L暗+0.05)`，要求**渐变两端**（最暗处与最亮处）
+都 **≥ 4.5:1（AA 正文级）**，失败时打印实际比值与具体色值。
+
+- **负向对照已实测**：故意把"深蓝"最亮端改成 `0x7FAEF5`（亮度 0.4138，旧断言**会放过**）→
+  新断言立即报错 `对比度仅 2.26:1，低于 WCAG AA 的 4.5:1` ✅（随后已还原，`git status` 仅剩测试文件）。
+- 12 套色板**实测全部达标**，最差一套（深蓝亮端）为 **4.63:1**，安全边际充足。
+
+### 🚀 ⑥ 发布与 CI
+
+| 项 | 值 |
+|---|---|
+| 远端 tag | `v6.8.3` |
+| 远端 commit | `bc5d0980`（tree `6468b5bf`，与本地工作树**逐字节一致**，已校验） |
+| CI run | **35256912342**（`Build Android APK`，**第 2 次尝试 success**） |
+| APK | `app-release.apk` **41,018,286 字节**，sha1 `10ff76c268cec7776b0d12f30d8da7b8bf36136e` |
+
+#### ⚠️ 发布过程中遇到的"假失败"（重要，别再误判）
+
+本 tag 的**第 1 次** CI 尝试结论是 **failure**，但**并不是代码问题**：
+
+```
+2026-09-17T18:23:34Z  ✓ Built build/app/outputs/flutter-apk/app-release.apk (41.0MB)   ← APK 构建成功
+2026-09-17T18:26:47Z  ##[error] request to https://uploads.github.com/.../releases/390946356/assets?name=app-release.apk
+                                  failed, reason: socket hang up                        ← 上传 Release 资产时网络中断
+```
+
+**根因**：`softprops/action-gh-release@v1` 把 41MB APK 上传到 `uploads.github.com` 时
+**上游网络抖动（socket hang up，约 3 分钟后断）** —— 属于**瞬时基础设施故障**，
+与代码、配置均无关（同一 workflow 在 `8517cdd8` / `7511bf90` 两次运行均成功，APK 字节数完全相同）。
+
+**处置**：用 `POST /repos/{o}/{r}/actions/runs/{id}/rerun-failed-jobs` 重跑 →
+**attempt 2 全绿**，Release 资产上传成功。
+**教训**：CI 红灯**先看失败在哪一步** —— 若 `Built ... app-release.apk` 已打出、失败在 `Create Release`，
+则是**发布环节的瞬时故障，重跑即可**，**不要**去改代码、更不要改版本号重发。
+
+> 备注：本次**未**为此修改 workflow。理由：① 根因是上游瞬时故障，非配置缺陷；
+> ② 该 workflow 已在 8 次发布中成功，改动未经真机验证风险更高；
+> ③ `workflow_dispatch` 手动触发与 job 重跑已构成足够的兜底通道。
+> 若后续该故障复现 ≥2 次，再考虑给 Release 步骤加"失败后重试一次"的包装。
+
+### ⚠️ ⑦ 已知边界（本版**未**改，留待决策）：Android Auto Backup 可能带回头像图片
+
+需求 ④ 要求"**重装 App 后自动回落到文字头像**"。Dart 侧已严格保证（配置与图片均在**本地私有**存储，
+**不写入 `AgentModel`、不碰 `cloud_sync_service.dart`**），普通重装**确实会回落**。
+
+但 `android/app/src/main/AndroidManifest.xml` **未声明 `android:allowBackup`**，
+即采用 Android 默认值 **`true`** —— 意味着若用户开启了系统"备份到云端 / 换机迁移"，
+`SharedPreferences`（含 `xw_avatar_<agentId>`）与私有目录下的 `agent_avatars/*.png`
+**可能随系统备份被还原**，此时图片会"跟着回来"。
+
+- 这**不影响**需求 ⑤（"同账号在另一台设备恢复**云端数据**不会带过去"）—— 我们自己的云同步路径已完全隔离；
+- 但严格意义上**削弱**了需求 ④（重装回落）在"开了系统备份"场景下的成立性。
+
+**待决策的三种修法**（各有代价，故未擅自实施）：
+
+| 方案 | 做法 | 代价 |
+|---|---|---|
+| A | `android:allowBackup="false"` | **全局**关闭备份，用户其它本地数据（智能体/设置）也失去备份保护 |
+| B | 加 `dataExtractionRules` / `fullBackupContent`，排除 prefs 与头像目录 | 规则按**文件**粒度，排除 prefs 会连带丢失其它设置 |
+| C | 头像图片改存 `getApplicationCacheDirectory()`（缓存目录默认不进 Auto Backup） | 系统清理缓存时**图片会随机消失**（比"重装回落"更差） |
+
+**AI 建议（可选采纳）**：优先考虑 **B + 只排除头像目录**（`agent_avatars/`），
+并**接受** prefs 中的 `xw_avatar_*` 键可能被还原（因为图片文件已被排除，键无对应文件时会
+自动走 `errorBuilder` **回落文字头像**）—— 这样既保住其它数据备份，又满足"重装回落"。
+
 ### 版本号
 
 - `pubspec.yaml`：`6.8.2+47` → **`6.8.3+48`**

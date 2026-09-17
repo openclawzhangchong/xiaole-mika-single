@@ -6,6 +6,16 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:xiaozhi_client_flutter/core/storage/storage_service.dart';
 import 'package:xiaozhi_client_flutter/presentation/services/agent_avatar_store.dart';
 
+/// WCAG 2.x 对比度：(L_亮 + 0.05) / (L_暗 + 0.05)。
+/// Flutter 的 `Color.computeLuminance()` 用的就是同一套 sRGB 相对亮度公式。
+double _contrastRatio(Color a, Color b) {
+  final la = a.computeLuminance();
+  final lb = b.computeLuminance();
+  final hi = la > lb ? la : lb;
+  final lo = la > lb ? lb : la;
+  return (hi + 0.05) / (lo + 0.05);
+}
+
 /// C 项（头像升级）纯逻辑单测。
 ///
 /// 重点覆盖 v6.8.3 实测踩到的**两个真 bug**：
@@ -110,27 +120,35 @@ void main() {
   });
 
   group('色板对比度（不做任意取色器）', () {
-    test('12 套色板，每套按亮度选安全字色', () {
+    test('12 套色板，每套在渐变两端都满足 WCAG AA（≥ 4.5:1）', () {
       expect(kAgentAvatarPalette.length, 12);
       for (final p in kAgentAvatarPalette) {
         expect(p.bg.length, 2, reason: '每套应为渐变（两色）');
-        // 字色只有两种安全选择：白字（深底）或深灰字（浅底）
+
+        // ① 字色只允许两种"安全档"：白字（配深底）或深灰字（配浅底）。
+        //    禁止任意取色 ⇒ 结构上就排除"中明度底 + 白字"这类会发虚的组合。
         final isWhite = p.fg.toARGB32() == 0xFFFFFFFF;
         final isDarkGray = p.fg.toARGB32() == 0xFF2C2C2E;
         expect(isWhite || isDarkGray, isTrue,
             reason: '字色必须是安全的白或深灰，避免撞色看不清');
-        // 渐变两端亮度接近（同明暗档），避免同一底色上出现"一半看得清一半看不清"
+
+        // ② 真正的验收标准：**渐变两端**（最暗处与最亮处）都要 ≥ 4.5:1。
+        //    ⚠️ 只看"平均/名义色"会漏掉渐变亮端——用户看到的是整块渐变。
+        //    旧版断言只查亮度阈值（白字配 <0.45 底），能放过 ~2.1:1 的不可读组合，
+        //    这里直接算 WCAG 对比度，把验收标准本身钉死。
+        for (final stop in p.bg) {
+          final ratio = _contrastRatio(p.fg, stop);
+          expect(ratio, greaterThanOrEqualTo(4.5),
+              reason: '底色 #${stop.toARGB32().toRadixString(16)} 与字色 '
+                  '#${p.fg.toARGB32().toRadixString(16)} 的对比度仅 '
+                  '${ratio.toStringAsFixed(2)}:1，低于 WCAG AA 的 4.5:1');
+        }
+
+        // ③ 渐变两端明暗差不宜过大，避免同一头像"一半看得清一半看不清"。
         final l0 = p.bg[0].computeLuminance();
         final l1 = p.bg[1].computeLuminance();
-        expect((l0 - l1).abs() < 0.35, isTrue,
+        expect((l0 - l1).abs(), lessThan(0.35),
             reason: '同套渐变两端明暗差不宜过大');
-        // 白字必须配深底，深灰字必须配浅底
-        final brightest = l0 > l1 ? l0 : l1;
-        if (isWhite) {
-          expect(brightest, lessThan(0.45), reason: '白字必须配深底');
-        } else {
-          expect(brightest, greaterThan(0.55), reason: '深灰字必须配浅底');
-        }
       }
     });
   });
