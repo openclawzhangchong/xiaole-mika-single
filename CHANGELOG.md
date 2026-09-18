@@ -19,7 +19,7 @@ v6.11.1 只改了图标色块/分割线/emoji，**漏了"容器"层**：服务�
 
 ### 🧪 验证
 - `flutter analyze`：**No issues**；全量 `flutter test`：**71/71**（golden 集不含这两页，基线不变）。
-- **Android 构建 CI 结论**：**（占位，由 lead 回填 CI 结论）**
+- **Android 构建 CI 结论**：**✅ success** —— run `35351185906`（attempt 1 一次通过）；APK **40,773,270 B**（sha1 `32f1e823`）已下载桌面 `xiaole-client-v6.11.3.apk`。
 
 ### 备注
 - 版本号 `6.11.2+54` → `6.11.3+55`；回滚锚点 `anchor-pre-v6.11.3` = `aa971cf`。
