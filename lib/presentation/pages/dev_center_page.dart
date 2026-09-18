@@ -841,21 +841,21 @@ class _McpToolsDetailPageState extends State<_McpToolsDetailPage> {
         children: [
           const SizedBox(height: 8),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            padding: const EdgeInsets.fromLTRB(16, 10, 16, 4),
             child: Text(
                 '共 ${_totalCount()} 项能力，逐项开关；关闭后 AI 将看不到该工具',
                 style: AppTextStyles.caption.copyWith(color: sub)),
           ),
           if (!masterOn)
             Container(
-              margin: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+              margin: const EdgeInsets.fromLTRB(16, 8, 16, 4),
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
                 color: AppColors.info.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(AppDimens.radiusMd),
+                borderRadius: BorderRadius.circular(AppDimens.radiusSm),
               ),
               child: Text(
-                '🧰 总开关「MCP 设备工具」已关闭，下面各项暂不可操作。'
+                '总开关「MCP 设备工具」已关闭，下面各项暂不可操作。'
                 '请先返回上一页开启总闸。',
                 style: AppTextStyles.caption.copyWith(color: AppColors.info),
               ),
@@ -865,7 +865,7 @@ class _McpToolsDetailPageState extends State<_McpToolsDetailPage> {
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
             child: Text(
-              '⚠️ 闹钟 / 日程 / 短信 / 拨号 / 分享会打开系统界面，'
+              '注意：闹钟 / 日程 / 短信 / 拨号 / 分享会打开系统界面，'
               '需要你确认后才真正生效（安卓的安全设计）。',
               style: AppTextStyles.captionSmall.copyWith(color: sub, height: 1.4),
             ),
@@ -880,19 +880,19 @@ class _McpToolsDetailPageState extends State<_McpToolsDetailPage> {
   Widget _section(String title, List<List<String>> tools, Color prim, Color sub,
       bool masterOn) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 10, 12, 0),
+      padding: const EdgeInsets.only(top: 10),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(8, 6, 8, 6),
+            padding: const EdgeInsets.fromLTRB(16, 10, 16, 6),
             child: Text(title,
                 style: AppTextStyles.caption.copyWith(
                     fontWeight: FontWeight.bold, color: prim)),
           ),
           Material(
             color: widget.isDark ? AppColors.surfaceDark : AppColors.surface,
-            borderRadius: BorderRadius.circular(AppDimens.radiusLg),
+            borderRadius: BorderRadius.zero,
             child: Column(
               children: [
                 for (var i = 0; i < tools.length; i++)

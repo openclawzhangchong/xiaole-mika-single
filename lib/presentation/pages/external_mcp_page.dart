@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:xiaozhi_client_flutter/app/themes/app_colors.dart';
+import 'package:xiaozhi_client_flutter/app/themes/app_dimens.dart';
 import 'package:xiaozhi_client_flutter/app/themes/app_text_styles.dart';
 import 'package:xiaozhi_client_flutter/core/utils/toast_util.dart';
 
@@ -282,11 +283,12 @@ class _ExternalMcpPageState extends State<ExternalMcpPage> {
             )
           : servers.isEmpty
               ? _buildEmpty()
-              : ListView.separated(
+              : ListView(
                   padding: const EdgeInsets.symmetric(vertical: 8),
-                  itemCount: servers.length,
-                  separatorBuilder: (_, __) => const Divider(height: 1),
-                  itemBuilder: (ctx, i) => _buildTile(servers[i], isDark),
+                  children: [
+                    for (int i = 0; i < servers.length; i++)
+                      _buildTile(servers[i], isDark, isLast: i == servers.length - 1),
+                  ],
                 ),
     );
   }
@@ -299,7 +301,7 @@ class _ExternalMcpPageState extends State<ExternalMcpPage> {
         onAction: _restoreBuiltins,
       );
 
-  Widget _buildTile(ExternalMcpServer s, bool isDark) {
+  Widget _buildTile(ExternalMcpServer s, bool isDark, {bool isLast = false}) {
     final pr = ExternalMcpManager.instance.statusOf(s.id);
     final online = s.enabled && pr != null && pr.ok;
     // v6.9.0：列表上直接显示「已启用几个 / 共几个」，不必点进去才知道能逐工具管理
@@ -316,11 +318,11 @@ class _ExternalMcpPageState extends State<ExternalMcpPage> {
     final statusColor = online ? AppColors.statusOnline : AppColors.textSecondary;
 
     return WxCell(
-      leading: Icon(
+      leading: _iconTile(
         Icons.hub,
-        color: online
+        online
             ? AppColors.primary
-            : (isDark ? AppColors.textSecondaryDark : AppColors.textSecondary),
+            : (isDark ? AppColors.navBarUnselectedDark : AppColors.navBarUnselected),
       ),
       title: '${s.name}  ·  ${s.prefix}.*',
       subtitleWidget: Column(
@@ -372,8 +374,25 @@ class _ExternalMcpPageState extends State<ExternalMcpPage> {
           MaterialPageRoute(builder: (_) => _ExternalMcpToolsPage(server: s)),
         );
       },
+      showDivider: !isLast,
     );
   }
+
+}
+
+/// 微信风图标色块（28px 圆角方块 + 白色图标，对齐 dev_center_page 同款做法）
+/// 文件级私有函数，供 ExternalMcpPage 与 _ExternalMcpToolsPage 两页共用。
+Widget _iconTile(IconData icon, Color color) {
+  return Container(
+    width: 28,
+    height: 28,
+    decoration: BoxDecoration(
+      color: color,
+      borderRadius: BorderRadius.circular(AppDimens.radiusIcon),
+    ),
+    alignment: Alignment.center,
+    child: Icon(icon, size: 18, color: Colors.white),
+  );
 }
 
 /// 单台服务器的**逐工具开关**页
@@ -483,7 +502,7 @@ class _ExternalMcpToolsPageState extends State<_ExternalMcpToolsPage> {
           : ListView(
               children: [
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -510,7 +529,7 @@ class _ExternalMcpToolsPageState extends State<_ExternalMcpToolsPage> {
                   final isWrite = kWriteTools.contains(t.name);
                   return WxCell(
                     leading: isWrite
-                        ? const Icon(Icons.warning_amber_rounded, size: 20)
+                        ? _iconTile(Icons.warning_amber_rounded, AppColors.error)
                         : null,
                     title: t.name,
                     subtitle: t.description.isEmpty ? '（无描述）' : t.description,
