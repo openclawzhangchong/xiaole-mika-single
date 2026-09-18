@@ -284,10 +284,22 @@ class _ExternalMcpPageState extends State<ExternalMcpPage> {
           : servers.isEmpty
               ? _buildEmpty()
               : ListView(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  padding: EdgeInsets.zero,
                   children: [
-                    for (int i = 0; i < servers.length; i++)
-                      _buildTile(servers[i], isDark, isLast: i == servers.length - 1),
+                    // v6.11.3：微信规格补全 —— 行装进白色通栏直角容器
+                    // （此前行直接铺在灰底上，0.5px 分割线不可见、观感"没改"）
+                    const SizedBox(height: 10),
+                    Material(
+                      color: isDark ? AppColors.surfaceDark : AppColors.surface,
+                      child: Column(
+                        children: [
+                          for (int i = 0; i < servers.length; i++)
+                            _buildTile(servers[i], isDark,
+                                isLast: i == servers.length - 1),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
                   ],
                 ),
     );
@@ -461,6 +473,7 @@ class _ExternalMcpToolsPageState extends State<_ExternalMcpToolsPage> {
   @override
   Widget build(BuildContext context) {
     final s = _current;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final pr = ExternalMcpManager.instance.statusOf(s.id);
     final tools = pr?.tools ?? const <ExternalMcpTool>[];
     final enabledCount =
@@ -524,25 +537,46 @@ class _ExternalMcpToolsPageState extends State<_ExternalMcpToolsPage> {
                     ],
                   ),
                 ),
-                ...tools.map((t) {
-                  final disabled = s.disabledTools.contains(t.name);
-                  final isWrite = kWriteTools.contains(t.name);
-                  return WxCell(
-                    leading: isWrite
-                        ? _iconTile(Icons.warning_amber_rounded, AppColors.error)
-                        : null,
-                    title: t.name,
-                    subtitle: t.description.isEmpty ? '（无描述）' : t.description,
-                    trailing: Switch(
-                      value: !disabled,
-                      activeColor: AppColors.primary,
-                      onChanged: s.enabled ? (v) => _toggle(t.name, v) : null,
-                    ),
-                    onTap: s.enabled ? () => _toggle(t.name, !disabled) : null,
-                  );
-                }),
+                // v6.11.3：微信规格补全 —— 工具行装进白色通栏直角容器
+                // （说明文字留在灰底上，对齐微信「发现页管理」式布局；
+                //   此前行直接铺在灰底上，0.5px 分割线不可见）
+                Material(
+                  color: isDark ? AppColors.surfaceDark : AppColors.surface,
+                  child: Column(
+                    children: [
+                      for (int i = 0; i < tools.length; i++)
+                        _buildToolTile(
+                          tools[i],
+                          s,
+                          isLast: i == tools.length - 1,
+                        ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 24),
               ],
             ),
+    );
+  }
+
+  /// 单个工具行（v6.11.3 自 tools.map 抽出；回调与状态逻辑逐字未动）
+  Widget _buildToolTile(ExternalMcpTool t, ExternalMcpServer s,
+      {required bool isLast}) {
+    final disabled = s.disabledTools.contains(t.name);
+    final isWrite = kWriteTools.contains(t.name);
+    return WxCell(
+      leading: isWrite
+          ? _iconTile(Icons.warning_amber_rounded, AppColors.error)
+          : null,
+      title: t.name,
+      subtitle: t.description.isEmpty ? '（无描述）' : t.description,
+      showDivider: !isLast,
+      trailing: Switch(
+        value: !disabled,
+        activeColor: AppColors.primary,
+        onChanged: s.enabled ? (v) => _toggle(t.name, v) : null,
+      ),
+      onTap: s.enabled ? () => _toggle(t.name, !disabled) : null,
     );
   }
 }

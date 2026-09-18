@@ -3,7 +3,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Flutter-3.32.2-blue.svg" alt="Flutter">
   <img src="https://img.shields.io/badge/包名-com.zcstudy.xiaole-green.svg" alt="Package">
-  <img src="https://img.shields.io/badge/当前版本-6.11.2-success.svg" alt="Version">
+  <img src="https://img.shields.io/badge/当前版本-6.11.3-success.svg" alt="Version">
 </p>
 
 本仓库是小智客户端 Flutter 版（上游 [eiriksgata/xiaozhi-client-flutter](https://github.com/eiriksgata/xiaozhi-client-flutter)）的**微信风 UI 定制版**，由张老师定制维护。上游的架构与功能说明保留在本文档后半部分，仍然适用。
@@ -73,6 +73,7 @@
 > **改动出错需要回退时，优先按下表找最近的 ✅ 版本**；标 ❌ 者为**构建失败、无 APK**，**勿用**。
 
 | 版本标签 | 内容 | 包名 | 验证状态 | 验证日期 |
+| `v6.11.3` | 🧩 **外部 MCP 两页补白色通栏直角容器** —— 张老师真机截图确证 v6.11.1 观感未变：根因是行直接铺在灰底上（WxCell InkWell 透明 + Scaffold 灰底透出），0.5px 分割线不可见。本版把服务器列表行与逐工具页工具行装进白色通栏直角容器（说明文字留灰底，微信「发现页管理」式），分割线在白底上显现。仅改 `external_mcp_page.dart`，回调零改动 | `com.zcstudy.xiaole` | ⏳ CI 构建中（结论稍后回填） | 2026-09-18 |
 | `v6.11.2` | 💬 **聊天输入栏对齐微信原版交互** —— 外部 AI 任务的输入栏改造经审计后采纳其核心交互（右侧**电话/发送互斥切换**：有字隐藏电话、清空恢复），拒绝其 4 处不合理项（固定 54 高/圆角 18 药丸/硬编码 #28C76F/#F5F5F5/砍 📷🎤 入口）。侧边图标统一 40x36 视觉盒解决高低不齐；输入框 minHeight 36 + contentPadding 8 + isDense；间距 10；hint 改「输入消息」（张老师定）；圆角保持 5px、颜色全走 token。仅改 `chat_input_bar.dart`，回调签名零改动，📷 识物/🎤 语音/📞 通话功能全保留。2 张输入栏 golden 重生成并目视核对 | `com.zcstudy.xiaole` | ✅ CI 通过（run **35347340620**，attempt 1 一次通过；APK 40,773,270 B sha1 `0da7d7f5` 已下载桌面 `xiaole-client-v6.11.2.apk`） | 2026-09-18 |
 | `v6.11.1` | 🎨 **外部 MCP 管理三处从属页排版微信化** —— 起因：张老师反馈「外部 MCP 管理界面和工具列表没微信化、漏掉了」。根因：v6.11.0 只重排了开发者中心**主页**，漏了三个从属页面——① 外部 MCP 服务器列表页；② 单台服务器的逐工具开关页（`_McpToolsDetailPage`）；③ MCP 设备工具清单页（26 项）。本版（补丁）把这三处用**与主页同一套微信规格**清掉：裸图标 → **28px 彩色圆角色块**（在线绿 / 离线灰、写工具红色警示块）；1px 通栏 `Divider` → `WxCell` 自带 **0.5px 细线**；删净 emoji（🧰 / ⚠️）；提示条 / 分组标题对齐微信排版。**仅改 `external_mcp_page.dart` + `dev_center_page.dart` 的 `_McpToolsDetailPage` 类内，行为零改动**（`switchTile` / 探测 / 导入 / 批量开关 / 默认关闭 `merge_notes` 逻辑一律未动）。版本号 `6.11.0+52` → `6.11.1+53`。自检：见 CHANGELOG.md 验证列（占位，CI 结论稍后回填）。详见 CHANGELOG.md | `com.zcstudy.xiaole` | ✅ CI 通过（run **35342901807**，attempt 1 一次通过；APK 40,773,270 B sha1 `0f942cee` 已下载桌面 `xiaole-client-v6.11.1.apk`） | 2026-09-18 |
 

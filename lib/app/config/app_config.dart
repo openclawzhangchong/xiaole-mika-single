@@ -4,7 +4,7 @@ class AppConfig {
 
   // 应用信息
   static const String appName = '小乐'; // v4.0.0：品牌统一（默认智能体名前缀等）
-  static const String appVersion = '6.11.2'; // v6.11.2：聊天输入栏对齐微信原版交互——右侧电话/发送互斥切换（有字隐藏电话）、侧边图标统一 40x36 视觉盒解决高低不齐、间距 10、hint 改「输入消息」。详见 CHANGELOG.md
+  static const String appVersion = '6.11.3'; // v6.11.3：外部 MCP 两页补白色通栏直角容器（v6.11.1 实施遗漏层——行直接铺灰底致 0.5px 分割线不可见、观感未变）。详见 CHANGELOG.md
 
   /// v4.4.0 尾音保护：AI 播放结束后丢弃麦克风音频的时长（毫秒）
   static const int defaultTailGuardMs = 300;
