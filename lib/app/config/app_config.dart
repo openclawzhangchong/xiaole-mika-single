@@ -4,7 +4,7 @@ class AppConfig {
 
   // 应用信息
   static const String appName = '小乐'; // v4.0.0：品牌统一（默认智能体名前缀等）
-  static const String appVersion = '6.11.3'; // v6.11.3：外部 MCP 两页补白色通栏直角容器（v6.11.1 实施遗漏层——行直接铺灰底致 0.5px 分割线不可见、观感未变）。详见 CHANGELOG.md
+  static const String appVersion = '6.11.4'; // v6.11.4：隐私政策·权限引导页按微信四层规范重排（28px 图标色块替代 emoji + 白色通栏直角容器显式撑满根治卡片收缩 bug + 0.5px 分割线；拒绝外部任务的 iOS 卡风）。详见 CHANGELOG.md
 
   /// v4.4.0 尾音保护：AI 播放结束后丢弃麦克风音频的时长（毫秒）
   static const int defaultTailGuardMs = 300;
