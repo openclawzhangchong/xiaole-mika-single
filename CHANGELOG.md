@@ -51,7 +51,9 @@ v6.9.0 新增的「已启用 N/M」也**与真实下发情况一致**。
 ### 自检
 - `flutter analyze --no-pub`：**0 error**（5 warning 为既有基线）
 - 新增测试 **6/6**；全量 `flutter test`：**71/71**（原 65 + 新 6）
-- Android 构建由 CI 验证。
+- **Android 构建已由 CI 验证通过** ✅ —— run `35294530211`（`conclusion=success`），
+  Release `v6.9.1` 已产出 `app-release.apk`（41,018,286 B ≈ 39.1 MB），已下载到桌面 `xiaole-client-v6.9.1.apk`
+  （字节数与 v6.9.0 一致 —— 本次只改 1 行判定逻辑 + 新增测试，不含资源变更）。
 
 ---
 
