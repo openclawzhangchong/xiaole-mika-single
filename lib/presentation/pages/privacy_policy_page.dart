@@ -1,21 +1,25 @@
+import 'package:android_intent_plus/android_intent.dart';
 import 'package:flutter/material.dart';
 import '../../app/themes/app_colors.dart';
 import '../../app/themes/app_text_styles.dart';
+import '../../core/utils/toast_util.dart';
 
-/// 隐私政策 · 权限引导页（v6.7.0 新增；v6.11.4 按微信四层规范重排）
+/// 隐私政策 · 权限引导页（v6.7.0 新增；v6.11.4 微信四层规范重排；
+/// v6.11.5 「让 App 常驻不杀」补"去设置"跳转 —— 对齐后台保活引导页能力）
 /// ------------------------------------------------------------
 /// 定位：引导用户放心授予全部权限（每条：用途 + 不授权的影响），
-/// 并给出保活设置指引（电池优化/自启动/后台运行）。
+/// 并给出保活设置指引（电池优化/自启动/后台运行，可一键跳系统设置）。
 /// 微信四层规范（对齐 v6.11.0 开发者中心）：①灰页面底 ②白色通栏直角容器
 /// （显式撑满宽，根治 v6.11.3 前卡片随内容收缩的 bug）③行间 0.5px 分割线
 /// ④28px 彩色圆角图标色块（替代 emoji）。无外链、深浅色自适应。
 class PrivacyPolicyPage extends StatelessWidget {
   const PrivacyPolicyPage({super.key});
 
+  static const String _packageName = 'com.zcstudy.xiaole';
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final prim = isDark ? AppColors.textPrimaryDark : AppColors.textPrimary;
     final sub = isDark ? AppColors.textSecondaryDark : AppColors.textSecondary;
 
     return Scaffold(
@@ -53,11 +57,21 @@ class PrivacyPolicyPage extends StatelessWidget {
             ]),
             _section(isDark, '让 App 常驻不杀（重要）', [
               _p(sub, '请按以下步骤设置，避免小乐被系统后台杀掉，'
-                  '保证语音通话不断线、AI 主动来电不漏接：'),
-              _p(prim, '1. 系统设置 → 应用 → 小乐 → 电池 → 选择「不限制/允许后台运行」；'),
-              _p(prim, '2. 在电池优化列表中将小乐设为「不优化/白名单」；'),
-              _p(prim, '3. 若有「自启动」开关，请开启；'),
-              _p(prim, '4. 最近任务里不要上滑清理小乐。'),
+                  '保证语音通话不断线、AI 主动来电不漏接。'
+                  '点各行「去设置」可直达对应系统设置页：'),
+              // v6.11.5：步骤改为可点跳转（对齐「后台保活引导」页能力）
+              _step(isDark, '1', '电池优化白名单',
+                  '把小乐加入「不受电池优化限制」列表，避免被系统休眠',
+                  _openBatterySettings),
+              _step(isDark, '2', '允许自启动',
+                  '允许小乐自启动，系统在需要时能重新拉起它完成巡检与来电',
+                  _openAppDetails),
+              _step(isDark, '3', '后台运行限制',
+                  '关闭对小乐的「后台运行限制 / 省电限制」，让它退到后台也能工作',
+                  _openAppDetails),
+              _step(isDark, '4', '最近任务不要上滑清理',
+                  '在最近任务里锁定小乐（部分系统为下拉小锁图标），防止被一键清理',
+                  null, isLast: true),
               _p(sub, '（不同品牌手机路径略有差异，关键词：电池优化、自启动、后台运行。）'),
             ]),
             _section(isDark, '我们的承诺', [
@@ -90,6 +104,100 @@ class PrivacyPolicyPage extends StatelessWidget {
       alignment: Alignment.center,
       child: Icon(icon, size: 18, color: Colors.white),
     );
+  }
+
+  /// 保活步骤行（v6.11.5）：序号色块 + 标题 + 说明；
+  /// [onTap] 非空时行尾显示绿色「去设置」并可点跳系统设置页，末行无分割线。
+  Widget _step(bool isDark, String index, String title, String desc,
+      Future<void> Function()? onTap, {bool isLast = false}) {
+    final prim = isDark ? AppColors.textPrimaryDark : AppColors.textPrimary;
+    final sub = isDark ? AppColors.textSecondaryDark : AppColors.textSecondary;
+    final row = Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Container(
+            width: 28,
+            height: 28,
+            decoration: BoxDecoration(
+              color: AppColors.primary,
+              borderRadius: BorderRadius.circular(7),
+            ),
+            alignment: Alignment.center,
+            child: Text(index,
+                style: AppTextStyles.subtitleStrong
+                    .copyWith(color: Colors.white)),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title,
+                    style: AppTextStyles.body.copyWith(color: prim)),
+                const SizedBox(height: 2),
+                Text(desc,
+                    style: AppTextStyles.caption
+                        .copyWith(height: 1.4, color: sub)),
+              ],
+            ),
+          ),
+          if (onTap != null)
+            Padding(
+              padding: const EdgeInsets.only(left: 8),
+              child: Text('去设置',
+                  style: AppTextStyles.subtitle
+                      .copyWith(color: AppColors.primary)),
+            ),
+        ],
+      ),
+    );
+    return Column(
+      children: [
+        if (onTap != null)
+          InkWell(
+            onTap: () => onTap(),
+            child: row,
+          )
+        else
+          row,
+        if (!isLast)
+          Container(
+            margin: const EdgeInsets.only(left: 16),
+            height: 0.5,
+            color: isDark ? AppColors.dividerDark : AppColors.divider,
+          ),
+      ],
+    );
+  }
+
+  // ===== 跳系统设置（逻辑逐字对齐「后台保活引导」页） =====
+
+  /// 电池优化设置页；个别 ROM 无此页时回退应用详情
+  Future<void> _openBatterySettings() async {
+    try {
+      const intent = AndroidIntent(
+        action: 'android.settings.IGNORE_BATTERY_OPTIMIZATION_SETTINGS',
+      );
+      await intent.launch();
+    } catch (e) {
+      await _openAppDetails();
+      ToastUtil.show('未找到电池优化页，已打开应用设置，请手动查找');
+    }
+  }
+
+  /// 应用详情设置页（自启动 / 后台运行限制多数厂商在此处或其子菜单）
+  Future<void> _openAppDetails() async {
+    try {
+      final intent = AndroidIntent(
+        action: 'android.settings.APPLICATION_DETAILS_SETTINGS',
+        data: 'package:$_packageName',
+      );
+      await intent.launch();
+    } catch (e) {
+      ToastUtil.show('无法打开系统设置：$e');
+    }
   }
 
   /// 权限条目：左 28px 色块 + 右侧（名称 17/w500 + 两行说明 12 次色，顶对齐）；
