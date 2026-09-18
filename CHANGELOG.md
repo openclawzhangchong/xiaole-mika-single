@@ -39,7 +39,8 @@ V3 不动容器与 emoji，视觉差依旧小，大概率还是「看不出变�
 
 ### 🧪 验证
 
-- 本地 `flutter analyze lib/ test/` + 全量 `flutter test` 结果见下方状态列回填（占位，由 lead 回填 / 或 CI 结论回填）。
+- 本地 `flutter analyze`：**0 error / 0 warning**（dev_center 单文件 No issues）；全量 `flutter test`：**71/71 通过**（golden 集不含 dev_center，5 张基线不变）。
+- **Android 构建已由 CI 验证通过** ✅ —— run `35334496762`（attempt 1 `conclusion=success`）；APK **40,773,270 B**（sha1 `84fc6c2a`）已下载桌面 `xiaole-client-v6.11.0.apk`。
 
 ### 🔒 红线遵守
 **本版未改动**：`app_theme.dart`、`lib/core/network`、`lib/data`、冻结区；`_switchTile` / 弹窗 / 回调 / 服务启停逻辑一律未动；`_McpToolsDetailPage._section` 重载未动。**纯视觉层变更，无网络 / 存储 / 协议 / 行为变更。**
