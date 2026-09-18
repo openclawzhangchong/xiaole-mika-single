@@ -23,7 +23,7 @@
 
 ### 🧪 验证
 - `flutter analyze`：**No issues**；全量 `flutter test`：**71/71**（golden 集不含此页，基线不变）。
-- **Android 构建 CI 结论**：**（占位，由 lead 回填 CI 结论）**
+- **Android 构建 CI 结论**：**✅ success** —— run `35355389947`（attempt 1 一次通过）；APK **40,773,610 B**（sha1 `d978ee01`）已下载桌面 `xiaole-client-v6.11.4.apk`。
 
 ### 备注
 - 版本号 `6.11.3+55` → `6.11.4+56`；回滚锚点 `anchor-pre-v6.11.4` = `d7de5db`。
