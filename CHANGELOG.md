@@ -22,7 +22,7 @@
 
 ### 🧪 验证
 - 本地 `flutter analyze`：**No issues**（单文件）；全量 `flutter test`：**71/71**（2 张输入栏 golden 按预期重生成，旧基线已留存 /tmp/golden_old_v6112，目视核对：空态=📷+输入框+电话；有字态=发送胶囊独占右侧、电话隐藏 ✓）。
-- **Android 构建 CI 结论**：**（占位，由 lead 回填 CI 结论）**
+- **Android 构建 CI 结论**：**✅ success** —— run `35347340620`（attempt 1 一次通过）；APK **40,773,270 B**（sha1 `0da7d7f5`）已下载桌面 `xiaole-client-v6.11.2.apk`。
 
 ### 备注
 - 版本号 `6.11.1+53` → `6.11.2+54`；回滚锚点 `anchor-pre-v6.11.2` = `e0d482c`。
