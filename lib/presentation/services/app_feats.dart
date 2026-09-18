@@ -118,13 +118,28 @@ class AppFeats {
   static final Map<String, bool> _mcpToolCache = {};
 
   /// 单个 MCP 工具是否启用。
-  /// v6.8.1（E 项）：默认白名单——白名单内的 5 项 `?? true`，其余一律 `?? false`。
-  /// 优先级：运行时缓存 > 已持久化存储值 > 默认白名单（保证"已存值不被默认值回滚"）。
+  ///
+  /// **本回调同时服务于「设备工具」与「外部 MCP 工具」**（`chat_page` 只注入这一个
+  /// `isToolEnabled`），因此默认值必须**按来源分别判定**：
+  /// - **设备工具**（`self.*`）：v6.8.1（E 项）白名单——白名单内 5 项 `?? true`，其余 `?? false`。
+  /// - **外部 MCP 工具**（非 `self.` 前缀，如 `notes.*` / `amap.*`）：**默认放行 `?? true`**。
+  ///
+  /// 🔴 **v6.9.1 修复的真实回归缺陷**：v6.8.1 把默认值统一改成
+  /// `mcpDefaultOnTools.contains(name)`，而该白名单只含 5 项设备工具 ⇒ 外部工具**全部**被判为
+  /// 禁用 ⇒ `tools/list` 不再下发 ⇒ 小智 AI 完全看不到 biji / 高德 的工具
+  /// （症状：v6.4.4 能用、v6.8.1 起"识别不到外部 MCP"）。
+  ///
+  /// 外部工具**是否启用由「外部 MCP」页负责**：整台启停 `ExternalMcpServer.enabled`
+  /// + 逐工具关闭名单 `disabledTools`（两处独立于本回调，互不冲突）。
+  ///
+  /// 优先级：运行时缓存 > 已持久化存储值 > 默认值（保证"已存值不被默认值回滚"）。
   static bool mcpToolEnabled(String name) {
     final cached = _mcpToolCache[name];
     if (cached != null) return cached;
     final stored = StorageService.instance.getBool(_mcpToolKey(name));
     if (stored != null) return stored;
+    // v6.9.1：外部 MCP 工具（非 self. 前缀）默认放行，不受设备工具白名单约束
+    if (!name.startsWith('self.')) return true;
     return mcpDefaultOnTools.contains(name);
   }
 

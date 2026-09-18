@@ -3,7 +3,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Flutter-3.32.2-blue.svg" alt="Flutter">
   <img src="https://img.shields.io/badge/包名-com.zcstudy.xiaole-green.svg" alt="Package">
-  <img src="https://img.shields.io/badge/当前版本-6.9.0-success.svg" alt="Version">
+  <img src="https://img.shields.io/badge/当前版本-6.9.1-success.svg" alt="Version">
 </p>
 
 本仓库是小智客户端 Flutter 版（上游 [eiriksgata/xiaozhi-client-flutter](https://github.com/eiriksgata/xiaozhi-client-flutter)）的**微信风 UI 定制版**，由张老师定制维护。上游的架构与功能说明保留在本文档后半部分，仍然适用。
@@ -73,6 +73,8 @@
 > **改动出错需要回退时，优先按下表找最近的 ✅ 版本**；标 ❌ 者为**构建失败、无 APK**，**勿用**。
 
 | 版本标签 | 内容 | 包名 | 验证状态 | 验证日期 |
+| `v6.9.1` | 🔴 **修复「小智 AI 识别不到外部 MCP」（真实回归）** —— 症状：v6.4.4 时 biji-notes 与高德地图的工具 AI 都能识别，**v6.8.1 起全部识别不到**。根因：`AppFeats.mcpToolEnabled()` **同时服务设备工具与外部 MCP 工具**（`chat_page` 只注入一个 `isToolEnabled`），而 v6.8.1（E 项）把默认值统一改成「只放行 5 项设备工具白名单」，外部工具名（`notes.*` / `amap.*`）不在白名单 ⇒ 被判禁用 ⇒ `tools/list` 不再下发 ⇒ AI 完全看不到。修复：`mcpToolEnabled()` 末尾**按来源分别判定**——**非 `self.` 前缀（外部 MCP 工具）默认放行**，`self.*` 仍走白名单（E 项本意保留）。**新增 6 例回归测试**（含"已存值优先于默认值"），全量测试 **71/71**。⚠️ 顺带澄清：「外部 MCP → 逐工具开关」页自 v6.4.0 就存在，缺陷期间因被整层杀掉而"看起来没效果"，修复后已**真正生效**。版本号 `6.9.0+49` → `6.9.1+50`。详见 CHANGELOG.md | `com.zcstudy.xiaole` | ✅ CI 通过 | 2026-09-18 |
+
 | `v6.9.0` | 🎛️ **外部 MCP 工具不再「爆掉」：逐工具开关看得见、好用** —— ① 服务器列表直接显示「**已启用 N/M 个工具**」（原来只看得到总数，看不出有几个被关、也看不出能逐工具管理）；② 工具页右上角 ⋮ 新增「**全部关闭 / 全部开启**」批量操作（直击「20 个只要 1 个却要手动关 19 次」的痛点，改为先全关再挑要的）；③ 顶部加「已启用 X / 共 Y 个；关闭的工具不会下发给 AI」说明。⚠️ **说明：逐工具开关能力在 v6.4.0 就已存在**（数据层 `disabledTools` + `mergedTools()` 过滤 + `dispatch()` 拦截 + 逐工具开关页），本次**不是从零实现**，只补「看不见、不好用」的缺口。**改动仅 1 个文件** `external_mcp_page.dart`，数据层 / 管理器 / 协议层**一律未动**，默认策略仍为全开（仅破坏性工具 `merge_notes` 默认关）。⚠️ 已知边界：黑名单语义下，服务器侧新增工具会默认启用，需再手动关一次。版本号 `6.8.3+48` → `6.9.0+49`。自检：analyze 0 error、全量测试 65/65。详见 CHANGELOG.md | `com.zcstudy.xiaole` | ✅ CI 通过（run 35283801890） | 2026-09-18 |
 
 | `v6.8.3` | ✨ **本版本新增：AI 主动来电「电话日志」跟踪 + 智能体头像升级（第二版-下 A/C 两项收官）** —— **① A 项 MCP 电话日志**：新增**旁路记录层** `proactive_round_log.dart`（**不改动巡检任何行为**），把**每一轮**巡检结构化留痕 —— 含**被守卫跳过的轮次及其具体原因**（时段外 / 冷却中 / 语音通话中 / 上一轮未结束 / 服务未初始化 / WS 地址为空）、本轮实际发出的**口令**（detect + 12s 重发）、**是否被调用 get_script**、**是否收到 trigger_call/skip**、**开场白原文**、**本轮耗时**、**close code**、**服务器 alert**；**最近 50 轮环形缓冲** + **持久化**（App 重启仍在）；新增开发者中心「AI 主动联系」→「📞 电话日志」页，支持**一键复制全部**（纯文本，整段可贴给 AI 诊断）与清空。**② C 项 头像升级**：头像由「固定底色 + 固定符号」升级为**文字头像**（取智能体名字**第 N 字**，默认第 1 字，可选 2/3/末字/自填一字）+ **12 套预设高对比色板**（深底白字 / 浅底深灰字，**不做任意取色器**，保证任何底色下文字清晰）+ **本地图片头像**（优先级 图片 > 文字，可一键清除回落）；**全部仅存本地**（SharedPreferences + App 私有目录，**绝不写入 AgentModel、绝不碰 cloud_sync_service**）⇒ **重装 App 自动回落文字头像、换设备恢复云端数据不会带过去**；会话列表 / 聊天页 / 来电页 / 通话页**全场景统一**（同一组件），编辑入口在智能体配置页；**「我」页用户头像本次不动**。自检：analyze 0 error、全量测试 65/65（golden `audit_chat_messages` / `audit_conversation_list` 已按预期更新并经**目视核对**——isolated diff 仅落在 3 个头像方块内，无布局位移）；lead 复核另修复 2 个"保存过的头像配置不生效"的真 bug（`read()` 曾用默认值覆盖已存值 / `_lazyLoad()` 曾在 build 期间同步 notify），已补 10 例回归单测守住；另将色板对比度断言从"亮度代理"升级为**真算 WCAG 对比度**（渐变两端均 ≥ 4.5:1，已用负向对照实测其有效性——故意调浅底色会立即报错 `2.26:1`，12 套色板实测最差 4.63:1）。版本号 `6.8.2+47` → `6.8.3+48`，`appVersion` → `6.8.3`。⚠️ 发布插曲：本 tag 首次 CI 尝试在 **APK 构建成功之后**的上传 Release 资产环节因 `socket hang up`（上游网络瞬时抖动）失败，**重跑后全绿**——非代码问题，详见 CHANGELOG「⑥ 发布与 CI」。⚠️ 已知边界（未改，留待决策）：`AndroidManifest` 未声明 `allowBackup`（默认 `true`），系统级备份可能把头像图片带回来，见 CHANGELOG「⑦」。详见 CHANGELOG.md | `com.zcstudy.xiaole` | ✅ CI 通过（run 35256912342，第 2 次尝试 success） | 2026-09-18 |

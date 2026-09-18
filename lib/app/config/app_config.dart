@@ -4,7 +4,7 @@ class AppConfig {
 
   // 应用信息
   static const String appName = '小乐'; // v4.0.0：品牌统一（默认智能体名前缀等）
-  static const String appVersion = '6.9.0'; // v6.9.0：外部 MCP 逐工具开关更好用 —— 服务器列表显示「已启用 N/M 个工具」，工具页右上角增「全部关闭/全部开启」批量操作（解决「20 个只要 1 个要手动关 19 次」）；改动仅 external_mcp_page.dart 一个文件，数据层/管理器/协议层未动。详见 CHANGELOG.md
+  static const String appVersion = '6.9.1'; // v6.9.1：修复「小智 AI 识别不到外部 MCP」—— mcpToolEnabled() 同时服务设备工具与外部工具，v6.8.1 白名单把 notes.*/amap.* 一并判禁用；改为非 self. 前缀默认放行 + 新增 6 例回归测试。详见 CHANGELOG.md
 
   /// v4.4.0 尾音保护：AI 播放结束后丢弃麦克风音频的时长（毫秒）
   static const int defaultTailGuardMs = 300;

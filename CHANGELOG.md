@@ -6,6 +6,55 @@
 
 ---
 
+## v6.9.1 · 2026-09-18
+
+**主题：修复「小智 AI 识别不到外部 MCP」—— v6.8.1 的工具白名单把外部工具误杀**
+
+### 🔴 缺陷（张老师报告的真实回归）
+**症状**：v6.4.4 时小智 AI 能识别 App 外挂的外部 MCP（biji-notes / 高德地图均可用）；
+**v6.8.1 起识别不到**（v6.8.1 / v6.8.2 / v6.8.3 / v6.9.0 **全部受影响**）。
+
+**根因**：`AppFeats.mcpToolEnabled()` **同时服务「设备工具」与「外部 MCP 工具」**
+（`chat_page` 只向 responder 注入这一个 `isToolEnabled`）。v6.8.1（E 项）把默认值统一改成
+「只放行 5 项设备工具白名单」，而外部工具名是 `notes.*`（biji-notes）/ `amap.*`（高德），
+**不在白名单** ⇒ 外部工具**全部被判禁用** ⇒ `xiaozhi_mcp_responder` 的 `tools/list` 不再下发
+⇒ **AI 完全看不到外部 MCP 的工具**。引入提交：`bab45d9`（v6.8.1 WIP）。
+
+**实跑证据（修复前，临时测试实测）**：
+```
+❌ 禁用 notes.search_notes / notes.add_note / amap.geocode / amap.map_around_search
+✅ 启用 self.location.get_current / self.alarm.set_alarm / self.audio_speaker.set_volume
+```
+
+### ✅ 修复（1 处逻辑）
+`lib/presentation/services/app_feats.dart` 的 `mcpToolEnabled()` 末尾改为**按来源分别判定默认值**：
+- **非 `self.` 前缀（外部 MCP 工具）→ 默认放行 `true`**（回到 v6.4.4 行为）
+- **`self.*` 设备工具 → 仍走 v6.8.1（E 项）白名单**（设计本意保留，未被破坏）
+
+优先级不变：运行时缓存 > 已存值 > 默认值。外部工具的启停仍由「外部 MCP」页负责：
+整台 `ExternalMcpServer.enabled` + 逐工具 `disabledTools`。
+
+### 🧪 新增回归测试（`test/mcp_tool_default_test.dart`，6 例）
+1. 外部工具（内置 `notes.` / `amap.` 及**任意自定义前缀**）**默认必须启用**
+2. 设备工具白名单 5 项默认开、其余默认关（E 项本意未被破坏）
+3. **已存值优先于默认值**：关过的外部工具冷启动后仍关；开过的白名单外设备工具仍开
+
+> 这次正是**缺这类测试**才让缺陷从 v6.8.1 一路溜到 v6.9.0。
+
+### 📌 顺带澄清（避免误判）：「外部 MCP → 逐工具开关」页**一直存在**
+`external_mcp_page.dart` 的 `_ExternalMcpToolsPage`（**点服务器列表项进入**）自 v6.4.0 就有，
+v6.9.0 还给它加了「全部关闭 / 全部开启」。
+**缺陷期间它看起来没效果** —— 因为被白名单整层杀掉，关不关 AI 都看不到
+⇒ 容易误以为"App 里没有逐工具开关功能"。本次修复后该页**才真正生效**，
+v6.9.0 新增的「已启用 N/M」也**与真实下发情况一致**。
+
+### 自检
+- `flutter analyze --no-pub`：**0 error**（5 warning 为既有基线）
+- 新增测试 **6/6**；全量 `flutter test`：**71/71**（原 65 + 新 6）
+- Android 构建由 CI 验证。
+
+---
+
 ## v6.9.0 · 2026-09-18
 
 **主题：外部 MCP「工具太多会爆掉」—— 让逐工具开关看得见、好用**
