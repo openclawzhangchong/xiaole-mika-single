@@ -3,7 +3,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Flutter-3.32.2-blue.svg" alt="Flutter">
   <img src="https://img.shields.io/badge/包名-com.zcstudy.xiaole-green.svg" alt="Package">
-  <img src="https://img.shields.io/badge/当前版本-6.11.1-success.svg" alt="Version">
+  <img src="https://img.shields.io/badge/当前版本-6.11.2-success.svg" alt="Version">
 </p>
 
 本仓库是小智客户端 Flutter 版（上游 [eiriksgata/xiaozhi-client-flutter](https://github.com/eiriksgata/xiaozhi-client-flutter)）的**微信风 UI 定制版**，由张老师定制维护。上游的架构与功能说明保留在本文档后半部分，仍然适用。
@@ -73,6 +73,7 @@
 > **改动出错需要回退时，优先按下表找最近的 ✅ 版本**；标 ❌ 者为**构建失败、无 APK**，**勿用**。
 
 | 版本标签 | 内容 | 包名 | 验证状态 | 验证日期 |
+| `v6.11.2` | 💬 **聊天输入栏对齐微信原版交互** —— 外部 AI 任务的输入栏改造经审计后采纳其核心交互（右侧**电话/发送互斥切换**：有字隐藏电话、清空恢复），拒绝其 4 处不合理项（固定 54 高/圆角 18 药丸/硬编码 #28C76F/#F5F5F5/砍 📷🎤 入口）。侧边图标统一 40x36 视觉盒解决高低不齐；输入框 minHeight 36 + contentPadding 8 + isDense；间距 10；hint 改「输入消息」（张老师定）；圆角保持 5px、颜色全走 token。仅改 `chat_input_bar.dart`，回调签名零改动，📷 识物/🎤 语音/📞 通话功能全保留。2 张输入栏 golden 重生成并目视核对 | `com.zcstudy.xiaole` | ⏳ CI 构建中（结论稍后回填） | 2026-09-18 |
 | `v6.11.1` | 🎨 **外部 MCP 管理三处从属页排版微信化** —— 起因：张老师反馈「外部 MCP 管理界面和工具列表没微信化、漏掉了」。根因：v6.11.0 只重排了开发者中心**主页**，漏了三个从属页面——① 外部 MCP 服务器列表页；② 单台服务器的逐工具开关页（`_McpToolsDetailPage`）；③ MCP 设备工具清单页（26 项）。本版（补丁）把这三处用**与主页同一套微信规格**清掉：裸图标 → **28px 彩色圆角色块**（在线绿 / 离线灰、写工具红色警示块）；1px 通栏 `Divider` → `WxCell` 自带 **0.5px 细线**；删净 emoji（🧰 / ⚠️）；提示条 / 分组标题对齐微信排版。**仅改 `external_mcp_page.dart` + `dev_center_page.dart` 的 `_McpToolsDetailPage` 类内，行为零改动**（`switchTile` / 探测 / 导入 / 批量开关 / 默认关闭 `merge_notes` 逻辑一律未动）。版本号 `6.11.0+52` → `6.11.1+53`。自检：见 CHANGELOG.md 验证列（占位，CI 结论稍后回填）。详见 CHANGELOG.md | `com.zcstudy.xiaole` | ✅ CI 通过（run **35342901807**，attempt 1 一次通过；APK 40,773,270 B sha1 `0f942cee` 已下载桌面 `xiaole-client-v6.11.1.apk`） | 2026-09-18 |
 
 | `v6.11.0` | 🎨 **开发者中心排版重排贴微信原型** —— 起因：张老师反馈 v6.10.0「开发者中心排版无变化」。**诊断确认根因**：v6.10.0 是控件替换、布局骨架未动（分组容器仍是 iOS 圆角浮动卡风），与微信原型**通栏直角风**（radius 0、无边距、组间 10px 灰隙）不一致。本版（方案 **V1**，用户批准）：① `_section` 重写为**通栏直角白卡**（去左右 margin、radius 0、组间 10px 灰隙，0.5px 分割线由 WxCell 自带）；② 全页 **emoji 下岗** → 28px 彩色圆角图标块（`_iconTile`，语义色走 AppColors：MCP=info 蓝、外部 MCP=primary 绿、视觉=cloudBlue、主动联系=amber、调试=gray…）；③ 入口行加**右侧灰色值**（WxCell `trailingText`）：巡检间隔「每 N 分钟」/ 电话日志「最近 50 轮」/ MCP 工具「26 项」；④ 顶部「N 项开启」**移到页面底部版本脚注**（对齐原型 `.profile-version`）。⚠️ 分组灰标题**保留**（dev center 功能多、无标题难扫读，与原型差异点已向用户说明）。**仅改 `dev_center_page.dart`（+ 色板 token），行为零改动**；`_McpToolsDetailPage` 的同名 `_section` 重载未动。版本号 `6.10.0+51` → `6.11.0+52`。自检：见 CHANGELOG.md 验证列（占位，CI 结论稍后回填）。详见 CHANGELOG.md | `com.zcstudy.xiaole` | ✅ CI 通过（run **35334496762**，attempt 1 success；APK 40,773,270 B sha1 `84fc6c2a` 已下载桌面 `xiaole-client-v6.11.0.apk`） | 2026-09-18 |
