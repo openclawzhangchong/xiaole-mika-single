@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../app/themes/app_colors.dart';
+import '../../app/themes/app_text_styles.dart';
 
 /// 隐私政策 · 权限引导页（v6.7.0 新增）
 /// ------------------------------------------------------------
@@ -66,14 +67,14 @@ class PrivacyPolicyPage extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(name,
-              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: prim),
+              style: AppTextStyles.subtitleStrong.copyWith(color: prim),
               softWrap: true),
           const SizedBox(height: 2),
           Text('为什么需要：$why',
-              style: TextStyle(fontSize: 13, height: 1.4, color: sub),
+              style: AppTextStyles.caption.copyWith(height: 1.4, color: sub),
               softWrap: true),
           Text('不授权会怎样：$impact',
-              style: TextStyle(fontSize: 13, height: 1.4, color: sub),
+              style: AppTextStyles.caption.copyWith(height: 1.4, color: sub),
               softWrap: true),
         ],
       ),
@@ -94,7 +95,7 @@ class PrivacyPolicyPage extends StatelessWidget {
           Expanded(
             child: Text(
               text,
-              style: const TextStyle(fontSize: 13.5, height: 1.5),
+              style: AppTextStyles.subtitle.copyWith(height: 1.5),
             ),
           ),
         ],
@@ -112,8 +113,7 @@ class PrivacyPolicyPage extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(8, 8, 8, 6),
             child: Text(
               title,
-              style: TextStyle(
-                fontSize: 13,
+              style: AppTextStyles.caption.copyWith(
                 color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
               ),
             ),
@@ -139,12 +139,8 @@ class PrivacyPolicyPage extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 6),
       child: Text(
         text,
-        style: TextStyle(
-          fontSize: bold ? 15 : 13.5,
-          fontWeight: bold ? FontWeight.w500 : FontWeight.w400,
-          height: 1.5,
-          color: color,
-        ),
+        style: (bold ? AppTextStyles.subtitleStrong : AppTextStyles.subtitle)
+            .copyWith(height: 1.5, color: color),
       ),
     );
   }

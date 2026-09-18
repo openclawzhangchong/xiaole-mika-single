@@ -41,6 +41,9 @@ class AppColors {
   static const Color info = Color(0xFF576B95);
   static const Color infoDark = Color(0xFF6B7FA8);
 
+  /// 云端相关图标蓝（一键云端 / 云端身份）—— v6.10.0 从硬编码提取为 token
+  static const Color cloudBlue = Color(0xFF0ABFF4);
+
   // 分割线与边框
   static const Color divider = Color(0xFFF0F0F0);
   static const Color dividerDark = Color(0xFF1E1E1E);
@@ -97,22 +100,6 @@ class AppColors {
   static const Color callBgBottom = Color(0xFF1A1A1A);
 }
 
-/// 尺寸与圆角常量
-class AppDimens {
-  AppDimens._();
-
-  static const double radiusS = 4;
-  static const double radiusM = 8;
-  static const double radiusL = 12;
-  static const double radiusXl = 20;
-
-  static const double navBarHeight = 48;
-  static const double tabBarHeight = 56;
-  static const double inputBarHeight = 52;
-
-  static const double avatarList = 48;
-  static const double avatarMessage = 40;
-  static const double avatarProfile = 64;
-
-  static const double pagePadding = 12;
-}
+// v6.10.0：原 `AppDimens` 类已迁出到 `app_dimens.dart` 并补齐 token。
+// 迁出原因：① 原类全项目零引用（死代码）；② 若与 app_dimens.dart 的新类同时被 import
+// 会触发类名冲突。此处删除零引用类，无回归风险。

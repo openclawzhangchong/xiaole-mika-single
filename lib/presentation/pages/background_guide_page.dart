@@ -2,6 +2,7 @@ import 'package:android_intent_plus/android_intent.dart';
 import 'package:flutter/material.dart';
 
 import 'package:xiaozhi_client_flutter/app/themes/app_colors.dart';
+import 'package:xiaozhi_client_flutter/app/themes/app_text_styles.dart';
 import 'package:xiaozhi_client_flutter/core/utils/toast_util.dart';
 
 /// v6.8.0：主动来电「后台化」引导页
@@ -35,10 +36,10 @@ class BackgroundGuidePage extends StatelessWidget {
               color: const Color(0xFF576B95).withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Text(
+            child: Text(
               '开启「AI 主动联系」后，小乐会在你退出 App / 锁屏时后台巡检并来电。'
               '不同手机厂商会限制后台活动，请按下面三步放行，来电才能更可靠地送达。',
-              style: TextStyle(fontSize: 13, height: 1.5),
+              style: AppTextStyles.caption.copyWith(height: 1.5),
             ),
           ),
           _StepCard(
@@ -63,7 +64,7 @@ class BackgroundGuidePage extends StatelessWidget {
           Text(
             '提示：不同厂商（小米 / 华为 / OPPO / vivo 等）设置路径与名称不同，'
             '若上述按钮未跳到对应位置，可在系统「设置 → 应用管理 → 小乐」中手动查找上述三项。',
-            style: TextStyle(fontSize: 12, color: sub, height: 1.5),
+            style: AppTextStyles.caption.copyWith(color: sub, height: 1.5),
           ),
         ],
       ),
@@ -132,7 +133,7 @@ class _StepCard extends StatelessWidget {
             height: 28,
             decoration: BoxDecoration(
               color: AppColors.primary,
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(12),
             ),
             alignment: Alignment.center,
             child: Text(
@@ -149,19 +150,16 @@ class _StepCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(title,
-                    style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w500,
-                        color: prim)),
+                    style: AppTextStyles.subtitleStrong.copyWith(color: prim)),
                 const SizedBox(height: 2),
                 Text(desc,
-                    style: TextStyle(fontSize: 12, color: sub, height: 1.4)),
+                    style: AppTextStyles.caption.copyWith(color: sub, height: 1.4)),
               ],
             ),
           ),
           TextButton(
             onPressed: onTap,
-            child: const Text('去设置'),
+            child: Text('去设置'),
           ),
         ],
       ),

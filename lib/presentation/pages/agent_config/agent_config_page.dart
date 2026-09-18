@@ -13,6 +13,7 @@ import '../../../core/utils/toast_util.dart';
 import '../../../core/utils/xiaozhi_device_info_util.dart';
 import '../../../app/config/app_config.dart';
 import '../../../app/themes/app_colors.dart';
+import '../../../app/themes/app_text_styles.dart';
 import '../../widgets/agent_avatar.dart';
 import '../../widgets/activation_dialog.dart';
 import '../../services/agent_identity_store.dart';
@@ -187,7 +188,7 @@ class _AgentConfigPageState extends ConsumerState<AgentConfigPage> {
                 child: Row(
                   children: [
                     const Text('高级设置',
-                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500)),
+                        style: AppTextStyles.subtitleStrong),
                     const Spacer(),
                     Icon(
                       _advancedExpanded
@@ -274,9 +275,9 @@ class _AgentConfigPageState extends ConsumerState<AgentConfigPage> {
                 maxLines: 3,
               ),
               const SizedBox(height: 8),
-              const Text(
+              Text(
                 '设备身份字段保存后写入设备身份（全局生效），用于连接校验。',
-                style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                style: AppTextStyles.caption.copyWith(color: AppColors.textSecondary),
               ),
             ],
           ],
@@ -298,7 +299,7 @@ class _AgentConfigPageState extends ConsumerState<AgentConfigPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(label,
-              style: const TextStyle(fontSize: 13, color: AppColors.textSecondary)),
+              style: AppTextStyles.caption.copyWith(color: AppColors.textSecondary)),
           const SizedBox(height: 6),
           Row(
             children: [
@@ -427,14 +428,14 @@ class _AgentConfigPageState extends ConsumerState<AgentConfigPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('头像预览',
+                  Text('头像预览',
                       style:
-                          TextStyle(fontSize: 13, color: AppColors.textSecondary)),
+                          AppTextStyles.caption.copyWith(color: AppColors.textSecondary)),
                   const SizedBox(height: 6),
                   Text(
                     _avatarImagePath != null ? '当前：本地图片头像' : '当前：文字头像',
-                    style: const TextStyle(
-                        fontSize: 12, color: AppColors.textSecondary),
+                    style: AppTextStyles.caption.copyWith(
+                        color: AppColors.textSecondary),
                   ),
                 ],
               ),
@@ -442,8 +443,8 @@ class _AgentConfigPageState extends ConsumerState<AgentConfigPage> {
           ],
         ),
         const SizedBox(height: 18),
-        const Text('取字',
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+          const Text('取字',
+            style: AppTextStyles.subtitleStrong),
         const SizedBox(height: 8),
         Wrap(
           spacing: 8,
@@ -476,8 +477,8 @@ class _AgentConfigPageState extends ConsumerState<AgentConfigPage> {
           ),
         ],
         const SizedBox(height: 18),
-        const Text('底色',
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+          const Text('底色',
+            style: AppTextStyles.subtitleStrong),
         const SizedBox(height: 8),
         Wrap(
           spacing: 8,
@@ -525,9 +526,9 @@ class _AgentConfigPageState extends ConsumerState<AgentConfigPage> {
           ],
         ),
         const SizedBox(height: 4),
-        const Text(
+        Text(
           '头像仅保存在本机，不会同步到云端；重装 App 后会回到文字头像',
-          style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+          style: AppTextStyles.caption.copyWith(color: AppColors.textSecondary),
         ),
       ],
     );

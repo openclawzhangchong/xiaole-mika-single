@@ -33,6 +33,7 @@ import 'package:xiaozhi_client_flutter/data/models/agent_model.dart';
 import '../../../data/models/message_model.dart';
 import '../../../app/routes/app_routes.dart';
 import '../../../app/themes/app_colors.dart';
+import '../../../app/themes/app_text_styles.dart';
 import '../../../core/utils/toast_util.dart';
 import '../../widgets/agent_avatar.dart';
 import '../../services/agent_identity_store.dart';
@@ -44,6 +45,8 @@ import 'widgets/chat_input_bar.dart';
 import 'widgets/voice_record_button.dart';
 import 'widgets/emotion_animation_overlay.dart';
 import 'package:logging/logging.dart';
+import '../../widgets/wx_action_sheet.dart';
+import '../../widgets/wx_dialog.dart';
 
 /// 聊天页面
 class ChatPage extends ConsumerStatefulWidget {
@@ -287,7 +290,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
             const SizedBox(width: 4),
             Text(
               _isConnected ? '已连接' : '未连接',
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w400),
+              style: AppTextStyles.caption,
             ),
           ],
         ),
@@ -397,11 +400,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
           const SizedBox(width: 6),
           Text(
             statusText,
-            style: TextStyle(
-              fontSize: 12,
-              color: statusColor,
-              fontWeight: FontWeight.w400,
-            ),
+            style: AppTextStyles.caption.copyWith(color: statusColor),
           ),
           const Spacer(),
           // 断线时显示重连按钮
@@ -631,111 +630,36 @@ class _ChatPageState extends ConsumerState<ChatPage> {
 
   /// 显示更多选项（微信 ActionSheet 风格）
   void _showMoreOptions() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (context) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // 选项组
-              Material(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(12),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SizedBox(
-                      width: double.infinity,
-                      height: 52,
-                      child: InkWell(
-                        borderRadius: const BorderRadius.vertical(
-                            top: Radius.circular(12)),
-                        onTap: () {
-                          Navigator.pop(context);
-                          _clearMessages();
-                        },
-                        child: const Center(
-                          child: Text(
-                            '清空聊天记录',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: AppColors.textPrimary,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const Divider(height: 0.5, thickness: 0.5),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 52,
-                      child: InkWell(
-                        borderRadius: const BorderRadius.vertical(
-                            bottom: Radius.circular(12)),
-                        onTap: () async {
-                          Navigator.pop(context);
-                          // v4.3.1：接线智能体设置（与会话列表页长按编辑同款）
-                          await context.push(
-                              '${AppRoutes.agentConfig}?agentId=${widget.agentId}');
-                          // 返回后刷新标题（配置页改名经 agentListProvider 已更新）
-                          if (!mounted) return;
-                          final agents =
-                              ref.read(agentListProvider).value ?? [];
-                          for (final a in agents) {
-                            if (a.id == widget.agentId) {
-                              if (a.name != _agentName) {
-                                setState(() => _agentName = a.name);
-                              }
-                              break;
-                            }
-                          }
-                        },
-                        child: const Center(
-                          child: Text(
-                            '智能体设置',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: AppColors.textPrimary,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 8),
-              // 取消按钮
-              Material(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(12),
-                child: SizedBox(
-                  width: double.infinity,
-                  height: 52,
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(12),
-                    onTap: () => Navigator.pop(context),
-                    child: const Center(
-                      child: Text(
-                        '取消',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
+    showWxActionSheet(
+      context,
+      items: const [
+        WxActionSheetItem(label: '清空聊天记录', danger: true),
+        WxActionSheetItem(label: '智能体设置'),
+      ],
+      cancelText: '取消',
+    ).then((index) async {
+      if (index == null) return;
+      if (index == 0) {
+        _clearMessages();
+        return;
+      }
+      if (index == 1) {
+        // v4.3.1：接线智能体设置（与会话列表页长按编辑同款）
+        await context.push(
+            '${AppRoutes.agentConfig}?agentId=${widget.agentId}');
+        // 返回后刷新标题（配置页改名经 agentListProvider 已更新）
+        if (!context.mounted) return;
+        final agents = ref.read(agentListProvider).value ?? [];
+        for (final a in agents) {
+          if (a.id == widget.agentId) {
+            if (a.name != _agentName) {
+              setState(() => _agentName = a.name);
+            }
+            break;
+          }
+        }
+      }
+    });
   }
 
   /// 清空消息
@@ -832,18 +756,12 @@ class _ChatPageState extends ConsumerState<ChatPage> {
   /// 标题「发送失败」，内容为入参 text，单按钮「知道了」关闭。
   void _showFriendlyAlertDialog(String text) {
     if (!mounted) return;
-    showDialog<void>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('发送失败'),
-        content: Text(text),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('知道了'),
-          ),
-        ],
-      ),
+    showWxDialog(
+      context,
+      title: '发送失败',
+      content: text,
+      confirmText: '知道了',
+      showCancel: false,
     );
   }
 
@@ -2562,21 +2480,20 @@ class _ChatPageState extends ConsumerState<ChatPage> {
               const SizedBox(height: 16),
               Text(
                 _agentName,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 20,
+                style: AppTextStyles.title20.copyWith(
                   fontWeight: FontWeight.w500,
+                  color: Colors.white,
                 ),
               ),
               const SizedBox(height: 8),
               Text(
                 _callStatus,
-                style: const TextStyle(color: Colors.white70, fontSize: 14),
+                style: AppTextStyles.subtitle.copyWith(color: Colors.white70),
               ),
               const SizedBox(height: 4),
               Text(
                 _voiceCallDuration,
-                style: const TextStyle(color: Colors.white, fontSize: 16),
+                style: AppTextStyles.body.copyWith(color: Colors.white),
               ),
               const Spacer(),
               Padding(
@@ -2653,7 +2570,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
           ),
         ),
         const SizedBox(height: 8),
-        Text(label, style: const TextStyle(color: Colors.white70, fontSize: 12)),
+        Text(label, style: AppTextStyles.caption.copyWith(color: Colors.white70)),
       ],
     );
   }

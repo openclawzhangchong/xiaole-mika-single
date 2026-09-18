@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../app/themes/app_colors.dart';
+import '../../app/themes/app_text_styles.dart';
+import '../../app/themes/app_dimens.dart';
 import '../services/chat_export_service.dart';
+import '../widgets/wx_icon_button.dart';
 
 /// v4.3.0：导出本地聊天记录（方案模块三，完全对齐网页版 v1.3.1 规格）。
 /// 范围（全部/单选智能体）+ 格式（TXT/JSON）+ 起止日期过滤 + 统计；
@@ -27,6 +30,31 @@ class _ExportChatPageState extends State<ExportChatPage> {
   void initState() {
     super.initState();
     _load();
+  }
+
+  InputDecoration _wxInput(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return InputDecoration(
+      labelText: '导出范围',
+      filled: true,
+      fillColor: isDark ? AppColors.inputBackgroundDark : AppColors.inputBackground,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppDimens.radiusSm),
+        borderSide: BorderSide(
+          color: isDark ? AppColors.inputBorderDark : AppColors.inputBorder,
+        ),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppDimens.radiusSm),
+        borderSide: BorderSide(
+          color: isDark ? AppColors.inputBorderDark : AppColors.inputBorder,
+        ),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppDimens.radiusSm),
+        borderSide: const BorderSide(color: AppColors.primary),
+      ),
+    );
   }
 
   Future<void> _load() async {
@@ -111,15 +139,12 @@ class _ExportChatPageState extends State<ExportChatPage> {
     return Scaffold(
       appBar: AppBar(title: const Text('导出聊天记录')),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppDimens.pagePadding),
         children: [
           // 范围
           DropdownButtonFormField<String>(
             value: _scope,
-            decoration: const InputDecoration(
-              labelText: '导出范围',
-              border: OutlineInputBorder(),
-            ),
+            decoration: _wxInput(context),
             items: [
               const DropdownMenuItem(value: 'all', child: Text('全部智能体（默认）')),
               ..._agents.map(
@@ -128,7 +153,7 @@ class _ExportChatPageState extends State<ExportChatPage> {
             ],
             onChanged: (v) => setState(() => _scope = v ?? 'all'),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppDimens.gapLg),
           // 格式
           SegmentedButton<String>(
             segments: const [
@@ -143,25 +168,30 @@ class _ExportChatPageState extends State<ExportChatPage> {
             _fmt == 'json'
                 ? 'JSON：结构化，适合备份/再导入'
                 : 'TXT：易读纯文本，适合直接查看/打印',
-            style: TextStyle(
-                fontSize: 12, color: Theme.of(context).hintColor),
+            style: AppTextStyles.caption.copyWith(
+              color: AppTextStyles.secondaryText(context),
+            ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppDimens.gapLg),
           // 起止日期
           Row(
             children: [
               Expanded(
-                child: OutlinedButton.icon(
-                  icon: const Icon(Icons.date_range, size: 18),
-                  label: Text('开始：${_fmtDate(_from)}'),
+                child: WxIconButton(
+                  label: '开始：${_fmtDate(_from)}',
+                  icon: Icons.date_range,
+                  filled: false,
+                  fullWidth: true,
                   onPressed: () => _pickDate(isFrom: true),
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppDimens.gapSm),
               Expanded(
-                child: OutlinedButton.icon(
-                  icon: const Icon(Icons.date_range, size: 18),
-                  label: Text('结束：${_fmtDate(_to)}'),
+                child: WxIconButton(
+                  label: '结束：${_fmtDate(_to)}',
+                  icon: Icons.date_range,
+                  filled: false,
+                  fullWidth: true,
                   onPressed: () => _pickDate(isFrom: false),
                 ),
               ),
@@ -170,12 +200,13 @@ class _ExportChatPageState extends State<ExportChatPage> {
           if (_from != null || _to != null)
             Align(
               alignment: Alignment.centerRight,
-              child: TextButton(
+              child: WxIconButton(
+                label: '清除日期过滤',
+                filled: false,
                 onPressed: () => setState(() {
                   _from = null;
                   _to = null;
                 }),
-                child: const Text('清除日期过滤'),
               ),
             ),
           const SizedBox(height: 8),
@@ -183,28 +214,24 @@ class _ExportChatPageState extends State<ExportChatPage> {
           Text(
             _statText,
             textAlign: TextAlign.center,
-            style: const TextStyle(
-                fontSize: 13, color: AppColors.textSecondary),
+            style: AppTextStyles.caption.copyWith(
+              color: AppTextStyles.secondaryText(context),
+            ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppDimens.gapLg),
           // 导出
-          FilledButton.icon(
-            icon: _busy
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2))
-                : const Icon(Icons.ios_share, size: 18),
-            label: Text(_busy ? '正在生成…' : '导出并分享'),
-            style: FilledButton.styleFrom(
-                minimumSize: const Size.fromHeight(48)),
+          WxIconButton(
+            label: _busy ? '正在生成…' : '导出并分享',
+            icon: _busy ? Icons.hourglass_empty : Icons.ios_share,
+            filled: true,
+            fullWidth: true,
             onPressed: _busy ? null : _doExport,
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppDimens.gapMd),
           const Text(
             '说明：导出生成文件后弹出系统分享面板，可保存到微信、文件管理器或发送到电脑；'
             'TXT 已带 BOM，记事本打开中文不乱码。本地记录永远全量保留，导出不影响任何数据。',
-            style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+            style: AppTextStyles.caption,
           ),
         ],
       ),

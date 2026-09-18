@@ -4,7 +4,7 @@ class AppConfig {
 
   // 应用信息
   static const String appName = '小乐'; // v4.0.0：品牌统一（默认智能体名前缀等）
-  static const String appVersion = '6.9.1'; // v6.9.1：修复「小智 AI 识别不到外部 MCP」—— mcpToolEnabled() 同时服务设备工具与外部工具，v6.8.1 白名单把 notes.*/amap.* 一并判禁用；改为非 self. 前缀默认放行 + 新增 6 例回归测试。详见 CHANGELOG.md
+  static const String appVersion = '6.10.0'; // v6.10.0：微信风收口与 Design Token 治理 —— ① 补活 AppTextStyles 与 AppDimens（此前全项目零引用、是死代码；AppTextStyles 沦陷根因是把 color 写死导致深色模式不可用，新版不含颜色）；② 新建 6 个微信风组件 WxCell/WxCellGroup/WxDialog/WxActionSheet/WxIconButton/WxEmpty；③ 全项目硬编码字号 124 处收敛到 11/12/14/17/20 五档阶梯（聊天气泡 16→17 对齐微信正文）；④ 会话列表长按菜单由底部白抽屉改为微信屏幕正中央深色 ActionSheet。详见 CHANGELOG.md
 
   /// v4.4.0 尾音保护：AI 播放结束后丢弃麦克风音频的时长（毫秒）
   static const int defaultTailGuardMs = 300;

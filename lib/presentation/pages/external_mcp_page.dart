@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
 
 import 'package:xiaozhi_client_flutter/app/themes/app_colors.dart';
+import 'package:xiaozhi_client_flutter/app/themes/app_text_styles.dart';
 import 'package:xiaozhi_client_flutter/core/utils/toast_util.dart';
 
 import '../../core/mcp/external_mcp_client.dart';
 import '../../core/mcp/external_mcp_manager.dart';
 import '../../core/mcp/external_mcp_store.dart';
+import '../widgets/wx_cell.dart';
+import '../widgets/wx_dialog.dart';
+import '../widgets/wx_action_sheet.dart';
+import '../widgets/wx_empty.dart';
 
 /// v6.4.0：外部 MCP 服务器管理页
 /// ------------------------------------------------------------------
@@ -80,59 +85,35 @@ class _ExternalMcpPageState extends State<ExternalMcpPage> {
   }
 
   Future<void> _showAddSheet() async {
-    final choice = await showModalBottomSheet<String>(
-      context: context,
-      builder: (ctx) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.content_paste_go),
-              title: const Text('粘贴 JSON 导入'),
-              subtitle: const Text('支持 {"mcpServers":{...}} 片段'),
-              onTap: () => Navigator.pop(ctx, 'paste'),
-            ),
-            ListTile(
-              leading: const Icon(Icons.edit_note),
-              title: const Text('手动填写'),
-              subtitle: const Text('名称 / 前缀 / 地址 / 请求头'),
-              onTap: () => Navigator.pop(ctx, 'manual'),
-            ),
-          ],
-        ),
-      ),
+    final idx = await showWxActionSheet(
+      context,
+      items: const [
+        WxActionSheetItem(label: '粘贴 JSON 导入'),
+        WxActionSheetItem(label: '手动填写'),
+      ],
     );
-    if (choice == 'paste') await _showPasteDialog();
-    if (choice == 'manual') await _showEditDialog(null);
+    if (idx == 0) await _showPasteDialog();
+    if (idx == 1) await _showEditDialog(null);
   }
 
   Future<void> _showPasteDialog() async {
     _pasteCtrl.clear();
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('粘贴 MCP 配置'),
-        content: SizedBox(
-          width: double.maxFinite,
-          child: TextField(
-            controller: _pasteCtrl,
-            maxLines: 10,
-            decoration: const InputDecoration(
-              hintText: '{\n  "mcpServers": {\n    "biji-notes": {\n'
-                  '      "type": "streamable_http",\n      "url": "https://...",\n'
-                  '      "headers": {"Authorization": "Bearer ..."}\n    }\n  }\n}',
-              border: OutlineInputBorder(),
-            ),
+    final ok = await showWxDialog(
+      context,
+      title: '粘贴 MCP 配置',
+      confirmText: '导入',
+      contentWidget: SizedBox(
+        width: double.maxFinite,
+        child: TextField(
+          controller: _pasteCtrl,
+          maxLines: 10,
+          decoration: const InputDecoration(
+            hintText: '{\n  "mcpServers": {\n    "biji-notes": {\n'
+                '      "type": "streamable_http",\n      "url": "https://...",\n'
+                '      "headers": {"Authorization": "Bearer ..."}\n    }\n  }\n}',
+            border: OutlineInputBorder(),
           ),
         ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('取消')),
-          TextButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('导入')),
-        ],
       ),
     );
     if (ok != true) return;
@@ -162,44 +143,35 @@ class _ExternalMcpPageState extends State<ExternalMcpPage> {
           .join('\n'),
     );
 
-    final saved = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(existing == null ? '添加 MCP 服务器' : '编辑 MCP 服务器'),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                  controller: nameCtrl,
-                  decoration: const InputDecoration(labelText: '名称')),
-              TextField(
-                controller: prefixCtrl,
-                decoration: const InputDecoration(
-                    labelText: '工具名前缀', hintText: '如 notes / amap'),
-              ),
-              TextField(
-                controller: urlCtrl,
-                decoration: const InputDecoration(
-                    labelText: '地址 URL', hintText: 'https://...'),
-              ),
-              TextField(
-                controller: headersCtrl,
-                maxLines: 3,
-                decoration: const InputDecoration(
-                    labelText: '请求头（每行一条 Key: Value）'),
-              ),
-            ],
-          ),
+    final saved = await showWxDialog(
+      context,
+      title: existing == null ? '添加 MCP 服务器' : '编辑 MCP 服务器',
+      confirmText: '保存',
+      contentWidget: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+                controller: nameCtrl,
+                decoration: const InputDecoration(labelText: '名称')),
+            TextField(
+              controller: prefixCtrl,
+              decoration: const InputDecoration(
+                  labelText: '工具名前缀', hintText: '如 notes / amap'),
+            ),
+            TextField(
+              controller: urlCtrl,
+              decoration: const InputDecoration(
+                  labelText: '地址 URL', hintText: 'https://...'),
+            ),
+            TextField(
+              controller: headersCtrl,
+              maxLines: 3,
+              decoration: const InputDecoration(
+                  labelText: '请求头（每行一条 Key: Value）'),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('取消')),
-          TextButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('保存')),
-        ],
       ),
     );
     if (saved != true) return;
@@ -252,20 +224,12 @@ class _ExternalMcpPageState extends State<ExternalMcpPage> {
   }
 
   Future<void> _confirmDelete(ExternalMcpServer s) async {
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('删除确认'),
-        content: Text('确定删除「${s.name}」？该配置仅保存在本机。'),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('取消')),
-          TextButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('删除')),
-        ],
-      ),
+    final ok = await showWxDialog(
+      context,
+      title: '删除确认',
+      content: '确定删除「${s.name}」？该配置仅保存在本机。',
+      confirmText: '删除',
+      danger: true,
     );
     if (ok != true) return;
     ExternalMcpManager.instance.servers.removeWhere((e) => e.id == s.id);
@@ -286,10 +250,14 @@ class _ExternalMcpPageState extends State<ExternalMcpPage> {
         actions: [
           IconButton(
             icon: _refreshing
-                ? const SizedBox(
+                ? SizedBox(
                     width: 18,
                     height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2))
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation(AppColors.primary),
+                    ),
+                  )
                 : const Icon(Icons.refresh),
             onPressed: _refreshing ? null : _refresh,
           ),
@@ -300,15 +268,20 @@ class _ExternalMcpPageState extends State<ExternalMcpPage> {
               if (v == 'restore') _restoreBuiltins();
             },
             itemBuilder: (_) => const [
-              PopupMenuItem(value: 'restore', child: Text('恢复预置（笔记/高德）')),
+              PopupMenuItem(
+                  value: 'restore', child: Text('恢复预置（笔记/高德）')),
             ],
           ),
         ],
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? Center(
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation(AppColors.primary),
+              ),
+            )
           : servers.isEmpty
-              ? _buildEmpty(isDark)
+              ? _buildEmpty()
               : ListView.separated(
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   itemCount: servers.length,
@@ -318,36 +291,12 @@ class _ExternalMcpPageState extends State<ExternalMcpPage> {
     );
   }
 
-  Widget _buildEmpty(bool isDark) => Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.hub_outlined,
-                  size: 56,
-                  color: isDark
-                      ? AppColors.textSecondaryDark
-                      : AppColors.textSecondary),
-              const SizedBox(height: 12),
-              const Text('还没有外部 MCP 服务器'),
-              const SizedBox(height: 6),
-              Text(
-                '点右上角 + 添加，或直接粘贴配置 JSON',
-                style: TextStyle(
-                    color: isDark
-                        ? AppColors.textSecondaryDark
-                        : AppColors.textSecondary),
-              ),
-              const SizedBox(height: 14),
-              OutlinedButton.icon(
-                icon: const Icon(Icons.download_for_offline),
-                label: const Text('载入预置（笔记 + 高德）'),
-                onPressed: _restoreBuiltins,
-              ),
-            ],
-          ),
-        ),
+  Widget _buildEmpty() => WxEmpty(
+        icon: Icons.hub_outlined,
+        title: '还没有外部 MCP 服务器',
+        description: '点右上角 + 添加，或直接粘贴配置 JSON',
+        actionLabel: '载入预置（笔记 + 高德）',
+        onAction: _restoreBuiltins,
       );
 
   Widget _buildTile(ExternalMcpServer s, bool isDark) {
@@ -366,20 +315,25 @@ class _ExternalMcpPageState extends State<ExternalMcpPage> {
                 : '连接失败：${pr.error ?? '未知'}');
     final statusColor = online ? AppColors.statusOnline : AppColors.textSecondary;
 
-    return ListTile(
-      leading: Icon(Icons.hub,
-          color: online
-              ? AppColors.primary
-              : (isDark
-                  ? AppColors.textSecondaryDark
-                  : AppColors.textSecondary)),
-      title: Text('${s.name}  ·  ${s.prefix}.*'),
-      subtitle: Column(
+    return WxCell(
+      leading: Icon(
+        Icons.hub,
+        color: online
+            ? AppColors.primary
+            : (isDark ? AppColors.textSecondaryDark : AppColors.textSecondary),
+      ),
+      title: '${s.name}  ·  ${s.prefix}.*',
+      subtitleWidget: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(s.url, maxLines: 1, overflow: TextOverflow.ellipsis),
+          Text(s.url,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppTextStyles.subtitle
+                  .copyWith(color: AppTextStyles.secondaryText(context))),
           const SizedBox(height: 2),
-          Text(statusText, style: TextStyle(color: statusColor, fontSize: 12)),
+          Text(statusText,
+              style: AppTextStyles.caption.copyWith(color: statusColor)),
         ],
       ),
       trailing: Row(
@@ -520,13 +474,11 @@ class _ExternalMcpToolsPageState extends State<_ExternalMcpToolsPage> {
         ],
       ),
       body: tools.isEmpty
-          ? Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Text(pr == null
-                    ? '尚未探测到工具，点右上角刷新'
-                    : '连接失败：${pr.error ?? '未知'}'),
-              ),
+          ? WxEmpty(
+              icon: Icons.hub_outlined,
+              title: pr == null
+                  ? '尚未探测到工具，点右上角刷新'
+                  : '连接失败：${pr.error ?? '未知'}',
             )
           : ListView(
               children: [
@@ -538,8 +490,8 @@ class _ExternalMcpToolsPageState extends State<_ExternalMcpToolsPage> {
                       Text(
                         '工具名前缀：${s.prefix}.  （暴露给 AI 的名称如 '
                         '${s.prefix}.${tools.first.name}）',
-                        style: TextStyle(
-                            fontSize: 12, color: AppColors.textSecondary),
+                        style: AppTextStyles.caption
+                            .copyWith(color: AppColors.textSecondary),
                       ),
                       const SizedBox(height: 4),
                       // v6.9.0：让「启用多少 / 一共多少」一目了然，并提示可批量
@@ -547,8 +499,8 @@ class _ExternalMcpToolsPageState extends State<_ExternalMcpToolsPage> {
                         '已启用 $enabledCount / 共 ${tools.length} 个'
                         '；关闭的工具不会下发给 AI。工具很多时可先「全部关闭」'
                         '（右上角 ⋮）再挑要用的。',
-                        style: TextStyle(
-                            fontSize: 12, color: AppColors.textSecondary),
+                        style: AppTextStyles.caption
+                            .copyWith(color: AppColors.textSecondary),
                       ),
                     ],
                   ),
@@ -556,19 +508,18 @@ class _ExternalMcpToolsPageState extends State<_ExternalMcpToolsPage> {
                 ...tools.map((t) {
                   final disabled = s.disabledTools.contains(t.name);
                   final isWrite = kWriteTools.contains(t.name);
-                  return SwitchListTile(
-                    value: !disabled,
-                    activeColor: AppColors.primary,
-                    title: Text(t.name),
-                    subtitle: Text(
-                      t.description.isEmpty ? '（无描述）' : t.description,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    secondary: isWrite
+                  return WxCell(
+                    leading: isWrite
                         ? const Icon(Icons.warning_amber_rounded, size: 20)
                         : null,
-                    onChanged: s.enabled ? (v) => _toggle(t.name, v) : null,
+                    title: t.name,
+                    subtitle: t.description.isEmpty ? '（无描述）' : t.description,
+                    trailing: Switch(
+                      value: !disabled,
+                      activeColor: AppColors.primary,
+                      onChanged: s.enabled ? (v) => _toggle(t.name, v) : null,
+                    ),
+                    onTap: s.enabled ? () => _toggle(t.name, !disabled) : null,
                   );
                 }),
               ],

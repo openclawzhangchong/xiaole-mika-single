@@ -4,7 +4,10 @@ import 'package:xiaozhi_client_flutter/core/utils/audio_util.dart';
 import 'package:xiaozhi_client_flutter/core/storage/storage_service.dart';
 import 'package:xiaozhi_client_flutter/app/config/app_config.dart';
 import '../../../app/themes/app_colors.dart';
+import '../../../app/themes/app_text_styles.dart';
 import '../../../core/providers/theme_provider.dart';
+import '../../widgets/wx_action_sheet.dart';
+import '../../widgets/wx_cell.dart';
 import '../../services/app_feats.dart';
 import '../../widgets/profile_header.dart';
 import '../cloud_sync_page.dart';
@@ -36,11 +39,11 @@ class SettingsPage extends ConsumerWidget {
             context,
             title: '账号与云',
             children: [
-              ListTile(
-                leading: _iconTile(Icons.cloud_outlined, const Color(0xFF0ABFF4)),
-                title: const Text('一键云端'),
-                subtitle: const Text('聊天记录 · 智能体配置 · 三端互通'),
-                trailing: const Icon(Icons.chevron_right),
+              WxCell(
+                leading: _iconTile(Icons.cloud_outlined, AppColors.cloudBlue),
+                title: '一键云端',
+                subtitle: '聊天记录 · 智能体配置 · 三端互通',
+                showArrow: true,
                 onTap: () {
                   Navigator.push(
                     context,
@@ -49,11 +52,12 @@ class SettingsPage extends ConsumerWidget {
                 },
               ),
               // v4.3.0：导出本地聊天记录（方案模块三，对齐网页版 v1.3.1）
-              ListTile(
+              WxCell(
                 leading: _iconTile(Icons.ios_share, const Color(0xFF07C160)),
-                title: const Text('导出聊天记录'),
-                subtitle: const Text('TXT / JSON · 起止日期 · 系统分享'),
-                trailing: const Icon(Icons.chevron_right),
+                title: '导出聊天记录',
+                subtitle: 'TXT / JSON · 起止日期 · 系统分享',
+                showArrow: true,
+                showDivider: false,
                 onTap: () {
                   Navigator.push(
                     context,
@@ -68,11 +72,12 @@ class SettingsPage extends ConsumerWidget {
             context,
             title: '通用',
             children: [
-              ListTile(
-                leading: _iconTile(Icons.palette_outlined, const Color(0xFFFF9500)),
-                title: const Text('主题模式'),
-                subtitle: Text(themeModeNotifier.getThemeModeName()),
-                trailing: const Icon(Icons.chevron_right),
+              WxCell(
+                leading:
+                    _iconTile(Icons.palette_outlined, const Color(0xFFFF9500)),
+                title: '主题模式',
+                subtitle: themeModeNotifier.getThemeModeName(),
+                showArrow: true,
                 onTap: () {
                   _showThemeDialog(context, ref);
                 },
@@ -81,16 +86,22 @@ class SettingsPage extends ConsumerWidget {
               StatefulBuilder(
                 builder: (context, setLocal) {
                   final vol = AudioUtil.ttsVolumePercent;
-                  return ListTile(
-                    leading:
-                        _iconTile(Icons.volume_up, const Color(0xFFFF9500)),
-                    title: const Text('说话音量'),
-                    subtitle: Slider(
+                  final isDark =
+                      Theme.of(context).brightness == Brightness.dark;
+                  return WxCell(
+                    leading: _iconTile(Icons.volume_up, const Color(0xFFFF9500)),
+                    title: '说话音量',
+                    showDivider: false,
+                    subtitleWidget: Slider(
                       value: vol.toDouble(),
                       min: 0,
                       max: 100,
                       divisions: 20,
                       label: '$vol%',
+                      activeColor: AppColors.primary,
+                      inactiveColor:
+                          isDark ? AppColors.borderDark : AppColors.border,
+                      thumbColor: AppColors.primary,
                       onChanged: (v) {
                         final p = v.round();
                         AudioUtil.setTtsVolume(p);
@@ -109,16 +120,16 @@ class SettingsPage extends ConsumerWidget {
             context,
             title: '关于',
             children: [
-              ListTile(
+              WxCell(
                 leading: _iconTile(Icons.info_outline, const Color(0xFF576B95)),
-                title: const Text('版本'),
-                subtitle: Text(AppConfig.appVersion),
+                title: '版本',
+                subtitle: AppConfig.appVersion,
               ),
-              ListTile(
+              WxCell(
                 leading: _iconTile(Icons.article_outlined, const Color(0xFF576B95)),
-                title: const Text('用户协议'),
-                subtitle: const Text('功能介绍 · 你能获得的能力'),
-                trailing: const Icon(Icons.chevron_right),
+                title: '用户协议',
+                subtitle: '功能介绍 · 你能获得的能力',
+                showArrow: true,
                 onTap: () {
                   Navigator.push(
                     context,
@@ -126,11 +137,12 @@ class SettingsPage extends ConsumerWidget {
                   );
                 },
               ),
-              ListTile(
+              WxCell(
                 leading: _iconTile(Icons.privacy_tip_outlined, AppColors.error),
-                title: const Text('隐私政策'),
-                subtitle: const Text('权限引导 · 让 App 更好用'),
-                trailing: const Icon(Icons.chevron_right),
+                title: '隐私政策',
+                subtitle: '权限引导 · 让 App 更好用',
+                showArrow: true,
+                showDivider: false,
                 onTap: () {
                   Navigator.push(
                     context,
@@ -145,15 +157,16 @@ class SettingsPage extends ConsumerWidget {
             context,
             title: '开发者',
             children: [
-              ListTile(
+              WxCell(
                 leading:
                     _iconTile(Icons.developer_mode, const Color(0xFF576B95)),
-                title: const Text('开发者选项'),
-                subtitle: ValueListenableBuilder<int>(
+                title: '开发者选项',
+                subtitleWidget: ValueListenableBuilder<int>(
                   valueListenable: AppFeats.onCountNotifier,
                   builder: (_, count, __) => Text('功能开关 · $count 项开启'),
                 ),
-                trailing: const Icon(Icons.chevron_right),
+                showArrow: true,
+                showDivider: false,
                 onTap: () => showDevGateIfNeeded(context),
               ),
             ],
@@ -193,9 +206,7 @@ class SettingsPage extends ConsumerWidget {
             padding: const EdgeInsets.fromLTRB(0, 8, 0, 8),
             child: Text(
               title,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w400,
+              style: AppTextStyles.subtitle.copyWith(
                 color: isDark
                     ? AppColors.textSecondaryDark
                     : AppColors.textSecondary,
@@ -212,54 +223,23 @@ class SettingsPage extends ConsumerWidget {
     );
   }
 
-  /// 显示主题选择对话框
-  void _showThemeDialog(BuildContext context, WidgetRef ref) {
+  /// 显示主题选择菜单
+  Future<void> _showThemeDialog(BuildContext context, WidgetRef ref) async {
     final themeModeNotifier = ref.read(themeModeProvider.notifier);
-    final currentThemeMode = ref.read(themeModeProvider);
+    final current = ref.read(themeModeProvider);
 
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('选择主题模式'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            RadioListTile<ThemeMode>(
-              title: const Text('浅色'),
-              value: ThemeMode.light,
-              groupValue: currentThemeMode,
-              onChanged: (value) {
-                if (value != null) {
-                  themeModeNotifier.setThemeMode(value);
-                  Navigator.pop(context);
-                }
-              },
-            ),
-            RadioListTile<ThemeMode>(
-              title: const Text('深色'),
-              value: ThemeMode.dark,
-              groupValue: currentThemeMode,
-              onChanged: (value) {
-                if (value != null) {
-                  themeModeNotifier.setThemeMode(value);
-                  Navigator.pop(context);
-                }
-              },
-            ),
-            RadioListTile<ThemeMode>(
-              title: const Text('跟随系统'),
-              value: ThemeMode.system,
-              groupValue: currentThemeMode,
-              onChanged: (value) {
-                if (value != null) {
-                  themeModeNotifier.setThemeMode(value);
-                  Navigator.pop(context);
-                }
-              },
-            ),
-          ],
-        ),
-      ),
+    final index = await showWxActionSheet(
+      context,
+      items: [
+        WxActionSheetItem(label: '浅色', selected: current == ThemeMode.light),
+        WxActionSheetItem(label: '深色', selected: current == ThemeMode.dark),
+        WxActionSheetItem(
+            label: '跟随系统', selected: current == ThemeMode.system),
+      ],
     );
+    if (!context.mounted) return;
+    if (index == null) return;
+    final modes = [ThemeMode.light, ThemeMode.dark, ThemeMode.system];
+    themeModeNotifier.setThemeMode(modes[index]);
   }
 }

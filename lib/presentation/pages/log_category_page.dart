@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:xiaozhi_client_flutter/app/themes/app_colors.dart';
+import 'package:xiaozhi_client_flutter/app/themes/app_text_styles.dart';
 import 'package:xiaozhi_client_flutter/core/utils/toast_util.dart';
+import '../widgets/wx_cell.dart';
 
 import '../../core/utils/log_buffer.dart';
 
@@ -39,7 +41,7 @@ class _LogCategoryPageState extends State<LogCategoryPage> {
               '关闭的分类不再记录到运行日志（省内存、降噪音）。\n'
               '排查某一功能时，只开它对应的分类即可。\n'
               '默认开启：识图（照片）+ 连接（WS）+ MCP 消息。',
-              style: TextStyle(fontSize: 13, height: 1.5, color: sub),
+              style: AppTextStyles.caption.copyWith(height: 1.5, color: sub),
             ),
           ),
           Padding(
@@ -47,7 +49,7 @@ class _LogCategoryPageState extends State<LogCategoryPage> {
             child: Text(
               '已开启 ${LogBuffer.enabledCount}/${LogBuffer.categories.length}'
               ' · 当前缓冲 ${LogBuffer.length} 条',
-              style: TextStyle(fontSize: 12, color: sub),
+              style: AppTextStyles.caption.copyWith(color: sub),
             ),
           ),
           Padding(
@@ -58,16 +60,22 @@ class _LogCategoryPageState extends State<LogCategoryPage> {
               child: Column(
                 children: [
                   for (final c in LogBuffer.categories)
-                    SwitchListTile(
-                      value: LogBuffer.isEnabled(c),
-                      onChanged: (v) {
-                        LogBuffer.setCategory(c, v);
+                    WxCell(
+                      title: LogBuffer.categoryLabels[c] ?? c,
+                      titleTextStyle: AppTextStyles.body.copyWith(color: prim),
+                      showDivider: false,
+                      trailing: Switch(
+                        value: LogBuffer.isEnabled(c),
+                        onChanged: (v) {
+                          LogBuffer.setCategory(c, v);
+                          setState(() {});
+                        },
+                        activeColor: AppColors.primary,
+                      ),
+                      onTap: () {
+                        LogBuffer.setCategory(c, !LogBuffer.isEnabled(c));
                         setState(() {});
                       },
-                      title: Text(
-                        LogBuffer.categoryLabels[c] ?? c,
-                        style: TextStyle(fontSize: 16, color: prim),
-                      ),
                     ),
                 ],
               ),

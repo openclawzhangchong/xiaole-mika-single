@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../data/models/message_model.dart';
 import '../../../../app/themes/app_colors.dart';
+import '../../../../app/themes/app_text_styles.dart';
 import '../../../widgets/typing_indicator.dart';
 import 'message_bubble.dart';
 
@@ -47,8 +48,7 @@ class MessageList extends StatelessWidget {
             const SizedBox(height: 16),
             Text(
               '开始对话',
-              style: TextStyle(
-                fontSize: 16,
+              style: AppTextStyles.body.copyWith(
                 color: isDark
                     ? AppColors.textSecondaryDark
                     : AppColors.textSecondary,
@@ -103,7 +103,7 @@ class MessageList extends StatelessWidget {
                   '${msg.timestamp.hour.toString().padLeft(2, '0')}:'
                   '${msg.timestamp.minute.toString().padLeft(2, '0')}',
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 12, color: systemColor),
+                  style: AppTextStyles.caption.copyWith(color: systemColor),
                 ),
               )
             : null;
@@ -119,7 +119,7 @@ class MessageList extends StatelessWidget {
                 child: Text(
                   msg.content,
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 12, color: systemColor),
+                  style: AppTextStyles.caption.copyWith(color: systemColor),
                 ),
               ),
             ],

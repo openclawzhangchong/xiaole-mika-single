@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
 
 import 'package:xiaozhi_client_flutter/app/themes/app_colors.dart';
+import 'package:xiaozhi_client_flutter/app/themes/app_text_styles.dart';
+import 'package:xiaozhi_client_flutter/app/themes/app_dimens.dart';
 import 'package:xiaozhi_client_flutter/core/utils/toast_util.dart';
 
 import '../../core/proactive/proactive_script_store.dart';
+import '../widgets/wx_cell.dart';
+import '../widgets/wx_cell_group.dart';
+import '../widgets/wx_dialog.dart';
+import '../widgets/wx_empty.dart';
 
 /// v6.5.0：巡检口令管理页（方案 D —— 口令存本地，由设备 MCP 工具 self.proactive.get_script 取回）
 /// ------------------------------------------------------------------
@@ -36,29 +42,43 @@ class _ProactiveScriptPageState extends State<ProactiveScriptPage> {
     if (mounted) setState(() {});
   }
 
+  InputDecoration _wxInput(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return InputDecoration(
+      hintText: '例：读巡检口令执行',
+      helperText: '≤16 字（该通道硬上限）',
+      filled: true,
+      fillColor: isDark ? AppColors.inputBackgroundDark : AppColors.inputBackground,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppDimens.radiusSm),
+        borderSide: BorderSide(
+          color: isDark ? AppColors.inputBorderDark : AppColors.inputBorder,
+        ),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppDimens.radiusSm),
+        borderSide: BorderSide(
+          color: isDark ? AppColors.inputBorderDark : AppColors.inputBorder,
+        ),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppDimens.radiusSm),
+        borderSide: const BorderSide(color: AppColors.primary),
+      ),
+    );
+  }
+
   Future<void> _addOrEdit({ProactiveScript? existing}) async {
     final ctrl = TextEditingController(text: existing?.text ?? '');
-    final saved = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(existing == null ? '新增巡检口令' : '编辑巡检口令'),
-        content: TextField(
-          controller: ctrl,
-          maxLength: maxChars,
-          autofocus: true,
-          decoration: const InputDecoration(
-            hintText: '例：读巡检口令执行',
-            helperText: '≤16 字（该通道硬上限）',
-          ),
-        ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('取消')),
-          TextButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('保存')),
-        ],
+    final saved = await showWxDialog(
+      context,
+      title: existing == null ? '新增巡检口令' : '编辑巡检口令',
+      confirmText: '保存',
+      contentWidget: TextField(
+        controller: ctrl,
+        maxLength: maxChars,
+        autofocus: true,
+        decoration: _wxInput(context),
       ),
     );
     if (saved != true) return;
@@ -82,20 +102,11 @@ class _ProactiveScriptPageState extends State<ProactiveScriptPage> {
   }
 
   Future<void> _confirmDelete(ProactiveScript s) async {
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('删除确认'),
-        content: Text('确定删除「${s.text}」？'),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('取消')),
-          TextButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('删除')),
-        ],
-      ),
+    final ok = await showWxDialog(
+      context,
+      title: '删除确认',
+      content: '确定删除「${s.text}」？',
+      confirmText: '删除',
     );
     if (ok != true) return;
     await ProactiveScriptStore.remove(s.id);
@@ -104,20 +115,11 @@ class _ProactiveScriptPageState extends State<ProactiveScriptPage> {
   }
 
   Future<void> _restoreDefaults() async {
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('恢复默认口令'),
-        content: const Text('将恢复 4 条内置口令，并把第 1 条设为当前。你自定义的口令会被覆盖。'),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('取消')),
-          TextButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('恢复')),
-        ],
-      ),
+    final ok = await showWxDialog(
+      context,
+      title: '恢复默认口令',
+      content: '将恢复 4 条内置口令，并把第 1 条设为当前。你自定义的口令会被覆盖。',
+      confirmText: '恢复',
     );
     if (ok != true) return;
     await ProactiveScriptStore.restoreDefaults();
@@ -149,58 +151,76 @@ class _ProactiveScriptPageState extends State<ProactiveScriptPage> {
       body: ListView(
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 14, 16, 6),
+            padding: const EdgeInsets.fromLTRB(
+              AppDimens.pagePadding,
+              AppDimens.gapLg,
+              AppDimens.pagePadding,
+              AppDimens.gapSm,
+            ),
             child: Text(
               '多条轮换使用（每轮自动换一条），提高"不被记忆固化"的成功率。'
               '单条 ≤$maxChars 字——巡检口令经 listen/detect 通道发出，该通道有硬性长度上限。',
-              style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+              style: AppTextStyles.caption.copyWith(
+                color: AppTextStyles.secondaryText(context),
+              ),
             ),
           ),
-          const Divider(height: 1),
+          const Divider(height: AppDimens.hairline),
           if (scripts.isEmpty)
-            const Padding(
-              padding: EdgeInsets.all(32),
-              child: Center(child: Text('还没有口令，点右上角 + 新增')),
-            ),
-          ...scripts.map((s) {
-            final isActive = s.id == activeId;
-            return ListTile(
-              leading: Icon(
-                isActive ? Icons.check_circle : Icons.radio_button_unchecked,
-                color: isActive ? AppColors.primary : AppColors.textSecondary,
-              ),
-              title: Text(s.text),
-              subtitle: Text(isActive ? '当前使用' : '点击设为当前',
-                  style: const TextStyle(fontSize: 12)),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Switch(
-                    value: s.enabled,
-                    activeColor: AppColors.primary,
-                    onChanged: (v) async {
-                      await ProactiveScriptStore.update(s.id, enabled: v);
-                      await _refresh();
-                    },
+            WxEmpty(
+              icon: Icons.inbox_outlined,
+              title: '还没有口令',
+              description: '点右上角 + 新增',
+              actionLabel: '新增',
+              onAction: () => _addOrEdit(),
+            )
+          else
+            WxCellGroup(
+              children: scripts.asMap().entries.map((e) {
+                final index = e.key;
+                final s = e.value;
+                final isActive = s.id == activeId;
+                final isLast = index == scripts.length - 1;
+                return WxCell(
+                  leading: Icon(
+                    isActive ? Icons.check_circle : Icons.radio_button_unchecked,
+                    color: isActive
+                        ? AppColors.primary
+                        : AppTextStyles.secondaryText(context),
                   ),
-                  PopupMenuButton<String>(
-                    onSelected: (v) {
-                      if (v == 'edit') _addOrEdit(existing: s);
-                      if (v == 'delete') _confirmDelete(s);
-                    },
-                    itemBuilder: (_) => const [
-                      PopupMenuItem(value: 'edit', child: Text('编辑')),
-                      PopupMenuItem(value: 'delete', child: Text('删除')),
+                  title: s.text,
+                  subtitle: isActive ? '当前使用' : '点击设为当前',
+                  showDivider: !isLast,
+                  onTap: () async {
+                    await ProactiveScriptStore.setActive(s.id);
+                    await _refresh();
+                  },
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Switch(
+                        value: s.enabled,
+                        activeColor: AppColors.primary,
+                        onChanged: (v) async {
+                          await ProactiveScriptStore.update(s.id, enabled: v);
+                          await _refresh();
+                        },
+                      ),
+                      PopupMenuButton<String>(
+                        onSelected: (v) {
+                          if (v == 'edit') _addOrEdit(existing: s);
+                          if (v == 'delete') _confirmDelete(s);
+                        },
+                        itemBuilder: (_) => const [
+                          PopupMenuItem(value: 'edit', child: Text('编辑')),
+                          PopupMenuItem(value: 'delete', child: Text('删除')),
+                        ],
+                      ),
                     ],
                   ),
-                ],
-              ),
-              onTap: () async {
-                await ProactiveScriptStore.setActive(s.id);
-                await _refresh();
-              },
-            );
-          }),
+                );
+              }).toList(),
+            ),
         ],
       ),
     );

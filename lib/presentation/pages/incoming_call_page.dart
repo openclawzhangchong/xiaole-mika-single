@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:vibration/vibration.dart';
 
 import '../../app/themes/app_colors.dart';
+import '../../app/themes/app_text_styles.dart';
 import '../../core/proactive/proactive_ringtone.dart';
 import '../widgets/agent_avatar.dart';
 
@@ -131,9 +132,9 @@ class _IncomingCallPageState extends State<IncomingCallPage> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                const Text(
+                Text(
                   '小乐想和你说说',
-                  style: TextStyle(color: Colors.white70, fontSize: 15),
+                  style: AppTextStyles.subtitle.copyWith(color: Colors.white70),
                 ),
                 const SizedBox(height: 28),
                 SizedBox(
@@ -151,11 +152,8 @@ class _IncomingCallPageState extends State<IncomingCallPage> {
                       ),
                       Text(
                         '$_remaining',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.w500,
-                        ),
+                        style: AppTextStyles.body.copyWith(
+                          color: Colors.white, fontWeight: FontWeight.w500),
                       ),
                     ],
                   ),
@@ -220,7 +218,7 @@ class _RoundButton extends StatelessWidget {
         ),
         const SizedBox(height: 10),
         Text(label,
-            style: const TextStyle(color: Colors.white70, fontSize: 13)),
+            style: AppTextStyles.caption.copyWith(color: Colors.white70)),
       ],
     );
   }

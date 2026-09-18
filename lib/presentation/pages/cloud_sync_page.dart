@@ -9,11 +9,15 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../app/config/app_config.dart';
 import '../../app/themes/app_colors.dart';
+import '../../app/themes/app_text_styles.dart';
+import '../../app/themes/app_dimens.dart';
 import '../../core/providers/agent_provider.dart';
 import '../../data/models/agent_model.dart';
 import '../../data/models/message_model.dart';
 import '../services/chat_history_store.dart';
 import '../services/cloud_sync_service.dart';
+import '../widgets/wx_dialog.dart';
+import '../widgets/wx_icon_button.dart';
 
 /// 一键云端（v4.1.0，对齐网页版批次C 交互）
 ///
@@ -224,22 +228,13 @@ class _CloudSyncPageState extends ConsumerState<CloudSyncPage> {
       }
       _setBusy(true, status: '云端读取完成，等待确认…', progress: 0.6);
       if (!mounted) return;
-      final ok = await showDialog<bool>(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          title: const Text('确认恢复？'),
-          content: Text(
-              '云端有 $cAgent 个智能体 · $cMsg 条消息。\n\n恢复将【覆盖】本机的智能体配置与全部聊天记录，确定恢复吗？'),
-          actions: [
-            TextButton(
-                onPressed: () => Navigator.pop(ctx, false),
-                child: const Text('取消')),
-            TextButton(
-                onPressed: () => Navigator.pop(ctx, true),
-                child: const Text('覆盖恢复',
-                    style: TextStyle(color: AppColors.error))),
-          ],
-        ),
+      final ok = await showWxDialog(
+        context,
+        title: '确认恢复？',
+        content: '云端有 $cAgent 个智能体 · $cMsg 条消息。\n\n'
+            '恢复将【覆盖】本机的智能体配置与全部聊天记录，确定恢复吗？',
+        confirmText: '覆盖恢复',
+        danger: true,
       );
       if (ok != true) {
         _setBusy(false);
@@ -273,27 +268,15 @@ class _CloudSyncPageState extends ConsumerState<CloudSyncPage> {
     if (st == null) return;
     if (!mounted) return;
 
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('⚠️ 清空云端数据'),
-        content: Text(
-          '将删除账号「${st.maskedPhone}」在云端的全部数据：\n\n'
+    final ok = await showWxDialog(
+      context,
+      title: '⚠️ 清空云端数据',
+      content: '将删除账号「${st.maskedPhone}」在云端的全部数据：\n\n'
           '· 所有智能体配置（含 MAC / 设备 ID）\n'
           '· 全部聊天记录\n\n'
           '此操作不可恢复（你本机上的数据不受影响）。',
-        ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('取消')),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('确认清空',
-                style: TextStyle(color: Color(0xFFE64340))),
-          ),
-        ],
-      ),
+      confirmText: '确认清空',
+      danger: true,
     );
     if (ok != true || !mounted) return;
 
@@ -319,21 +302,12 @@ class _CloudSyncPageState extends ConsumerState<CloudSyncPage> {
   }
 
   Future<void> _unbind() async {
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('解除绑定'),
-        content: const Text(
-            '仅解除本机与云端的关联（云端数据不受影响）。\n之后可用同一手机号+用户名重新绑定。'),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('取消')),
-          TextButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('解除')),
-        ],
-      ),
+    final ok = await showWxDialog(
+      context,
+      title: '解除绑定',
+      content: '仅解除本机与云端的关联（云端数据不受影响）。\n'
+          '之后可用同一手机号+用户名重新绑定。',
+      confirmText: '解除',
     );
     if (ok == true) {
       await CloudSyncService.clearState();
@@ -359,14 +333,16 @@ class _CloudSyncPageState extends ConsumerState<CloudSyncPage> {
   Widget _buildProgress() {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.all(AppDimens.gapXxl),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const CircularProgressIndicator(),
-            const SizedBox(height: 24),
+            CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation(AppColors.primary),
+            ),
+            const SizedBox(height: AppDimens.gapXl),
             Text(_statusText, textAlign: TextAlign.center),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppDimens.gapLg),
             LinearProgressIndicator(value: _progress),
           ],
         ),
@@ -376,59 +352,93 @@ class _CloudSyncPageState extends ConsumerState<CloudSyncPage> {
 
   Widget _buildBody() {
     final st = _state;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final inputFill =
+        isDark ? AppColors.inputBackgroundDark : AppColors.inputBackground;
+    final inputBorder =
+        isDark ? AppColors.inputBorderDark : AppColors.inputBorder;
+
+    InputDecoration wxInput(String labelText, {String? hintText}) =>
+        InputDecoration(
+          labelText: labelText,
+          hintText: hintText,
+          counterText: '',
+          filled: true,
+          fillColor: inputFill,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(AppDimens.radiusSm),
+            borderSide: BorderSide(color: inputBorder),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(AppDimens.radiusSm),
+            borderSide: BorderSide(color: inputBorder),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(AppDimens.radiusSm),
+            borderSide: const BorderSide(color: AppColors.primary),
+          ),
+        );
+
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppDimens.pagePadding),
       children: [
         Container(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppDimens.pagePadding),
           decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
+            color: AppTextStyles.surface(context),
+            borderRadius: BorderRadius.circular(AppDimens.radiusLg),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Row(children: [
-                Icon(Icons.cloud_outlined, color: Color(0xFF0ABFF4)),
-                SizedBox(width: 8),
+              Row(children: [
+                Icon(Icons.cloud_outlined, color: AppColors.cloudBlue),
+                SizedBox(width: AppDimens.gapSm),
                 Text('云端身份',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                    style: AppTextStyles.body
+                        .copyWith(fontWeight: FontWeight.bold)),
               ]),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppDimens.gapSm),
               Text(
                 st == null
                     ? '手机号是您在云端的唯一身份。绑定后可随时把聊天记录与智能体配置备份到云端，换设备也能一键恢复。'
                     : '已绑定：${st.userName} · ${st.maskedPhone}',
-                style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+                style: AppTextStyles.caption.copyWith(
+                  color: AppTextStyles.secondaryText(context),
+                ),
               ),
               if (st != null) ...[
-                const SizedBox(height: 4),
+                const SizedBox(height: AppDimens.gapXs),
                 Text(
                   '绑定于 ${_fmt(st.boundAt)} · ${st.lastSync > 0 ? '上次同步 ${_fmt(st.lastSync)}' : '尚未同步过'}',
-                  style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+                  style: AppTextStyles.caption.copyWith(
+                    color: AppTextStyles.tertiaryText(context),
+                  ),
                 ),
               ],
             ],
           ),
         ),
-        const SizedBox(height: 16),
-        if (st == null) _buildUnbound(),
-        if (st != null) _buildBound(),
+        const SizedBox(height: AppDimens.gapLg),
+        if (st == null)
+          _buildUnbound(wxInput)
+        else
+          _buildBound(),
         if (_errorText != null) ...[
-          const SizedBox(height: 12),
+          const SizedBox(height: AppDimens.gapMd),
           Text(_errorText!,
-              style: const TextStyle(color: AppColors.error, fontSize: 13)),
+              style: AppTextStyles.caption.copyWith(color: AppColors.error)),
         ],
       ],
     );
   }
 
-  Widget _buildUnbound() {
+  Widget _buildUnbound(InputDecoration Function(String, {String? hintText}) wxInput) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppDimens.pagePadding),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        color: AppTextStyles.surface(context),
+        borderRadius: BorderRadius.circular(AppDimens.radiusLg),
       ),
       child: Column(
         children: [
@@ -436,31 +446,22 @@ class _CloudSyncPageState extends ConsumerState<CloudSyncPage> {
             controller: _phoneCtl,
             keyboardType: TextInputType.phone,
             maxLength: 11,
-            decoration: const InputDecoration(
-              labelText: '手机号（云端唯一身份）',
-              hintText: '11 位手机号',
-              counterText: '',
-              border: OutlineInputBorder(),
-            ),
+            decoration: wxInput('手机号（云端唯一身份）',
+                hintText: '11 位手机号'),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppDimens.gapMd),
           TextField(
             controller: _nameCtl,
             maxLength: 24,
-            decoration: const InputDecoration(
-              labelText: '用户名（绑定后锁定，重绑须同名）',
-              counterText: '',
-              border: OutlineInputBorder(),
-            ),
+            decoration: wxInput('用户名（绑定后锁定，重绑须同名）'),
           ),
-          const SizedBox(height: 16),
-          SizedBox(
-            width: double.infinity,
-            child: FilledButton.icon(
-              onPressed: _bind,
-              icon: const Icon(Icons.lock_outline),
-              label: const Text('绑定云端'),
-            ),
+          const SizedBox(height: AppDimens.gapLg),
+          WxIconButton(
+            label: '绑定云端',
+            icon: Icons.lock_outline,
+            filled: true,
+            fullWidth: true,
+            onPressed: _bind,
           ),
         ],
       ),
@@ -469,52 +470,52 @@ class _CloudSyncPageState extends ConsumerState<CloudSyncPage> {
 
   Widget _buildBound() {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppDimens.pagePadding),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        color: AppTextStyles.surface(context),
+        borderRadius: BorderRadius.circular(AppDimens.radiusLg),
       ),
       child: Column(
         children: [
-          SizedBox(
-            width: double.infinity,
-            child: FilledButton.icon(
-              onPressed: _push,
-              icon: const Icon(Icons.upload),
-              label: const Text('⬆ 上传聊天记录到云端'),
-            ),
+          WxIconButton(
+            label: '⬆ 上传聊天记录到云端',
+            icon: Icons.upload,
+            filled: true,
+            fullWidth: true,
+            onPressed: _push,
           ),
           const SizedBox(height: 10),
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed: _pull,
-              icon: const Icon(Icons.download),
-              label: const Text('⬇ 从云端恢复到本机'),
-            ),
+          WxIconButton(
+            label: '⬇ 从云端恢复到本机',
+            icon: Icons.download,
+            filled: false,
+            fullWidth: true,
+            onPressed: _pull,
           ),
           const SizedBox(height: 10),
           // v6.2.0：清空云端数据（危险操作 → 二次确认）
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed: _clearCloud,
-              icon: const Icon(Icons.delete_forever_outlined,
-                  size: 18, color: Color(0xFFE64340)),
-              label: const Text('🗑 清空云端数据',
-                  style: TextStyle(color: Color(0xFFE64340))),
-            ),
+          WxIconButton(
+            label: '🗑 清空云端数据',
+            icon: Icons.delete_forever_outlined,
+            filled: false,
+            fullWidth: true,
+            danger: true,
+            onPressed: _clearCloud,
           ),
           const SizedBox(height: 10),
-          TextButton.icon(
+          WxIconButton(
+            label: '解除本机绑定',
+            icon: Icons.link_off,
+            filled: false,
+            fullWidth: true,
             onPressed: _unbind,
-            icon: const Icon(Icons.link_off, size: 18),
-            label: const Text('解除本机绑定'),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: AppDimens.gapXs),
           Text(
             '云端每个智能体保留最近 500 条 · 三端（网页/桌面/App）同号即互通',
-            style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+            style: AppTextStyles.caption.copyWith(
+              color: AppTextStyles.tertiaryText(context),
+            ),
           ),
         ],
       ),

@@ -4,8 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'package:xiaozhi_client_flutter/app/themes/app_colors.dart';
+import 'package:xiaozhi_client_flutter/app/themes/app_text_styles.dart';
 import 'package:xiaozhi_client_flutter/core/utils/toast_util.dart';
 import 'package:xiaozhi_client_flutter/core/proactive/proactive_round_log.dart';
+import '../widgets/wx_dialog.dart';
 
 /// v6.8.3：AI 主动联系 · 电话日志（诊断用）
 /// ------------------------------------------------------------
@@ -59,22 +61,13 @@ class _ProactiveLogPageState extends State<ProactiveLogPage> {
   }
 
   Future<void> _clear() async {
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('清空电话日志'),
-        content: const Text('将删除全部巡检记录（含已跳过轮次），此操作不可恢复。'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('取消'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('清空'),
-          ),
-        ],
-      ),
+    final ok = await showWxDialog(
+      context,
+      title: '清空电话日志',
+      content: '将删除全部巡检记录（含已跳过轮次），此操作不可恢复。',
+      cancelText: '取消',
+      confirmText: '清空',
+      danger: true,
     );
     if (ok != true) return;
     ProactiveRoundLog.clear();
@@ -113,7 +106,7 @@ class _ProactiveLogPageState extends State<ProactiveLogPage> {
               '每轮 AI 主动联系巡检的完整过程（含被守卫跳过的轮次）。'
               '保留最近 ${ProactiveRoundLog.maxRounds} 轮，App 重启后仍在。'
               '点右上角「复制全部」可整段贴给 AI 诊断。',
-              style: TextStyle(fontSize: 12, color: sub),
+              style: AppTextStyles.caption.copyWith(color: sub),
             ),
           ),
           const Divider(height: 1),
@@ -159,8 +152,7 @@ class _ProactiveLogPageState extends State<ProactiveLogPage> {
                   ),
                   child: Text(
                     label,
-                    style: TextStyle(
-                      fontSize: 12,
+                    style: AppTextStyles.caption.copyWith(
                       color: accent,
                       fontWeight: FontWeight.w600,
                     ),
@@ -169,7 +161,7 @@ class _ProactiveLogPageState extends State<ProactiveLogPage> {
                 const Spacer(),
                 Text(
                   _fmt(e.time),
-                  style: TextStyle(fontSize: 12, color: sub),
+                  style: AppTextStyles.caption.copyWith(color: sub),
                 ),
               ],
             ),
@@ -211,12 +203,12 @@ class _ProactiveLogPageState extends State<ProactiveLogPage> {
         children: [
           SizedBox(
             width: 92,
-            child: Text(k, style: TextStyle(fontSize: 13, color: sub)),
+            child: Text(k, style: AppTextStyles.caption.copyWith(color: sub)),
           ),
           Expanded(
             child: Text(
               v,
-              style: TextStyle(fontSize: 13, color: prim),
+              style: AppTextStyles.caption.copyWith(color: prim),
             ),
           ),
         ],

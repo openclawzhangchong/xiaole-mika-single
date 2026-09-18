@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../data/models/message_model.dart';
 import '../../../../app/themes/app_colors.dart';
+import '../../../../app/themes/app_text_styles.dart';
 import '../../../widgets/agent_avatar.dart';
 
 /// 聊天消息气泡组件（微信风格 v7）
@@ -131,7 +132,7 @@ class MessageBubble extends StatelessWidget {
       case MessageType.text:
         return SelectableText(
           message.content,
-          style: TextStyle(fontSize: 16, color: bubbleTextColor, height: 1.5),
+          style: AppTextStyles.body.copyWith(color: bubbleTextColor, height: 1.5),
         );
 
       case MessageType.image:
@@ -159,8 +160,8 @@ class MessageBubble extends StatelessWidget {
             Flexible(
               child: SelectableText(
                 message.content,
-                style: TextStyle(
-                    fontSize: 16, color: bubbleTextColor, height: 1.5),
+                style: AppTextStyles.body.copyWith(
+                    color: bubbleTextColor, height: 1.5),
               ),
             ),
           ],
@@ -170,8 +171,7 @@ class MessageBubble extends StatelessWidget {
         // 系统消息由 MessageList 层居中渲染，此处兜底（不应到达）
         return Text(
           message.content,
-          style: const TextStyle(
-            fontSize: 12,
+          style: AppTextStyles.caption.copyWith(
             color: AppColors.systemText,
           ),
         );
@@ -199,8 +199,8 @@ class MessageBubble extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text('📊 设备状态',
-              style: TextStyle(
-                  fontSize: 14, fontWeight: FontWeight.bold, color: textColor)),
+              style: AppTextStyles.subtitle.copyWith(
+                  fontWeight: FontWeight.bold, color: textColor)),
           const SizedBox(height: 8),
           _statusRow(Icons.volume_up, '音量', '$volume%', textColor, subColor),
           _statusRow(
@@ -234,11 +234,11 @@ class MessageBubble extends StatelessWidget {
         children: [
           Icon(icon, size: 16, color: valueColor),
           const SizedBox(width: 8),
-          Text(label, style: TextStyle(fontSize: 13, color: subColor)),
+          Text(label, style: AppTextStyles.caption.copyWith(color: subColor)),
           const SizedBox(width: 10),
           Text(value,
-              style: TextStyle(
-                  fontSize: 13, fontWeight: FontWeight.w600, color: valueColor)),
+              style: AppTextStyles.caption.copyWith(
+                  fontWeight: FontWeight.w600, color: valueColor)),
         ],
       ),
     );

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../app/themes/app_colors.dart';
+import '../../app/themes/app_text_styles.dart';
 
 /// 用户协议 · 功能介绍页（v6.7.0 新增）
 /// ------------------------------------------------------------
@@ -88,8 +89,7 @@ class UserAgreementPage extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(8, 8, 8, 6),
             child: Text(
               title,
-              style: TextStyle(
-                fontSize: 13,
+              style: AppTextStyles.caption.copyWith(
                 color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
               ),
             ),
@@ -115,12 +115,8 @@ class UserAgreementPage extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 6),
       child: Text(
         text,
-        style: TextStyle(
-          fontSize: bold ? 15 : 13.5,
-          fontWeight: bold ? FontWeight.w500 : FontWeight.w400,
-          height: 1.5,
-          color: color,
-        ),
+        style: (bold ? AppTextStyles.subtitleStrong : AppTextStyles.subtitle)
+            .copyWith(height: 1.5, color: color),
       ),
     );
   }

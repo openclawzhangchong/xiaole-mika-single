@@ -4,9 +4,13 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../app/routes/app_routes.dart';
 import '../../../app/themes/app_colors.dart';
+import '../../../app/themes/app_text_styles.dart';
 import '../../../core/providers/agent_provider.dart';
 import '../../../data/models/agent_model.dart';
 import '../../widgets/agent_avatar.dart';
+import '../../widgets/wx_dialog.dart';
+import '../../widgets/wx_action_sheet.dart';
+import '../../widgets/wx_empty.dart';
 
 /// 对话页面 - 智能体列表（微信会话列表风格）
 class ConversationPage extends ConsumerWidget {
@@ -33,47 +37,12 @@ class ConversationPage extends ConsumerWidget {
       body: agentListAsync.when(
         data: (agents) {
           if (agents.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.chat_bubble_outline,
-                    size: 72,
-                    color: isDark
-                        ? AppColors.navBarUnselectedDark
-                        : AppColors.navBarUnselected,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    '暂无会话',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: isDark
-                          ? AppColors.textSecondaryDark
-                          : AppColors.textSecondary,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    '点击右上角 "+" 添加智能体',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: isDark
-                          ? AppColors.textSecondaryDark
-                          : AppColors.textSecondary,
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      context.push(AppRoutes.agentConfig);
-                    },
-                    icon: const Icon(Icons.add, size: 18),
-                    label: const Text('添加智能体'),
-                  ),
-                ],
-              ),
+            return WxEmpty(
+              icon: Icons.chat_bubble_outline,
+              title: '暂无会话',
+              description: '点击右上角 "+" 添加智能体',
+              actionLabel: '添加智能体',
+              onAction: () => context.push(AppRoutes.agentConfig),
             );
           }
 
@@ -127,9 +96,7 @@ class ConversationPage extends ConsumerWidget {
                                 agent.name,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  fontSize: 17,
-                                  fontWeight: FontWeight.w600,
+                                style: AppTextStyles.bodyStrong.copyWith(
                                   color: isDark
                                       ? AppColors.textPrimaryDark
                                       : AppColors.textPrimary,
@@ -142,8 +109,7 @@ class ConversationPage extends ConsumerWidget {
                                     : '点击开始对话',
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  fontSize: 14,
+                                style: AppTextStyles.subtitle.copyWith(
                                   color: isDark
                                       ? AppColors.textSecondaryDark
                                       : AppColors.textSecondary,
@@ -156,8 +122,7 @@ class ConversationPage extends ConsumerWidget {
                         // 右侧：时间（编辑/删除已改为长按弹出，微信交互）
                         Text(
                           timeStr,
-                          style: TextStyle(
-                            fontSize: 12,
+                          style: AppTextStyles.caption.copyWith(
                             color: isDark
                                 ? AppColors.textSecondaryDark
                                 : AppColors.textSecondary,
@@ -171,110 +136,59 @@ class ConversationPage extends ConsumerWidget {
             },
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stack) => Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.error_outline,
-                  size: 60, color: AppColors.error),
-              const SizedBox(height: 16),
-              Text(
-                '加载失败: $error',
-                style: TextStyle(
-                  color: isDark
-                      ? AppColors.textPrimaryDark
-                      : AppColors.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: () {
-                  ref.read(agentListProvider.notifier).loadAgents();
-                },
-                child: const Text('重试'),
-              ),
-            ],
+        loading: () => const Center(
+          child: CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation(AppColors.primary),
           ),
+        ),
+        error: (error, stack) => WxEmpty(
+          icon: Icons.error_outline,
+          title: '加载失败',
+          description: '$error',
+          actionLabel: '重试',
+          onAction: () => ref.read(agentListProvider.notifier).loadAgents(),
         ),
       ),
     );
   }
 
   /// 长按会话行：微信式操作菜单（编辑/删除）
-  void _showRowActions(
+  Future<void> _showRowActions(
     BuildContext context,
     WidgetRef ref,
     AgentModel agent,
-  ) {
-    showModalBottomSheet(
-      context: context,
-      builder: (sheetContext) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(height: 8),
-            ListTile(
-              leading: const Icon(Icons.edit_outlined),
-              title: const Text('编辑智能体'),
-              onTap: () {
-                Navigator.pop(sheetContext);
-                context.push('${AppRoutes.agentConfig}?agentId=${agent.id}');
-              },
-            ),
-            ListTile(
-              leading:
-                  const Icon(Icons.delete_outline, color: AppColors.error),
-              title: const Text('删除智能体',
-                  style: TextStyle(color: AppColors.error)),
-              onTap: () {
-                Navigator.pop(sheetContext);
-                _showDeleteDialog(context, ref, agent.id, agent.name);
-              },
-            ),
-            const SizedBox(height: 8),
-          ],
-        ),
-      ),
+  ) async {
+    final index = await showWxActionSheet(
+      context,
+      items: const [
+        WxActionSheetItem(label: '编辑智能体'),
+        WxActionSheetItem(label: '删除智能体', danger: true),
+      ],
     );
+    if (!context.mounted) return;
+    if (index == 0) {
+      context.push('${AppRoutes.agentConfig}?agentId=${agent.id}');
+    } else if (index == 1) {
+      _showDeleteDialog(context, ref, agent.id, agent.name);
+    }
   }
 
   /// 显示删除确认对话框
-  void _showDeleteDialog(
+  Future<void> _showDeleteDialog(
     BuildContext context,
     WidgetRef ref,
     String agentId,
     String agentName,
-  ) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('删除智能体'),
-        content: Text('确定要删除 "$agentName" 吗？'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              '取消',
-              style: TextStyle(
-                color: Theme.of(context).brightness == Brightness.dark
-                    ? AppColors.textSecondaryDark
-                    : AppColors.textSecondary,
-              ),
-            ),
-          ),
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              await ref.read(agentListProvider.notifier).deleteAgent(agentId);
-            },
-            child: const Text(
-              '删除',
-              style: TextStyle(color: AppColors.error),
-            ),
-          ),
-        ],
-      ),
+  ) async {
+    final ok = await showWxDialog(
+      context,
+      title: '删除智能体',
+      content: '确定要删除 "$agentName" 吗？',
+      confirmText: '删除',
+      danger: true,
     );
+    if (ok == true) {
+      await ref.read(agentListProvider.notifier).deleteAgent(agentId);
+    }
   }
 }

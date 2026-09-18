@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:vibration/vibration.dart';
 import 'package:xiaozhi_client_flutter/core/utils/audio_util.dart';
 import '../../../../app/themes/app_colors.dart';
+import '../../../../app/themes/app_text_styles.dart';
 import 'voice_wave_visualizer.dart';
 
 /// 按住说话按钮组件
@@ -102,8 +103,7 @@ class _VoiceRecordButtonState extends State<VoiceRecordButton> {
                           : (_isRecording
                                 ? (_isCancelling ? '松开取消' : '松开发送')
                                 : '按住说话'),
-                      style: TextStyle(
-                        fontSize: 15,
+                      style: AppTextStyles.body.copyWith(
                         fontWeight: FontWeight.w500,
                         color: textColor,
                       ),

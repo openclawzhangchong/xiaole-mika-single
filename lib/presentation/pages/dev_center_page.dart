@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:xiaozhi_client_flutter/app/themes/app_colors.dart';
+import 'package:xiaozhi_client_flutter/app/themes/app_text_styles.dart';
+import 'package:xiaozhi_client_flutter/app/themes/app_dimens.dart';
 import 'package:xiaozhi_client_flutter/core/utils/toast_util.dart';
 import 'package:xiaozhi_client_flutter/core/utils/xiaozhi_device_info_util.dart';
 import '../services/app_feats.dart';
@@ -11,6 +13,9 @@ import '../../core/utils/audio_util.dart';
 import '../../core/storage/storage_service.dart';
 import '../../app/config/app_config.dart';
 import '../widgets/device_edit_dialog.dart';
+import '../widgets/wx_cell.dart';
+import '../widgets/wx_dialog.dart';
+import '../widgets/wx_action_sheet.dart';
 import 'log_category_page.dart';
 import 'external_mcp_page.dart';
 import 'proactive_script_page.dart';
@@ -58,10 +63,8 @@ class _DevCenterPageState extends State<DevCenterPage> {
           Center(
             child: Text(
               '${AppFeats.onCount} 项开启',
-              style: TextStyle(
-                fontSize: 13,
-                color:
-                    isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
+              style: AppTextStyles.caption.copyWith(
+                color: AppTextStyles.secondaryText(context),
               ),
             ),
           ),
@@ -75,68 +78,58 @@ class _DevCenterPageState extends State<DevCenterPage> {
           // v6.7.0：原「能力开关」拆分——AI 能力
           _section(isDark, 'AI 能力', [
             _switchTile(
-              isDark,
               '🧰 MCP 设备工具',
               '向 AI 注册设备工具：26 项（音量/闹钟/日程/拨号/短信/导航/截屏…）——AI 可真实操控',
               'mcptools',
             ),
             // v6.1.2：点开查看已注册给 AI 的**全部 26 项**工具（分组 + 用途说明）
-            ListTile(
-              leading: const Icon(Icons.list_alt, color: Color(0xFF576B95)),
-              title: const Text('📋 查看已注册的工具清单'),
-              subtitle: const Text('26 项能力分组明细（AI 能做什么，一目了然）'),
-              trailing: const Icon(Icons.chevron_right),
+            WxCell(
+              leading: const Icon(Icons.list_alt, color: AppColors.info),
+              title: '📋 查看已注册的工具清单',
+              subtitle: '26 项能力分组明细（AI 能做什么，一目了然）',
+              showArrow: true,
               onTap: () => _showMcpToolsDialog(isDark),
             ),
             // v6.4.0：外部 MCP 服务器管理（可增删改多条，工具带前缀桥接给 AI）
-            ListTile(
-              leading: const Icon(Icons.hub, color: Color(0xFF576B95)),
-              title: const Text('🌐 外部 MCP'),
-              subtitle: const Text('接入外部 MCP 服务器（biji 笔记 / 高德地图…），可逐台逐工具开关'),
-              trailing: const Icon(Icons.chevron_right),
+            WxCell(
+              leading: const Icon(Icons.hub, color: AppColors.info),
+              title: '🌐 外部 MCP',
+              subtitle: '接入外部 MCP 服务器（biji 笔记 / 高德地图…），可逐台逐工具开关',
+              showArrow: true,
               onTap: () {
                 Navigator.of(context).push(
                   MaterialPageRoute(
-                      builder: (_) => const ExternalMcpPage()),
+                    builder: (_) => const ExternalMcpPage(),
+                  ),
                 );
               },
             ),
             _switchTile(
-              isDark,
               '📷 视觉识物',
               '聊天栏相机按钮：拍照问 AI 这是什么',
               'vision',
             ),
             _switchTile(
-              isDark,
               '😄 表情动画',
               'AI 对话时的全屏表情动画（v4.3.0 起默认关，可在此开启）',
               'emotion',
+              showDivider: false,
             ),
           ]),
           // v6.5.0：AI 主动来电（方案 D —— 口令存本地，设备 MCP 工具取回）
           // v6.8.0：后台化（WorkManager 周期唤醒 + 高优先通知）
           _section(isDark, 'AI 主动联系', [
             // 总开关：核心层不自查开关，必须由这里直接启停巡检服务（关闭=零流量）
-            SwitchListTile(
-              value: AppFeats.get('proactive'),
-              activeColor: AppColors.primary,
-              title: const Text('🤖 AI 主动联系'),
-              subtitle: const Text(
-                  '前台定时巡检 + 退到后台/锁屏后由系统周期唤醒（WorkManager，最小 15 分钟），命中即高优先通知来电'),
-              onChanged: (v) async {
-                AppFeats.set('proactive', v);
-                if (v) {
-                  await ProactivePollService.instance.start();
-                } else {
-                  await ProactivePollService.instance.stop();
-                }
-                // v6.8.0：与总开关联动注册/取消后台周期任务（含通知权限申请）
-                await ProactiveBackground.syncWithSwitch();
-                if (!mounted) return;
-                setState(() {});
-                ToastUtil.show(v ? 'AI 主动联系 已开启' : 'AI 主动联系 已关闭');
-              },
+            WxCell(
+              title: '🤖 AI 主动联系',
+              subtitle: '前台定时巡检 + 退到后台/锁屏后由系统周期唤醒'
+                  '（WorkManager，最小 15 分钟），命中即高优先通知来电',
+              trailing: Switch(
+                value: AppFeats.get('proactive'),
+                activeColor: AppColors.primary,
+                onChanged: (v) => _toggleProactive(v),
+              ),
+              onTap: () => _toggleProactive(!AppFeats.get('proactive')),
             ),
             // v6.8.0：通知被拒提示（优雅降级，不崩溃）
             if (AppFeats.get('proactive') &&
@@ -145,136 +138,136 @@ class _DevCenterPageState extends State<DevCenterPage> {
                 margin: const EdgeInsets.fromLTRB(12, 0, 12, 4),
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE64340).withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(10),
+                  color: AppColors.error.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(AppDimens.radiusMd),
                 ),
-                child: const Text(
+                child: Text(
                   '⚠️ 通知权限被禁用，主动来电将无法提醒。请在系统设置中允许小乐发送通知。',
-                  style: TextStyle(fontSize: 12, color: Color(0xFFE64340)),
+                  style: AppTextStyles.caption.copyWith(color: AppColors.error),
                 ),
               ),
             // v6.8.0：后台保活引导入口
-            ListTile(
+            WxCell(
               leading: const Icon(Icons.battery_charging_full,
-                  color: Color(0xFF576B95)),
-              title: const Text('🔋 后台保活引导'),
-              subtitle: const Text('电池优化白名单 / 自启动 / 后台运行限制（提升锁屏存活率）'),
-              trailing: const Icon(Icons.chevron_right),
+                  color: AppColors.info),
+              title: '🔋 后台保活引导',
+              subtitle: '电池优化白名单 / 自启动 / 后台运行限制（提升锁屏存活率）',
+              showArrow: true,
               onTap: () {
                 Navigator.of(context).push(
                   MaterialPageRoute(
-                      builder: (_) => const BackgroundGuidePage()),
+                    builder: (_) => const BackgroundGuidePage(),
+                  ),
                 );
               },
             ),
-            ListTile(
-              leading: const Icon(Icons.schedule, color: Color(0xFF576B95)),
-              title: const Text('⏱ 巡检间隔'),
-              subtitle: Text(
-                  '每 ${ProactivePollService.instance.intervalMinutes} 分钟一次（后台最小 15 分钟）'),
-              trailing: const Icon(Icons.chevron_right),
+            WxCell(
+              leading: const Icon(Icons.schedule, color: AppColors.info),
+              title: '⏱ 巡检间隔',
+              subtitle: '每 ${ProactivePollService.instance.intervalMinutes} '
+                  '分钟一次（后台最小 15 分钟）',
+              showArrow: true,
               onTap: _pickProactiveInterval,
             ),
-            ListTile(
-              leading: const Icon(Icons.bedtime_outlined,
-                  color: Color(0xFF576B95)),
-              title: const Text('🌙 允许来电时段'),
-              subtitle: Text(_proactiveWindowLabel()),
-              trailing: const Icon(Icons.chevron_right),
+            WxCell(
+              leading: const Icon(Icons.bedtime_outlined, color: AppColors.info),
+              title: '🌙 允许来电时段',
+              subtitle: _proactiveWindowLabel(),
+              showArrow: true,
               onTap: _pickProactiveWindow,
             ),
-            ListTile(
-              leading: const Icon(Icons.edit_note, color: Color(0xFF576B95)),
-              title: const Text('📝 巡检口令管理'),
-              subtitle: const Text('多条轮换使用（可增删改查 / 恢复默认 / ≤16 字）'),
-              trailing: const Icon(Icons.chevron_right),
+            WxCell(
+              leading: const Icon(Icons.edit_note, color: AppColors.info),
+              title: '📝 巡检口令管理',
+              subtitle: '多条轮换使用（可增删改查 / 恢复默认 / ≤16 字）',
+              showArrow: true,
               onTap: () {
                 Navigator.of(context).push(
                   MaterialPageRoute(
-                      builder: (_) => const ProactiveScriptPage()),
+                    builder: (_) => const ProactiveScriptPage(),
+                  ),
                 );
               },
             ),
             // v6.8.3（A 项）：电话日志入口（诊断用，旁路记录层，不改动巡检行为）
-            ListTile(
-              leading: const Icon(Icons.call, color: Color(0xFF576B95)),
-              title: const Text('📞 电话日志'),
-              subtitle: const Text(
-                  '每轮巡检的完整过程（含跳过原因/口令/开场白），最近 50 轮，可一键复制'),
-              trailing: const Icon(Icons.chevron_right),
+            WxCell(
+              leading: const Icon(Icons.call, color: AppColors.info),
+              title: '📞 电话日志',
+              subtitle: '每轮巡检的完整过程（含跳过原因/口令/开场白），最近 50 轮，可一键复制',
+              showArrow: true,
               onTap: () {
                 Navigator.of(context).push(
                   MaterialPageRoute(builder: (_) => const ProactiveLogPage()),
                 );
               },
+              showDivider: false,
             ),
           ]),
           // v6.7.0：原「能力开关」拆分——连接与音频（尾音保护自「诊断」迁入）
           _section(isDark, '连接与音频', [
             _switchTile(
-              isDark,
               '📡 MQTT 常驻在线',
               '长连接保后台在线 + 接收远程配置；下次连接生效（限流风险默认关）',
               'mqtt',
             ),
             // v4.4.0：原「🎤 抢话打断」开关已移除——其用未消回声的振幅判断会误触发，
             // 导致 AI 自问自答（方案根因③）。此处改为 AEC 通话通路开关。
-            _aecTile(isDark),
+            _aecTile(),
             _tailGuardTile(),
           ]),
           // v6.7.0：原「能力开关」拆分——调试（+ 音频能力检测自「我」页迁入）
           _section(isDark, '调试', [
             _switchTile(
-              isDark,
               '🧪 MCP 调试',
               '开启=字幕保留 % 工具名原文；关闭=自动过滤',
               'mcpDebug',
             ),
             // v6.4.4：开发者/普通用户身份分流开关——控制聊天页服务端 alert 的展现方式
             _switchTile(
-              isDark,
               '⚠️ 显示服务端原始提示',
-              '开启=开发者模式，聊天页直接显示服务器原文（如 alert 报错）；关闭=普通用户模式，改用友好弹窗',
+              '开启=开发者模式，聊天页直接显示服务器原文（如 alert 报错）；'
+                  '关闭=普通用户模式，改用友好弹窗',
               'rawServerAlert',
             ),
             // v6.7.0：音频能力检测（自「我」页迁入，只读展示）
             _audioCapabilitiesTile(),
-            ListTile(
-              leading:
-                  const Icon(Icons.receipt_long_outlined, color: Color(0xFF576B95)),
-              title: const Text('📋 运行日志查看'),
-              subtitle: const Text('复制最近 200 条运行日志，供 AI 排查故障'),
+            WxCell(
+              leading: const Icon(Icons.receipt_long_outlined,
+                  color: AppColors.info),
+              title: '📋 运行日志查看',
+              subtitle: '复制最近 200 条运行日志，供 AI 排查故障',
               onTap: _copyLogs,
             ),
-            ListTile(
-              leading: const Icon(Icons.tune, color: Color(0xFF576B95)),
-              title: const Text('🗂 日志分类'),
-              subtitle: Text(
-                  '按功能开关日志记录（已开 ${LogBuffer.enabledCount}/${LogBuffer.categories.length}）'),
+            WxCell(
+              leading: const Icon(Icons.tune, color: AppColors.info),
+              title: '🗂 日志分类',
+              subtitle: '按功能开关日志记录'
+                  '（已开 ${LogBuffer.enabledCount}/${LogBuffer.categories.length}）',
               onTap: () async {
                 await Navigator.of(context).push(
                   MaterialPageRoute(builder: (_) => const LogCategoryPage()),
                 );
                 if (mounted) setState(() {});
               },
+              showDivider: false,
             ),
           ]),
           // v6.7.0：原「安全」+「危险操作」合并为「管理」
           _section(isDark, '管理', [
-            ListTile(
-              leading: const Icon(Icons.lock_outline, color: Color(0xFF576B95)),
-              title: const Text('🔒 清除授权'),
-              subtitle: const Text('下次进开发者中心需重新输密码'),
+            WxCell(
+              leading: const Icon(Icons.lock_outline, color: AppColors.info),
+              title: '🔒 清除授权',
+              subtitle: '下次进开发者中心需重新输密码',
               onTap: () {
                 AppFeats.setDevAuthed(false);
                 ToastUtil.show('已清除授权');
                 Navigator.of(context).pop();
               },
             ),
-            ListTile(
-              leading: const Icon(Icons.close, color: Color(0xFFE64340)),
-              title: const Text('全部关闭'),
-              subtitle: const Text('关闭所有开发者功能（等效普通用户模式）'),
+            WxCell(
+              leading: const Icon(Icons.close, color: AppColors.error),
+              title: '全部关闭',
+              subtitle: '关闭所有开发者功能（等效普通用户模式）',
               onTap: () {
                 AppFeats.allOff();
                 // v6.8.0：总开关被关闭 → 取消后台周期任务（保证关闭=零唤醒）
@@ -282,12 +275,28 @@ class _DevCenterPageState extends State<DevCenterPage> {
                 setState(() {});
                 ToastUtil.show('已全部关闭');
               },
+              showDivider: false,
             ),
           ]),
           const SizedBox(height: 24),
         ],
       ),
     );
+  }
+
+  /// v6.5.0：AI 主动联系总开关——与总开关联动启停巡检服务 + 后台周期任务。
+  Future<void> _toggleProactive(bool v) async {
+    AppFeats.set('proactive', v);
+    if (v) {
+      await ProactivePollService.instance.start();
+    } else {
+      await ProactivePollService.instance.stop();
+    }
+    // v6.8.0：与总开关联动注册/取消后台周期任务（含通知权限申请）
+    await ProactiveBackground.syncWithSwitch();
+    if (!mounted) return;
+    setState(() {});
+    ToastUtil.show(v ? 'AI 主动联系 已开启' : 'AI 主动联系 已关闭');
   }
 
   // ===== v6.7.0：设备身份组（自「我」页原样迁入，行为不变） =====
@@ -310,21 +319,10 @@ class _DevCenterPageState extends State<DevCenterPage> {
   /// ⚠️ MAC 强制小写：服务器 WS 侧按 device-id 查设备区分大小写，
   /// 大写 MAC 会 OTA 激活成功但连上即被静默踢线（close code=1005）
   Widget _deviceMacTile() {
-    return ListTile(
-      leading: _iconTile(Icons.confirmation_num_outlined, const Color(0xFF576B95)),
-      title: const Text('虚拟MAC地址'),
-      trailing: IconButton(
-        icon: const Icon(Icons.edit, size: 20),
-        tooltip: '编辑',
-        onPressed: () => showDeviceEditDialog(
-          context,
-          title: '编辑虚拟MAC地址',
-          getCurrent: XiaozhiDeviceInfoUtil.instance.getDeviceMacAddress,
-          onSave: (v) => XiaozhiDeviceInfoUtil.instance
-              .setDeviceMacAddress(v.trim().toLowerCase()),
-        ),
-      ),
-      subtitle: FutureBuilder<String>(
+    return WxCell(
+      leading: _iconTile(Icons.confirmation_num_outlined, AppColors.info),
+      title: '虚拟MAC地址',
+      subtitleWidget: FutureBuilder<String>(
         future: XiaozhiDeviceInfoUtil.instance.getDeviceMacAddress(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -335,6 +333,17 @@ class _DevCenterPageState extends State<DevCenterPage> {
           }
           return Text(snapshot.data ?? '未知');
         },
+      ),
+      trailing: IconButton(
+        icon: const Icon(Icons.edit, size: 20),
+        tooltip: '编辑',
+        onPressed: () => showDeviceEditDialog(
+          context,
+          title: '编辑虚拟MAC地址',
+          getCurrent: XiaozhiDeviceInfoUtil.instance.getDeviceMacAddress,
+          onSave: (v) => XiaozhiDeviceInfoUtil.instance
+              .setDeviceMacAddress(v.trim().toLowerCase()),
+        ),
       ),
       onTap: () async {
         final macAddress =
@@ -353,20 +362,10 @@ class _DevCenterPageState extends State<DevCenterPage> {
 
   /// 虚拟 Client ID（编辑 + 点按复制）
   Widget _deviceClientIdTile() {
-    return ListTile(
-      leading: _iconTile(Icons.badge_outlined, const Color(0xFF576B95)),
-      title: const Text('虚拟Client ID'),
-      trailing: IconButton(
-        icon: const Icon(Icons.edit, size: 20),
-        tooltip: '编辑',
-        onPressed: () => showDeviceEditDialog(
-          context,
-          title: '编辑虚拟Client ID',
-          getCurrent: XiaozhiDeviceInfoUtil.instance.getDeviceClientId,
-          onSave: XiaozhiDeviceInfoUtil.instance.setDeviceClientId,
-        ),
-      ),
-      subtitle: FutureBuilder<String>(
+    return WxCell(
+      leading: _iconTile(Icons.badge_outlined, AppColors.info),
+      title: '虚拟Client ID',
+      subtitleWidget: FutureBuilder<String>(
         future: XiaozhiDeviceInfoUtil.instance.getDeviceClientId(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -377,6 +376,16 @@ class _DevCenterPageState extends State<DevCenterPage> {
           }
           return Text(snapshot.data ?? '未知');
         },
+      ),
+      trailing: IconButton(
+        icon: const Icon(Icons.edit, size: 20),
+        tooltip: '编辑',
+        onPressed: () => showDeviceEditDialog(
+          context,
+          title: '编辑虚拟Client ID',
+          getCurrent: XiaozhiDeviceInfoUtil.instance.getDeviceClientId,
+          onSave: XiaozhiDeviceInfoUtil.instance.setDeviceClientId,
+        ),
       ),
       onTap: () async {
         final clientId =
@@ -398,20 +407,10 @@ class _DevCenterPageState extends State<DevCenterPage> {
   /// 「加载中/值」间漂移）。全局矫正入口在聊天页 initState +
   /// 添加/编辑智能体页加载设备字段两处，覆盖日常全部路径。
   Widget _deviceModelTile() {
-    return ListTile(
+    return WxCell(
       leading: _iconTile(Icons.phone_android_outlined, AppColors.primary),
-      title: const Text('设备型号'),
-      trailing: IconButton(
-        icon: const Icon(Icons.edit, size: 20),
-        tooltip: '编辑',
-        onPressed: () => showDeviceEditDialog(
-          context,
-          title: '编辑设备型号',
-          getCurrent: XiaozhiDeviceInfoUtil.instance.getDeviceModel,
-          onSave: XiaozhiDeviceInfoUtil.instance.setDeviceModel,
-        ),
-      ),
-      subtitle: FutureBuilder<String>(
+      title: '设备型号',
+      subtitleWidget: FutureBuilder<String>(
         future: XiaozhiDeviceInfoUtil.instance.getDeviceModel(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -423,6 +422,17 @@ class _DevCenterPageState extends State<DevCenterPage> {
           return Text(snapshot.data ?? '未知');
         },
       ),
+      trailing: IconButton(
+        icon: const Icon(Icons.edit, size: 20),
+        tooltip: '编辑',
+        onPressed: () => showDeviceEditDialog(
+          context,
+          title: '编辑设备型号',
+          getCurrent: XiaozhiDeviceInfoUtil.instance.getDeviceModel,
+          onSave: XiaozhiDeviceInfoUtil.instance.setDeviceModel,
+        ),
+      ),
+      showDivider: false,
     );
   }
 
@@ -432,10 +442,10 @@ class _DevCenterPageState extends State<DevCenterPage> {
       future: AudioUtil.checkAudioCapabilities(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const ListTile(
+          return const WxCell(
             leading: Icon(Icons.graphic_eq),
-            title: Text('音频能力检测'),
-            subtitle: Text('检测中...'),
+            title: '音频能力检测',
+            subtitle: '检测中...',
           );
         }
 
@@ -446,29 +456,30 @@ class _DevCenterPageState extends State<DevCenterPage> {
 
         return Column(
           children: [
-            ListTile(
+            WxCell(
               leading: Icon(
                 aecSupported ? Icons.check_circle : Icons.cancel,
-                color: aecSupported ? Colors.green : Colors.red,
+                color: aecSupported ? AppColors.primary : AppColors.error,
               ),
-              title: const Text('AEC 回声消除'),
-              subtitle: Text(aecSupported ? '支持' : '不支持'),
+              title: 'AEC 回声消除',
+              subtitle: aecSupported ? '支持' : '不支持',
             ),
-            ListTile(
+            WxCell(
               leading: Icon(
                 noiseSuppress ? Icons.check_circle : Icons.cancel,
-                color: noiseSuppress ? Colors.green : Colors.red,
+                color: noiseSuppress ? AppColors.primary : AppColors.error,
               ),
-              title: const Text('噪声抑制'),
-              subtitle: Text(noiseSuppress ? '支持' : '不支持'),
+              title: '噪声抑制',
+              subtitle: noiseSuppress ? '支持' : '不支持',
             ),
-            ListTile(
+            WxCell(
               leading: Icon(
                 autoGain ? Icons.check_circle : Icons.cancel,
-                color: autoGain ? Colors.green : Colors.red,
+                color: autoGain ? AppColors.primary : AppColors.error,
               ),
-              title: const Text('自动增益控制'),
-              subtitle: Text(autoGain ? '支持' : '不支持'),
+              title: '自动增益控制',
+              subtitle: autoGain ? '支持' : '不支持',
+              showDivider: false,
             ),
           ],
         );
@@ -479,33 +490,30 @@ class _DevCenterPageState extends State<DevCenterPage> {
   /// v4.4.0：AEC 通话通路开关
   /// **独立于 `AppFeats`**——`AppFeats.allOff()`（"全部关闭"＝普通用户模式）会关掉所有开关，
   /// 而 AEC 属基础收音质量而非"开发者增强功能"，不应被"全部关闭"取消，故用独立存储键。
-  Widget _aecTile(bool isDark) {
-    return SwitchListTile(
-      value: AudioUtil.useAecSource,
-      onChanged: (v) {
+  Widget _aecTile() {
+    return WxCell(
+      title: '🎧 通话降噪通路（AEC）',
+      subtitle: '开启＝走通话音频通路以启用硬件回声消除，'
+          '可消除 AI 尾音被误识别；少数机型音色略闷。下次录音/通话生效',
+      trailing: Switch(
+        value: AudioUtil.useAecSource,
+        activeColor: AppColors.primary,
+        onChanged: (v) {
+          AudioUtil.setAecSource(v);
+          setState(() {});
+          ToastUtil.show(v
+              ? '通话降噪通路已开启（下次录音生效）'
+              : '通话降噪通路已关闭，恢复原录音源（下次录音生效）');
+        },
+      ),
+      onTap: () {
+        final v = !AudioUtil.useAecSource;
         AudioUtil.setAecSource(v);
         setState(() {});
         ToastUtil.show(v
             ? '通话降噪通路已开启（下次录音生效）'
             : '通话降噪通路已关闭，恢复原录音源（下次录音生效）');
       },
-      title: Text(
-        '🎧 通话降噪通路（AEC）',
-        style: TextStyle(
-          fontSize: 16,
-          color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
-        ),
-      ),
-      subtitle: Padding(
-        padding: const EdgeInsets.only(top: 2),
-        child: Text(
-          '开启＝走通话音频通路以启用硬件回声消除，可消除 AI 尾音被误识别；少数机型音色略闷。下次录音/通话生效',
-          style: TextStyle(
-            fontSize: 12,
-            color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
-          ),
-        ),
-      ),
     );
   }
 
@@ -518,51 +526,45 @@ class _DevCenterPageState extends State<DevCenterPage> {
   /// v4.4.0：尾音保护时长（100–500ms，默认 300）
   Widget _tailGuardTile() {
     final ms = _tailGuardMs;
-    return ListTile(
-      leading: const Icon(Icons.timer_outlined, color: Color(0xFF576B95)),
-      title: const Text('⏱ 尾音保护'),
-      subtitle: Text('AI 说完后等待 $ms 毫秒再恢复采集（减少误识别；调大更保险）'),
+    return WxCell(
+      leading: const Icon(Icons.timer_outlined, color: AppColors.info),
+      title: '⏱ 尾音保护',
+      subtitle: 'AI 说完后等待 $ms 毫秒再恢复采集（减少误识别；调大更保险）',
       onTap: () => _pickTailGuard(ms),
+      showDivider: false,
     );
   }
 
   Future<void> _pickTailGuard(int current) async {
     double value = current.toDouble();
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('尾音保护时长'),
-        content: StatefulBuilder(
-          builder: (ctx, setS) => Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('${value.round()} 毫秒'),
-              Slider(
-                value: value,
-                min: AppConfig.minTailGuardMs.toDouble(),
-                max: AppConfig.maxTailGuardMs.toDouble(),
-                divisions: 8, // 100~500，步进 50
-                label: '${value.round()}ms',
-                onChanged: (v) => setS(() => value = v),
-              ),
-              const Text(
-                'AI 说完后等多久再开始听你说话：调大可减少误识别，调小更灵敏',
-                style: TextStyle(fontSize: 12),
-              ),
-            ],
-          ),
+    final ok = await showWxDialog(
+      context,
+      title: '尾音保护时长',
+      confirmText: '保存',
+      contentWidget: StatefulBuilder(
+        builder: (ctx, setS) => Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('${value.round()} 毫秒'),
+            Slider(
+              value: value,
+              min: AppConfig.minTailGuardMs.toDouble(),
+              max: AppConfig.maxTailGuardMs.toDouble(),
+              divisions: 8, // 100~500，步进 50
+              label: '${value.round()}ms',
+              activeColor: AppColors.primary,
+              onChanged: (v) => setS(() => value = v),
+            ),
+            const Text(
+              'AI 说完后等多久再开始听你说话：调大可减少误识别，调小更灵敏',
+              style: AppTextStyles.caption,
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('取消')),
-          TextButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('保存')),
-        ],
       ),
     );
     if (ok != true) return;
+    if (!mounted) return;
     final v =
         value.round().clamp(AppConfig.minTailGuardMs, AppConfig.maxTailGuardMs);
     await StorageService.instance.setInt(AppConfig.keyTailGuardMs, v);
@@ -611,27 +613,14 @@ class _DevCenterPageState extends State<DevCenterPage> {
 
   Future<void> _pickProactiveInterval() async {
     const opts = <int>[15, 30, 60, 120, 240];
-    final cur = ProactivePollService.instance.intervalMinutes;
-    final picked = await showModalBottomSheet<int>(
-      context: context,
-      builder: (ctx) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 12),
-              child: Text('巡检间隔', style: TextStyle(fontWeight: FontWeight.w500)),
-            ),
-            ...opts.map((m) => ListTile(
-                  title: Text('每 $m 分钟'),
-                  trailing: m == cur ? const Icon(Icons.check) : null,
-                  onTap: () => Navigator.pop(ctx, m),
-                )),
-          ],
-        ),
-      ),
+    final idx = await showWxActionSheet(
+      context,
+      items: [
+        for (final m in opts) WxActionSheetItem(label: '每 $m 分钟'),
+      ],
     );
-    if (picked == null) return;
+    if (idx == null) return;
+    final picked = opts[idx];
     await ProactivePollService.instance.setIntervalMinutes(picked);
     if (mounted) setState(() {});
   }
@@ -641,69 +630,59 @@ class _DevCenterPageState extends State<DevCenterPage> {
     var allDay = w.allDay;
     var start = w.startMin;
     var end = w.endMin;
-    final ok = await showModalBottomSheet<bool>(
-      context: context,
-      isScrollControlled: true,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setSheet) => SafeArea(
+    final ok = await showWxDialog(
+      context,
+      title: '允许来电时段',
+      confirmText: '保存',
+      contentWidget: StatefulBuilder(
+        builder: (ctx, setSheet) => SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 12),
-                child: Text('允许来电时段',
-                    style: TextStyle(fontWeight: FontWeight.w500)),
-              ),
-              SwitchListTile(
-                title: const Text('全天允许'),
-                value: allDay,
-                activeColor: AppColors.primary,
-                onChanged: (v) => setSheet(() => allDay = v),
+              WxCell(
+                title: '全天允许',
+                trailing: Switch(
+                  value: allDay,
+                  activeColor: AppColors.primary,
+                  onChanged: (v) => setSheet(() => allDay = v),
+                ),
+                onTap: () => setSheet(() => allDay = !allDay),
               ),
               if (!allDay) ...[
-                ListTile(
-                  title: const Text('开始时间'),
-                  trailing: Text(_fmtMinOfDay(start)),
-                  onTap: () async {
-                    final t = await showTimePicker(
-                      context: ctx,
-                      initialTime: TimeOfDay(
-                          hour: start ~/ 60, minute: start % 60),
-                    );
-                    if (t != null) setSheet(() => start = t.hour * 60 + t.minute);
-                  },
-                ),
-                ListTile(
-                  title: const Text('结束时间'),
-                  trailing: Text(_fmtMinOfDay(end)),
-                  onTap: () async {
-                    final t = await showTimePicker(
-                      context: ctx,
-                      initialTime: TimeOfDay(hour: end ~/ 60, minute: end % 60),
-                    );
-                    if (t != null) setSheet(() => end = t.hour * 60 + t.minute);
-                  },
-                ),
-                const Padding(
-                  padding: EdgeInsets.fromLTRB(16, 4, 16, 12),
-                  child: Text('支持跨午夜（如 22:00–08:00）',
-                      style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
-                ),
-              ],
+              WxCell(
+                title: '开始时间',
+                trailingText: _fmtMinOfDay(start),
+                onTap: () async {
+                  final t = await showTimePicker(
+                    context: ctx,
+                    initialTime:
+                        TimeOfDay(hour: start ~/ 60, minute: start % 60),
+                  );
+                  if (t != null) setSheet(() => start = t.hour * 60 + t.minute);
+                },
+              ),
+              WxCell(
+                title: '结束时间',
+                trailingText: _fmtMinOfDay(end),
+                onTap: () async {
+                  final t = await showTimePicker(
+                    context: ctx,
+                    initialTime: TimeOfDay(hour: end ~/ 60, minute: end % 60),
+                  );
+                  if (t != null) setSheet(() => end = t.hour * 60 + t.minute);
+                },
+              ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-                child: SizedBox(
-                  width: double.infinity,
-                  child: FilledButton(
-                    onPressed: () => Navigator.pop(ctx, true),
-                    child: const Text('保存'),
-                  ),
-                ),
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+                child: Text('支持跨午夜（如 22:00–08:00）',
+                    style: AppTextStyles.caption.copyWith(
+                        color: AppTextStyles.secondaryText(context))),
               ),
             ],
-          ),
+          ],
         ),
       ),
+    ),
     );
     if (ok != true) return;
     await ProactiveScriptStore.setWindow(
@@ -721,16 +700,14 @@ class _DevCenterPageState extends State<DevCenterPage> {
             padding: const EdgeInsets.fromLTRB(8, 8, 8, 6),
             child: Text(
               title,
-              style: TextStyle(
-                fontSize: 13,
-                color:
-                    isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
+              style: AppTextStyles.caption.copyWith(
+                color: AppTextStyles.secondaryText(context),
               ),
             ),
           ),
           Material(
             color: isDark ? AppColors.surfaceDark : AppColors.surface,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppDimens.radiusLg),
             child: Column(children: children),
           ),
         ],
@@ -738,32 +715,27 @@ class _DevCenterPageState extends State<DevCenterPage> {
     );
   }
 
-  Widget _switchTile(bool isDark, String title, String subtitle, String key) {
-    return SwitchListTile(
-      value: AppFeats.get(key),
-      onChanged: (v) {
+  Widget _switchTile(String title, String subtitle, String key,
+      {bool showDivider = true}) {
+    return WxCell(
+      title: title,
+      subtitle: subtitle,
+      trailing: Switch(
+        value: AppFeats.get(key),
+        activeColor: AppColors.primary,
+        onChanged: (v) {
+          AppFeats.set(key, v);
+          setState(() {});
+          ToastUtil.show(v ? '$title 已开启' : '$title 已关闭');
+        },
+      ),
+      onTap: () {
+        final v = !AppFeats.get(key);
         AppFeats.set(key, v);
         setState(() {});
         ToastUtil.show(v ? '$title 已开启' : '$title 已关闭');
       },
-      title: Text(
-        title,
-        style: TextStyle(
-          fontSize: 16,
-          color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
-        ),
-      ),
-      subtitle: Padding(
-        padding: const EdgeInsets.only(top: 2),
-        child: Text(
-          subtitle,
-          style: TextStyle(
-            fontSize: 12,
-            color:
-                isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
-          ),
-        ),
-      ),
+      showDivider: showDivider,
     );
   }
 }
@@ -834,21 +806,22 @@ class _McpToolsDetailPageState extends State<_McpToolsDetailPage> {
           const SizedBox(height: 8),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-            child: Text('共 ${_totalCount()} 项能力，逐项开关；关闭后 AI 将看不到该工具',
-                style: TextStyle(fontSize: 12, color: sub)),
+            child: Text(
+                '共 ${_totalCount()} 项能力，逐项开关；关闭后 AI 将看不到该工具',
+                style: AppTextStyles.caption.copyWith(color: sub)),
           ),
           if (!masterOn)
             Container(
               margin: const EdgeInsets.fromLTRB(12, 8, 12, 4),
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: const Color(0xFF576B95).withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(10),
+                color: AppColors.info.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(AppDimens.radiusMd),
               ),
-              child: const Text(
+              child: Text(
                 '🧰 总开关「MCP 设备工具」已关闭，下面各项暂不可操作。'
                 '请先返回上一页开启总闸。',
-                style: TextStyle(fontSize: 12, color: Color(0xFF576B95)),
+                style: AppTextStyles.caption.copyWith(color: AppColors.info),
               ),
             ),
           for (final g in groups)
@@ -858,7 +831,7 @@ class _McpToolsDetailPageState extends State<_McpToolsDetailPage> {
             child: Text(
               '⚠️ 闹钟 / 日程 / 短信 / 拨号 / 分享会打开系统界面，'
               '需要你确认后才真正生效（安卓的安全设计）。',
-              style: TextStyle(fontSize: 11, color: sub, height: 1.4),
+              style: AppTextStyles.captionSmall.copyWith(color: sub, height: 1.4),
             ),
           ),
         ],
@@ -878,36 +851,38 @@ class _McpToolsDetailPageState extends State<_McpToolsDetailPage> {
           Padding(
             padding: const EdgeInsets.fromLTRB(8, 6, 8, 6),
             child: Text(title,
-                style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
-                    color: prim)),
+                style: AppTextStyles.caption.copyWith(
+                    fontWeight: FontWeight.bold, color: prim)),
           ),
           Material(
             color: widget.isDark ? AppColors.surfaceDark : AppColors.surface,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppDimens.radiusLg),
             child: Column(
               children: [
-                for (final t in tools)
-                  SwitchListTile(
-                    // 总闸关 → 置灰不可操作（逐项设置保留，不清除）
-                    onChanged: masterOn
-                        ? (v) {
-                            AppFeats.setMcpToolEnabled(t[0], v);
+                for (var i = 0; i < tools.length; i++)
+                  WxCell(
+                    title: tools[i][1],
+                    subtitleWidget: Text(tools[i][0],
+                        style: AppTextStyles.captionSmall.copyWith(color: sub)),
+                    trailing: Switch(
+                      // 总闸关 → 置灰不可操作（逐项设置保留，不清除）
+                      value: AppFeats.mcpToolEnabled(tools[i][0]),
+                      activeColor: AppColors.primary,
+                      onChanged: masterOn
+                          ? (v) {
+                              AppFeats.setMcpToolEnabled(tools[i][0], v);
+                              setState(() {});
+                            }
+                          : null,
+                    ),
+                    onTap: masterOn
+                        ? () {
+                            final v = !AppFeats.mcpToolEnabled(tools[i][0]);
+                            AppFeats.setMcpToolEnabled(tools[i][0], v);
                             setState(() {});
                           }
                         : null,
-                    value: AppFeats.mcpToolEnabled(t[0]),
-                    title: Text(t[1],
-                        style: TextStyle(
-                            fontSize: 14,
-                            color: masterOn ? prim : sub)),
-                    subtitle: Padding(
-                      padding: const EdgeInsets.only(top: 2),
-                      child: Text(t[0],
-                          style: TextStyle(fontSize: 11, color: sub)),
-                    ),
-                    activeColor: const Color(0xFF07C160),
+                    showDivider: i == tools.length - 1,
                   ),
               ],
             ),
@@ -927,39 +902,31 @@ Future<void> showDevGateIfNeeded(BuildContext context) async {
     return;
   }
   final controller = TextEditingController();
-  final ok = await showDialog<bool>(
-    context: context,
-    builder: (ctx) => AlertDialog(
-      title: const Text('开发者模式'),
-      content: TextField(
-        controller: controller,
-        obscureText: true,
-        autofocus: true,
-        keyboardType: TextInputType.number,
-        decoration: const InputDecoration(
-            hintText: '请输入密码', border: OutlineInputBorder()),
-        onSubmitted: (v) => Navigator.of(ctx).pop(v == AppFeats.devPassword),
-      ),
-      actions: [
-        TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('取消')),
-        TextButton(
-            onPressed: () =>
-                Navigator.of(ctx).pop(controller.text == AppFeats.devPassword),
-            child: const Text('确定')),
-      ],
+  final ok = await showWxDialog(
+    context,
+    title: '开发者模式',
+    confirmText: '确定',
+    contentWidget: TextField(
+      controller: controller,
+      obscureText: true,
+      autofocus: true,
+      keyboardType: TextInputType.number,
+      decoration: const InputDecoration(
+          hintText: '请输入密码', border: OutlineInputBorder()),
     ),
   );
   if (ok == true) {
-    AppFeats.setDevAuthed(true);
-    ToastUtil.show('授权成功');
-    if (context.mounted) {
-      Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => const DevCenterPage()),
-      );
+    if (controller.text == AppFeats.devPassword) {
+      AppFeats.setDevAuthed(true);
+      ToastUtil.show('授权成功');
+      if (context.mounted) {
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const DevCenterPage()),
+        );
+      }
+    } else {
+      ToastUtil.show('密码错误');
     }
-  } else if (ok == false) {
-    ToastUtil.show('密码错误');
   }
+  controller.dispose();
 }

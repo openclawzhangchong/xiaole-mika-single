@@ -2,6 +2,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:xiaozhi_client_flutter/core/network/xiaozhi_ota_service.dart';
 import '../../app/themes/app_colors.dart';
+import '../../app/themes/app_text_styles.dart';
+import '../../app/themes/app_dimens.dart';
+import 'wx_icon_button.dart';
 
 /// 设备激活轮询弹窗（对齐原型 v6 的 activationModal）
 ///
@@ -145,17 +148,41 @@ class _ActivationDialogState extends State<ActivationDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('设备激活'),
+      backgroundColor: AppTextStyles.surface(context),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppDimens.radiusLg),
+      ),
+      title: Text(
+        '设备激活',
+        style: AppTextStyles.navTitle.copyWith(
+          color: AppTextStyles.primaryText(context),
+        ),
+      ),
+      titlePadding: const EdgeInsets.only(
+        top: AppDimens.gapXl,
+        bottom: AppDimens.gapSm,
+      ),
+      contentPadding: const EdgeInsets.fromLTRB(
+        AppDimens.pagePadding,
+        0,
+        AppDimens.pagePadding,
+        AppDimens.gapMd,
+      ),
       content: SizedBox(
-        width: double.maxFinite,
+        width: 270,
         child: _buildContent(),
       ),
       actions: [
-        TextButton(
+        WxIconButton(
+          label: '关闭',
+          filled: false,
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('关闭'),
         ),
       ],
+      actionsPadding: const EdgeInsets.only(
+        right: AppDimens.gapXs,
+        bottom: AppDimens.gapXs,
+      ),
     );
   }
 
@@ -177,10 +204,10 @@ class _ActivationDialogState extends State<ActivationDialog> {
           mainAxisSize: MainAxisSize.min,
           children: [
             const SizedBox(height: 8),
-            const Text(
+            Text(
               '请前往 xiaozhi.me 后台，输入以下验证码激活设备',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
+              style: AppTextStyles.subtitle.copyWith(color: AppColors.textSecondary),
             ),
             const SizedBox(height: 20),
             Text(
@@ -195,7 +222,7 @@ class _ActivationDialogState extends State<ActivationDialog> {
             const SizedBox(height: 12),
             Text(
               '剩余 ${_formatRemaining()}',
-              style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
+              style: AppTextStyles.caption.copyWith(color: AppColors.textSecondary),
             ),
             const SizedBox(height: 20),
             Row(
@@ -210,8 +237,8 @@ class _ActivationDialogState extends State<ActivationDialog> {
                   ),
                 ),
                 const SizedBox(width: 8),
-                const Text('正在自动检测激活状态...',
-                    style: TextStyle(fontSize: 13, color: AppColors.textSecondary)),
+                Text('正在自动检测激活状态...',
+                    style: AppTextStyles.caption.copyWith(color: AppColors.textSecondary)),
               ],
             ),
             const SizedBox(height: 16),
@@ -233,11 +260,11 @@ class _ActivationDialogState extends State<ActivationDialog> {
             ),
             const SizedBox(height: 16),
             const Text('设备激活成功',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+                style: AppTextStyles.bodyStrong),
             const SizedBox(height: 8),
-            const Text('设备已加入智能体列表，可以开始对话了',
+            Text('设备已加入智能体列表，可以开始对话了',
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 14, color: AppColors.textSecondary)),
+                style: AppTextStyles.subtitle.copyWith(color: AppColors.textSecondary)),
             const SizedBox(height: 12),
           ],
         );
@@ -252,7 +279,7 @@ class _ActivationDialogState extends State<ActivationDialog> {
             Text(
               _errorMsg,
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 14, color: AppColors.textSecondary),
+              style: AppTextStyles.subtitle.copyWith(color: AppColors.textSecondary),
             ),
             const SizedBox(height: 16),
           ],

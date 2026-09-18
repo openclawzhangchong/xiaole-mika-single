@@ -3,7 +3,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Flutter-3.32.2-blue.svg" alt="Flutter">
   <img src="https://img.shields.io/badge/包名-com.zcstudy.xiaole-green.svg" alt="Package">
-  <img src="https://img.shields.io/badge/当前版本-6.9.1-success.svg" alt="Version">
+  <img src="https://img.shields.io/badge/当前版本-6.10.0-success.svg" alt="Version">
 </p>
 
 本仓库是小智客户端 Flutter 版（上游 [eiriksgata/xiaozhi-client-flutter](https://github.com/eiriksgata/xiaozhi-client-flutter)）的**微信风 UI 定制版**，由张老师定制维护。上游的架构与功能说明保留在本文档后半部分，仍然适用。
@@ -73,6 +73,8 @@
 > **改动出错需要回退时，优先按下表找最近的 ✅ 版本**；标 ❌ 者为**构建失败、无 APK**，**勿用**。
 
 | 版本标签 | 内容 | 包名 | 验证状态 | 验证日期 |
+| `v6.10.0` | 🎨 **微信风收口与 Design Token 治理** —— 起因：张老师提议引入 `tdesign_flutter` 让 UI 更贴微信。**评估后否决** —— 兼容性实测没问题（仓库外探针跑 `pub get` **179 包零冲突**，其 pubspec 零第三方依赖），但 **TDesign 默认主色蓝 `#0052D9` + 12px 圆角卡片 + 阴影**，与微信「绿 / 扁平无阴影 / 0.5px 细线」是对立美学；且官方 **51 个组件中聊天/气泡/IM 类 = 0**（`Message` 是全局 Toast、`Popover` 是 tooltip）⇒ 净收益三项全负（更不像微信 + APK 增大 + golden 全失效）。**评估过程挖出真病根**：`AppTextStyles` 与 `AppDimens` **全项目零引用（死代码）** —— 根因是旧版把 `color` **写死在 TextStyle 里** ⇒ 深色模式不可用 ⇒ 没人敢用 ⇒ 全项目改用硬编码字号，累计 **124 处 / 15 种取值**（13 与 14、15/16/17 成对冲突）。⚠️ **教训：「文件存在」≠「token 在用」，判断设计系统健康度必须统计真实引用数。** 本版：① **重写 `app_text_styles.dart`**（5 档阶梯 **11/12/14/17/20**，**不含颜色**，改用 `primaryText(context)` 等 6 个辅助方法按 light/dark 取值）；② **新建 `app_dimens.dart`**（原同名类从 app_colors 迁出，避免 import 冲突）；③ **新建 6 个微信风组件** `WxCell / WxCellGroup / WxDialog / WxActionSheet / WxIconButton / WxEmpty`；④ **字号 124 处全量收敛**（映射 13→12、15→14、**16→17**、18→17；≥22 与 `size*` 计算值刻意保留）—— **聊天气泡 16→17 对齐微信正文**是最大收益；⑤ 会话列表长按菜单 → **微信屏幕正中央深色 ActionSheet**；⑥ 设置页 8 个 `ListTile` → `WxCell` 并**补齐行间 0.5px 细线**（原实现行间无线）、主题弹窗 → 微信选择菜单（带对勾）、**音量 Slider 保留本体仅改微信绿**；⑦ **10 个页面 Material 控件清零**（残留仅 `activation_dialog` 的 AlertDialog 外壳 —— 含验证码+倒计时+提交回调，复杂有状态，只换视觉外壳风险最低）。**新增 8 文件 / 修改 31 文件**。自检：analyze **0 error / 0 warning**、全量测试 **71/71**、5 张 golden 重生成并**逐张目视核对**。🔒 未碰 `app_theme.dart`（全局引用，改它会连带影响 chat_page 与全部 golden）/ `lib/core/network` / `lib/data` / 冻结区；**纯视觉层，无行为变更**。⚠️ 已知取舍（未改，留待决策）：**圆角只收敛野生值**（10→8、14→12），5/6/7/8 保留 —— 1px 差异无视觉收益，且 `7` 是 28px 图标色块的微信**正确**值、`6` 是 48px 会话头像的正确值；**54 处硬编码点缀色仍在**（属设计决策，需新增语义色 token）。详见 CHANGELOG.md | `com.zcstudy.xiaole` | ⏳ CI 构建中（结论稍后回填） | 2026-09-18 |
+
 | `v6.9.1` | 🔴 **修复「小智 AI 识别不到外部 MCP」（真实回归）** —— 症状：v6.4.4 时 biji-notes 与高德地图的工具 AI 都能识别，**v6.8.1 起全部识别不到**。根因：`AppFeats.mcpToolEnabled()` **同时服务设备工具与外部 MCP 工具**（`chat_page` 只注入一个 `isToolEnabled`），而 v6.8.1（E 项）把默认值统一改成「只放行 5 项设备工具白名单」，外部工具名（`notes.*` / `amap.*`）不在白名单 ⇒ 被判禁用 ⇒ `tools/list` 不再下发 ⇒ AI 完全看不到。修复：`mcpToolEnabled()` 末尾**按来源分别判定**——**非 `self.` 前缀（外部 MCP 工具）默认放行**，`self.*` 仍走白名单（E 项本意保留）。**新增 6 例回归测试**（含"已存值优先于默认值"），全量测试 **71/71**。⚠️ 顺带澄清：「外部 MCP → 逐工具开关」页自 v6.4.0 就存在，缺陷期间因被整层杀掉而"看起来没效果"，修复后已**真正生效**。版本号 `6.9.0+49` → `6.9.1+50`。详见 CHANGELOG.md | `com.zcstudy.xiaole` | ✅ CI 通过（run 35294530211） | 2026-09-18 |
 
 | `v6.9.0` | 🎛️ **外部 MCP 工具不再「爆掉」：逐工具开关看得见、好用** —— ① 服务器列表直接显示「**已启用 N/M 个工具**」（原来只看得到总数，看不出有几个被关、也看不出能逐工具管理）；② 工具页右上角 ⋮ 新增「**全部关闭 / 全部开启**」批量操作（直击「20 个只要 1 个却要手动关 19 次」的痛点，改为先全关再挑要的）；③ 顶部加「已启用 X / 共 Y 个；关闭的工具不会下发给 AI」说明。⚠️ **说明：逐工具开关能力在 v6.4.0 就已存在**（数据层 `disabledTools` + `mergedTools()` 过滤 + `dispatch()` 拦截 + 逐工具开关页），本次**不是从零实现**，只补「看不见、不好用」的缺口。**改动仅 1 个文件** `external_mcp_page.dart`，数据层 / 管理器 / 协议层**一律未动**，默认策略仍为全开（仅破坏性工具 `merge_notes` 默认关）。⚠️ 已知边界：黑名单语义下，服务器侧新增工具会默认启用，需再手动关一次。版本号 `6.8.3+48` → `6.9.0+49`。自检：analyze 0 error、全量测试 65/65。详见 CHANGELOG.md | `com.zcstudy.xiaole` | ✅ CI 通过（run 35283801890） | 2026-09-18 |

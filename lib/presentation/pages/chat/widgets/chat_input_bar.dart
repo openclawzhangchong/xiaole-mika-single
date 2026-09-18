@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../app/themes/app_colors.dart';
+import '../../../../app/themes/app_text_styles.dart';
 
 /// 聊天输入栏组件（微信风格，对齐原型 v6）
 class ChatInputBar extends StatefulWidget {
@@ -100,8 +101,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
                 ),
                 child: TextField(
                   controller: widget.textController,
-                  style: TextStyle(
-                    fontSize: 16,
+                  style: AppTextStyles.body.copyWith(
                     color: isDark
                         ? AppColors.textPrimaryDark
                         : AppColors.textPrimary,
@@ -144,10 +144,9 @@ class _ChatInputBarState extends State<ChatInputBar> {
                     color: AppColors.primary,
                     borderRadius: BorderRadius.circular(5),
                   ),
-                  child: const Text(
+                  child: Text(
                     '发送',
-                    style: TextStyle(
-                      fontSize: 15,
+                    style: AppTextStyles.body.copyWith(
                       fontWeight: FontWeight.w500,
                       color: Colors.white,
                     ),

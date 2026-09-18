@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../app/themes/app_colors.dart';
+import '../../app/themes/app_text_styles.dart';
 import 'agent_avatar.dart';
+import 'wx_dialog.dart';
 
 /// 「我」页资料头（对齐原型 v6 的 .profile-header）
 /// 头像 + 昵称 + ID + 箭头，点击可编辑昵称/ID（存 SharedPreferences）。
@@ -50,39 +52,32 @@ class _ProfileHeaderState extends State<ProfileHeader> {
   void _edit() {
     final nameCtl = TextEditingController(text: _name);
     final idCtl = TextEditingController(text: _id);
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('编辑资料'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: nameCtl,
-              decoration: const InputDecoration(labelText: '昵称'),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: idCtl,
-              decoration: const InputDecoration(labelText: 'ID'),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('取消'),
+    showWxDialog(
+      context,
+      title: '编辑资料',
+      contentWidget: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: nameCtl,
+            decoration: const InputDecoration(labelText: '昵称'),
           ),
-          TextButton(
-            onPressed: () {
-              Navigator.of(ctx).pop();
-              _save(nameCtl.text, idCtl.text);
-            },
-            child: const Text('保存'),
+          const SizedBox(height: 12),
+          TextField(
+            controller: idCtl,
+            decoration: const InputDecoration(labelText: 'ID'),
           ),
         ],
       ),
-    );
+      cancelText: '取消',
+      confirmText: '保存',
+    ).then((ok) {
+      if (ok == true) {
+        _save(nameCtl.text, idCtl.text);
+      }
+      nameCtl.dispose();
+      idCtl.dispose();
+    });
   }
 
   @override
@@ -114,8 +109,7 @@ class _ProfileHeaderState extends State<ProfileHeader> {
                           )
                         : Text(
                             _name,
-                            style: const TextStyle(
-                              fontSize: 20,
+                            style: AppTextStyles.title20.copyWith(
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -128,8 +122,7 @@ class _ProfileHeaderState extends State<ProfileHeader> {
                           )
                         : Text(
                             'ID: $_id',
-                            style: TextStyle(
-                              fontSize: 14,
+                            style: AppTextStyles.subtitle.copyWith(
                               color: isDark
                                   ? AppColors.textSecondaryDark
                                   : AppColors.textSecondary,

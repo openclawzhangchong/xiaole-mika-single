@@ -6,6 +6,85 @@
 
 ---
 
+## v6.10.0 · 2026-09-18
+
+**主题：微信风收口 —— 补活 Design Token、新建 6 个自建组件、全项目字号收敛**
+
+### 🎯 起因（一个想法被数据推翻，却挖出真问题）
+张老师提出「引入 `tdesign_flutter`，让 App 的 UI 更贴近微信聊天」。评估后**否决**该方案，但评估过程暴露了一个**更严重的既有问题**。
+
+### ❌ 为什么不引 TDesign（结论：兼容性没问题，方向反了）
+
+| 维度 | 结论 |
+|---|---|
+| 兼容性 | **完全没问题** —— 0.2.7 要求 `flutter>=3.16.0` / `dart>=3.2.6`；本项目 3.32.2 / 3.8.1 满足。**实测**：把现有 38 个依赖 + `tdesign_flutter: ^0.2.7` 放进仓库外探针工程跑 `pub get` → **179 个包零冲突**（其 pubspec 的 dependencies 只有 `flutter` SDK 本身，零第三方依赖） |
+| 但方向反了 | TDesign 默认主色 `#0052D9` 蓝 + 12px 圆角卡片 + 阴影，与微信「绿 / 扁平无阴影 / 0.5px 细线」是**两套对立美学** |
+| 且无聊天能力 | 官方 **51 个组件中 Chat/气泡/IM 类 = 0**（`Message` 是全局 Toast、`Popover` 是 tooltip）⇒ 聊天页该自绘仍要自绘 |
+| 净结果 | 视觉更不像微信 + APK 增大（+2 个 TTF）+ 5 张 golden 失效 —— **三项全负** |
+
+### ⭐ 真正的病根：Design Token 是「半死」的
+
+实测引用数：
+
+| token | 文件 | 引用数 | 状态 |
+|---|---|---|---|
+| `AppColors` | app_colors.dart | **244 处 / 28 文件** | ✅ 健康 |
+| `AppTextStyles` | app_text_styles.dart | **0 处** | ❌ **死代码** |
+| `AppDimens` | app_colors.dart 内 | **0 处** | ❌ **死代码** |
+
+**`AppTextStyles` 为什么会死**（这是本次最有价值的发现）：
+它把 `color: AppColors.textPrimary` **写死在每一个 TextStyle 里** ⇒ **深色模式下无法使用** ⇒ 没人敢用 ⇒ 全项目改为硬编码字号。
+后果：**124 处硬编码 `fontSize`、15 种取值**（13 与 14 并存、15/16/17 并存、18/20 为野生值）；**10 种圆角取值**。
+
+> 教训：**「文件存在」≠「token 在用」**。判断设计系统健康度必须统计真实引用数，不能看文件在不在。
+
+### ✅ 本版做了什么
+
+1. **重写 `app_text_styles.dart`** —— 只保留 **5 档阶梯 11/12/14/17/20**，**不含任何颜色**，改用 6 个辅助方法按 light/dark 自动取值（`primaryText` / `secondaryText` / `tertiaryText` / `divider` / `surface` / `background`）。这是"token 能真正被用"的前提。
+2. **新建 `app_dimens.dart`** —— 圆角/高度/头像/间距/页面 token。原 `AppDimens` 从 `app_colors.dart` **迁出**（同名类若同时 import 会冲突；旧类零引用，移除安全）。
+3. **新建 6 个微信风组件**（`lib/presentation/widgets/`）：`WxCell` / `WxCellGroup` / `WxDialog` / `WxActionSheet` / `WxIconButton` / `WxEmpty`。
+4. **全项目字号收敛**：124 处 → 5 档阶梯。映射规则 **13→12、15→14、16→17、18→17**（就近取整 + 平局偏收缩，避免撑破密集布局）；**≥22 保留**（emoji 110 / 通话页 22 / 成功页 40）；`agent_avatar` 的 `size*0.45` 是按头像尺寸计算，**保留**。
+   - ⭐ **聊天气泡 16→17** 是本次最有价值的一处改动 —— 微信正文就是 17px。
+5. **会话列表长按菜单**：底部白抽屉 → **微信屏幕正中央的深色 ActionSheet**（张老师选定）。
+6. **设置页**：8 个 `ListTile` → `WxCell`（**补齐行间 0.5px 细线**——原实现行间无线）；主题选择 `AlertDialog`+3×`RadioListTile` → 微信选择菜单（带对勾）；**音量 Slider 保留本体、配色改微信绿**（张老师选定）。
+7. **Material 控件全面清零**：`settings` / `conversation` / `dev_center` / `external_mcp` / `cloud_sync` / `proactive_script` / `export_chat` / `log_category` / `proactive_log` / `device_edit_dialog` / `profile_header` 的 `ListTile` / `SwitchListTile` / `AlertDialog` / `showModalBottomSheet` / `RadioListTile` 全部替换。
+8. 顺带把硬编码 `0xFF0ABFF4` 提取为 `AppColors.cloudBlue`。
+
+### 📊 改动量化
+
+- **文件：新增 8 个 / 修改 31 个**
+- **硬编码字号：124 → 26**。剩余 26 处**全部正当**：8 处是 `app_text_styles.dart` 的阶梯定义本身、8 处是 `app_theme.dart` 的全局主题定义（本版刻意不碰）、4 处是 `core/utils/toast_util.dart`（不在本次范围）、**6 处是刻意例外**（emoji 110 / 通话页 22 / 成功页 40 / `size*` 计算值 ×3）。
+- **残留 Material 弹窗：仅 1 处** —— `activation_dialog.dart` 的 `AlertDialog` 外壳**刻意保留**（含验证码输入 + 倒计时 + 提交回调，是复杂有状态对话框；只换视觉外壳风险最低）。
+
+### 🧪 验证
+
+- `flutter analyze lib/ test/` → **0 error / 0 warning**（84 条 info 级为既有告警：`avoid_print`、`withOpacity` 弃用等）
+- `flutter test` → **71/71 全绿**（含 5 张 golden；本次弹窗改造不触及 golden 渲染路径，基线未失效）
+- 5 张 golden 在会话列表/设置页改造后已用 `--update-goldens` 重生成，并**逐张目视核对**（聊天页 / 会话列表 / 设置页，确认无塌陷、无溢出、分隔线 76px 缩进正确）
+- 期间修复子 agent 遗留的 5 处编译错误（4 处 `const` 未去 + 1 处多余 `!`）
+
+### ⚠️ 已知取舍与偏差（**未改，留待决策**）
+
+| 项 | 说明 |
+|---|---|
+| **圆角未严格单值化** | 只收敛了野生值 `10→8`、`14→12`；`5/6/7/8` 保留。理由：1px 差异肉眼不可辨，改动是纯风险零收益；且 `7` 是微信 28px 图标色块的**正确**值、`6` 是 48px 会话头像的**正确**值，强改反而**破坏**规范 |
+| **54 处硬编码颜色仍在** | 多为各页图标色块的点缀色（如 `0xFFFF9500`）。本版 V3 针对**字号**收敛，颜色层原本健康（244 处 token 引用）。若要严格单值化需新增若干语义色 token，属设计决策 |
+| `WxIconButton` 高 40 | 微信规范值；原 Material `FilledButton` 为 48，略矮 |
+| `WxEmpty` 默认带 72px 图标 | 部分原空态无图标，视觉上多一个图标 |
+| 导出页「正在生成…」 | 原内联转圈 → 沙漏图标（`WxIconButton.icon` 只接 `IconData`，是组件能力缺口） |
+| `WxCell` 副标题固定 14px | 把原 12px 的巡检口令抬了一档，符合微信单元格规范，但与「12→12」映射表有出入 |
+
+### 🔒 红线遵守
+
+**本版未改动**：`app_theme.dart`（被 `main.dart` 全局引用，改它会连带影响 chat_page 与全部 golden —— 故新增 token 一律走**新建文件**）、`lib/core/network`、`lib/data`、冻结区。
+**本版为纯视觉层变更，无网络 / 存储 / 协议 / 行为变更。**
+
+### 📌 配套文档
+
+新增 `PLAN_v6.10.0_次级页微信风收口与Token治理.md`（含完整审计数据、逐行控件清单、确定性映射表、V1/V2/V3 方案对比）。
+
+---
+
 ## v6.9.1 · 2026-09-18
 
 **主题：修复「小智 AI 识别不到外部 MCP」—— v6.8.1 的工具白名单把外部工具误杀**

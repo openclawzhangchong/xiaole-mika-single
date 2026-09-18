@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'wx_dialog.dart';
 
 /// 设备身份字段编辑对话框（v6.7.0 自 settings_page 迁出公共化）
 /// MAC / ClientID / 型号三处共用；行为与原 `_editDeviceField` 完全一致。
@@ -15,36 +16,26 @@ Future<void> showDeviceEditDialog(
   final current = await getCurrent();
   if (!context.mounted) return;
   final controller = TextEditingController(text: current);
-  await showDialog(
-    context: context,
-    builder: (ctx) => AlertDialog(
-      title: Text(title),
-      content: TextField(
-        controller: controller,
-        decoration: const InputDecoration(hintText: '输入新值'),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(ctx),
-          child: const Text('取消'),
-        ),
-        TextButton(
-          onPressed: () async {
-            await onSave(controller.text.trim());
-            if (ctx.mounted) Navigator.pop(ctx);
-            if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('已保存，重新进入对话后生效'),
-                  duration: Duration(seconds: 2),
-                ),
-              );
-            }
-          },
-          child: const Text('保存'),
-        ),
-      ],
+  final ok = await showWxDialog(
+    context,
+    title: title,
+    contentWidget: TextField(
+      controller: controller,
+      decoration: const InputDecoration(hintText: '输入新值'),
     ),
+    cancelText: '取消',
+    confirmText: '保存',
   );
+  if (ok == true) {
+    await onSave(controller.text.trim());
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('已保存，重新进入对话后生效'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
+  }
   controller.dispose();
 }
