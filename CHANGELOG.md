@@ -30,8 +30,8 @@ v6.11.0 把开发者中心**主页**排版重排成了微信规格（通栏直�
 
 ### 🧪 验证
 
-- 本地 `flutter analyze`：**（占位，由 lead 回填 CI 结论）**
-- **Android 构建 CI 结论**：**（占位，由 lead 回填 CI 结论）**
+- 本地 `flutter analyze`：**0 error / 0 warning**；全量 `flutter test`：**71/71 通过**。
+- **Android 构建 CI 结论**：**✅ success** —— run `35342901807`（attempt 1 一次通过）；APK **40,773,270 B**（sha1 `0f942cee`）已下载桌面 `xiaole-client-v6.11.1.apk`。
 
 ### 🔒 红线遵守
 **本版未改动**：`app_theme.dart`、`lib/core/network`、`lib/data`、冻结区；开关 / 探测 / 导入 / 批量开关 / 默认关闭 `merge_notes` 等**任何行为逻辑一律未动**。**纯视觉层变更，无网络 / 存储 / 协议 / 行为变更。**
