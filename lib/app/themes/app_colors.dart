@@ -44,6 +44,12 @@ class AppColors {
   /// 云端相关图标蓝（一键云端 / 云端身份）—— v6.10.0 从硬编码提取为 token
   static const Color cloudBlue = Color(0xFF0ABFF4);
 
+  /// 表情动画图标粉（开发者中心「表情动画」开关行色块）
+  static const Color emojiPink = Color(0xFFFF6B9D);
+
+  /// 主动联系图标琥珀（开发者中心「AI 主动联系」总开关行色块）
+  static const Color alertAmber = Color(0xFFFA9D3B);
+
   // 分割线与边框
   static const Color divider = Color(0xFFF0F0F0);
   static const Color dividerDark = Color(0xFF1E1E1E);

@@ -59,16 +59,6 @@ class _DevCenterPageState extends State<DevCenterPage> {
       body: ListView(
         children: [
           const SizedBox(height: 8),
-          // N 项开启
-          Center(
-            child: Text(
-              '${AppFeats.onCount} 项开启',
-              style: AppTextStyles.caption.copyWith(
-                color: AppTextStyles.secondaryText(context),
-              ),
-            ),
-          ),
-          const SizedBox(height: 8),
           // v6.7.0：设备身份组（自「我」页迁入）
           _section(isDark, '设备身份', [
             _deviceMacTile(),
@@ -78,22 +68,25 @@ class _DevCenterPageState extends State<DevCenterPage> {
           // v6.7.0：原「能力开关」拆分——AI 能力
           _section(isDark, 'AI 能力', [
             _switchTile(
-              '🧰 MCP 设备工具',
+              'MCP 设备工具',
               '向 AI 注册设备工具：26 项（音量/闹钟/日程/拨号/短信/导航/截屏…）——AI 可真实操控',
               'mcptools',
+              icon: Icons.build_outlined,
+              iconColor: AppColors.info,
+              trailingText: '26 项',
             ),
             // v6.1.2：点开查看已注册给 AI 的**全部 26 项**工具（分组 + 用途说明）
             WxCell(
-              leading: const Icon(Icons.list_alt, color: AppColors.info),
-              title: '📋 查看已注册的工具清单',
+              leading: _iconTile(Icons.list_alt, AppColors.info),
+              title: '查看已注册的工具清单',
               subtitle: '26 项能力分组明细（AI 能做什么，一目了然）',
               showArrow: true,
               onTap: () => _showMcpToolsDialog(isDark),
             ),
             // v6.4.0：外部 MCP 服务器管理（可增删改多条，工具带前缀桥接给 AI）
             WxCell(
-              leading: const Icon(Icons.hub, color: AppColors.info),
-              title: '🌐 外部 MCP',
+              leading: _iconTile(Icons.hub, AppColors.primary),
+              title: '外部 MCP',
               subtitle: '接入外部 MCP 服务器（biji 笔记 / 高德地图…），可逐台逐工具开关',
               showArrow: true,
               onTap: () {
@@ -105,14 +98,18 @@ class _DevCenterPageState extends State<DevCenterPage> {
               },
             ),
             _switchTile(
-              '📷 视觉识物',
+              '视觉识物',
               '聊天栏相机按钮：拍照问 AI 这是什么',
               'vision',
+              icon: Icons.photo_camera_outlined,
+              iconColor: AppColors.cloudBlue,
             ),
             _switchTile(
-              '😄 表情动画',
+              '表情动画',
               'AI 对话时的全屏表情动画（v4.3.0 起默认关，可在此开启）',
               'emotion',
+              icon: Icons.emoji_emotions_outlined,
+              iconColor: AppColors.emojiPink,
               showDivider: false,
             ),
           ]),
@@ -121,7 +118,8 @@ class _DevCenterPageState extends State<DevCenterPage> {
           _section(isDark, 'AI 主动联系', [
             // 总开关：核心层不自查开关，必须由这里直接启停巡检服务（关闭=零流量）
             WxCell(
-              title: '🤖 AI 主动联系',
+              leading: _iconTile(Icons.phone_in_talk_outlined, AppColors.alertAmber),
+              title: 'AI 主动联系',
               subtitle: '前台定时巡检 + 退到后台/锁屏后由系统周期唤醒'
                   '（WorkManager，最小 15 分钟），命中即高优先通知来电',
               trailing: Switch(
@@ -142,15 +140,14 @@ class _DevCenterPageState extends State<DevCenterPage> {
                   borderRadius: BorderRadius.circular(AppDimens.radiusMd),
                 ),
                 child: Text(
-                  '⚠️ 通知权限被禁用，主动来电将无法提醒。请在系统设置中允许小乐发送通知。',
+                  '通知权限被禁用，主动来电将无法提醒。请在系统设置中允许小乐发送通知。',
                   style: AppTextStyles.caption.copyWith(color: AppColors.error),
                 ),
               ),
             // v6.8.0：后台保活引导入口
             WxCell(
-              leading: const Icon(Icons.battery_charging_full,
-                  color: AppColors.info),
-              title: '🔋 后台保活引导',
+              leading: _iconTile(Icons.battery_charging_full, AppColors.info),
+              title: '后台保活引导',
               subtitle: '电池优化白名单 / 自启动 / 后台运行限制（提升锁屏存活率）',
               showArrow: true,
               onTap: () {
@@ -162,23 +159,25 @@ class _DevCenterPageState extends State<DevCenterPage> {
               },
             ),
             WxCell(
-              leading: const Icon(Icons.schedule, color: AppColors.info),
-              title: '⏱ 巡检间隔',
+              leading: _iconTile(Icons.schedule, AppColors.info),
+              title: '巡检间隔',
               subtitle: '每 ${ProactivePollService.instance.intervalMinutes} '
                   '分钟一次（后台最小 15 分钟）',
+              trailingText:
+                  '每 ${ProactivePollService.instance.intervalMinutes} 分钟',
               showArrow: true,
               onTap: _pickProactiveInterval,
             ),
             WxCell(
-              leading: const Icon(Icons.bedtime_outlined, color: AppColors.info),
-              title: '🌙 允许来电时段',
+              leading: _iconTile(Icons.nights_stay, AppColors.info),
+              title: '允许来电时段',
               subtitle: _proactiveWindowLabel(),
               showArrow: true,
               onTap: _pickProactiveWindow,
             ),
             WxCell(
-              leading: const Icon(Icons.edit_note, color: AppColors.info),
-              title: '📝 巡检口令管理',
+              leading: _iconTile(Icons.notes, AppColors.info),
+              title: '巡检口令管理',
               subtitle: '多条轮换使用（可增删改查 / 恢复默认 / ≤16 字）',
               showArrow: true,
               onTap: () {
@@ -191,9 +190,10 @@ class _DevCenterPageState extends State<DevCenterPage> {
             ),
             // v6.8.3（A 项）：电话日志入口（诊断用，旁路记录层，不改动巡检行为）
             WxCell(
-              leading: const Icon(Icons.call, color: AppColors.info),
-              title: '📞 电话日志',
+              leading: _iconTile(Icons.call, AppColors.info),
+              title: '电话日志',
               subtitle: '每轮巡检的完整过程（含跳过原因/口令/开场白），最近 50 轮，可一键复制',
+              trailingText: '最近 50 轮',
               showArrow: true,
               onTap: () {
                 Navigator.of(context).push(
@@ -206,9 +206,11 @@ class _DevCenterPageState extends State<DevCenterPage> {
           // v6.7.0：原「能力开关」拆分——连接与音频（尾音保护自「诊断」迁入）
           _section(isDark, '连接与音频', [
             _switchTile(
-              '📡 MQTT 常驻在线',
+              'MQTT 常驻在线',
               '长连接保后台在线 + 接收远程配置；下次连接生效（限流风险默认关）',
               'mqtt',
+              icon: Icons.router,
+              iconColor: AppColors.info,
             ),
             // v4.4.0：原「🎤 抢话打断」开关已移除——其用未消回声的振幅判断会误触发，
             // 导致 AI 自问自答（方案根因③）。此处改为 AEC 通话通路开关。
@@ -218,29 +220,32 @@ class _DevCenterPageState extends State<DevCenterPage> {
           // v6.7.0：原「能力开关」拆分——调试（+ 音频能力检测自「我」页迁入）
           _section(isDark, '调试', [
             _switchTile(
-              '🧪 MCP 调试',
+              'MCP 调试',
               '开启=字幕保留 % 工具名原文；关闭=自动过滤',
               'mcpDebug',
+              icon: Icons.bug_report,
+              iconColor: AppColors.info,
             ),
             // v6.4.4：开发者/普通用户身份分流开关——控制聊天页服务端 alert 的展现方式
             _switchTile(
-              '⚠️ 显示服务端原始提示',
+              '显示服务端原始提示',
               '开启=开发者模式，聊天页直接显示服务器原文（如 alert 报错）；'
                   '关闭=普通用户模式，改用友好弹窗',
               'rawServerAlert',
+              icon: Icons.warning_amber,
+              iconColor: AppColors.info,
             ),
             // v6.7.0：音频能力检测（自「我」页迁入，只读展示）
             _audioCapabilitiesTile(),
             WxCell(
-              leading: const Icon(Icons.receipt_long_outlined,
-                  color: AppColors.info),
-              title: '📋 运行日志查看',
+              leading: _iconTile(Icons.terminal, AppColors.info),
+              title: '运行日志查看',
               subtitle: '复制最近 200 条运行日志，供 AI 排查故障',
               onTap: _copyLogs,
             ),
             WxCell(
-              leading: const Icon(Icons.tune, color: AppColors.info),
-              title: '🗂 日志分类',
+              leading: _iconTile(Icons.folder_open, AppColors.info),
+              title: '日志分类',
               subtitle: '按功能开关日志记录'
                   '（已开 ${LogBuffer.enabledCount}/${LogBuffer.categories.length}）',
               onTap: () async {
@@ -255,8 +260,8 @@ class _DevCenterPageState extends State<DevCenterPage> {
           // v6.7.0：原「安全」+「危险操作」合并为「管理」
           _section(isDark, '管理', [
             WxCell(
-              leading: const Icon(Icons.lock_outline, color: AppColors.info),
-              title: '🔒 清除授权',
+              leading: _iconTile(Icons.lock_open, AppColors.error),
+              title: '清除授权',
               subtitle: '下次进开发者中心需重新输密码',
               onTap: () {
                 AppFeats.setDevAuthed(false);
@@ -265,7 +270,7 @@ class _DevCenterPageState extends State<DevCenterPage> {
               },
             ),
             WxCell(
-              leading: const Icon(Icons.close, color: AppColors.error),
+              leading: _iconTile(Icons.power_settings_new, AppColors.error),
               title: '全部关闭',
               subtitle: '关闭所有开发者功能（等效普通用户模式）',
               onTap: () {
@@ -279,6 +284,15 @@ class _DevCenterPageState extends State<DevCenterPage> {
             ),
           ]),
           const SizedBox(height: 24),
+          Center(
+            child: Text(
+              '${AppFeats.onCount} 项开启\n小乐 AI 智能体聊天 · Version ${AppConfig.appVersion}',
+              textAlign: TextAlign.center,
+              style: AppTextStyles.caption
+                  .copyWith(color: AppTextStyles.tertiaryText(context)),
+            ),
+          ),
+          const SizedBox(height: 40),
         ],
       ),
     );
@@ -492,7 +506,8 @@ class _DevCenterPageState extends State<DevCenterPage> {
   /// 而 AEC 属基础收音质量而非"开发者增强功能"，不应被"全部关闭"取消，故用独立存储键。
   Widget _aecTile() {
     return WxCell(
-      title: '🎧 通话降噪通路（AEC）',
+      leading: _iconTile(Icons.headset, AppColors.primary),
+      title: '通话降噪通路（AEC）',
       subtitle: '开启＝走通话音频通路以启用硬件回声消除，'
           '可消除 AI 尾音被误识别；少数机型音色略闷。下次录音/通话生效',
       trailing: Switch(
@@ -527,8 +542,8 @@ class _DevCenterPageState extends State<DevCenterPage> {
   Widget _tailGuardTile() {
     final ms = _tailGuardMs;
     return WxCell(
-      leading: const Icon(Icons.timer_outlined, color: AppColors.info),
-      title: '⏱ 尾音保护',
+      leading: _iconTile(Icons.timer_outlined, AppColors.info),
+      title: '尾音保护',
       subtitle: 'AI 说完后等待 $ms 毫秒再恢复采集（减少误识别；调大更保险）',
       onTap: () => _pickTailGuard(ms),
       showDivider: false,
@@ -692,12 +707,12 @@ class _DevCenterPageState extends State<DevCenterPage> {
 
   Widget _section(bool isDark, String title, List<Widget> children) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+      padding: const EdgeInsets.only(top: 10),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(8, 8, 8, 6),
+            padding: const EdgeInsets.fromLTRB(16, 10, 16, 6),
             child: Text(
               title,
               style: AppTextStyles.caption.copyWith(
@@ -707,7 +722,7 @@ class _DevCenterPageState extends State<DevCenterPage> {
           ),
           Material(
             color: isDark ? AppColors.surfaceDark : AppColors.surface,
-            borderRadius: BorderRadius.circular(AppDimens.radiusLg),
+            borderRadius: BorderRadius.zero,
             child: Column(children: children),
           ),
         ],
@@ -716,18 +731,39 @@ class _DevCenterPageState extends State<DevCenterPage> {
   }
 
   Widget _switchTile(String title, String subtitle, String key,
-      {bool showDivider = true}) {
+      {bool showDivider = true,
+      IconData? icon,
+      Color? iconColor,
+      String? trailingText}) {
     return WxCell(
+      leading: icon != null && iconColor != null
+          ? _iconTile(icon, iconColor)
+          : null,
       title: title,
       subtitle: subtitle,
-      trailing: Switch(
-        value: AppFeats.get(key),
-        activeColor: AppColors.primary,
-        onChanged: (v) {
-          AppFeats.set(key, v);
-          setState(() {});
-          ToastUtil.show(v ? '$title 已开启' : '$title 已关闭');
-        },
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (trailingText != null)
+            Padding(
+              padding: const EdgeInsets.only(right: AppDimens.gapSm),
+              child: Text(
+                trailingText,
+                style: AppTextStyles.subtitle.copyWith(
+                  color: AppTextStyles.secondaryText(context),
+                ),
+              ),
+            ),
+          Switch(
+            value: AppFeats.get(key),
+            activeColor: AppColors.primary,
+            onChanged: (v) {
+              AppFeats.set(key, v);
+              setState(() {});
+              ToastUtil.show(v ? '$title 已开启' : '$title 已关闭');
+            },
+          ),
+        ],
       ),
       onTap: () {
         final v = !AppFeats.get(key);
