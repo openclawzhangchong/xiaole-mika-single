@@ -22,7 +22,7 @@
 
 ### 🧪 验证
 - `flutter analyze`：**No issues**（修复过程抓到 onTap 可空类型错误并即时修复）；全量 `flutter test`：**71/71**。
-- **Android 构建 CI 结论**：**（占位，由 lead 回填 CI 结论）**
+- **Android 构建 CI 结论**：**✅ success** —— run `35360076590`（attempt 1 一次通过）；APK **40,789,990 B**（sha1 `767c983f`）已下载桌面 `xiaole-client-v6.11.5.apk`。
 
 ### 备注
 - 版本号 `6.11.4+56` → `6.11.5+57`；回滚锚点 `anchor-pre-v6.11.5` = `dbc8074`。
