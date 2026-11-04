@@ -1,8 +1,6 @@
-gradle-wrapper.jar
+# 单包仓库固定提交 Gradle wrapper：clone 后无需本机安装 Gradle，CI 可直接 ./gradlew
 /.gradle
 /captures/
-/gradlew
-/gradlew.bat
 /local.properties
 GeneratedPluginRegistrant.java
 .cxx/
