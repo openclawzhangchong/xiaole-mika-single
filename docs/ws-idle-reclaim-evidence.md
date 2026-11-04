@@ -47,7 +47,7 @@
 ## 4. 心跳实验设计（v6.11.8，默认关）
 
 实现位置：`lib/core/network/xiaozhi_websocket_manager.dart`（`WsProbeMode` + `[PROBE]` 日志）；
-开关入口：开发者中心「调试 → WS 心跳实验」（`AppFeats.wsProbeMode`，默认 `off`，间隔 30s，可 10–120s）。
+开关入口：开发者中心「调试 → WS 保活」（`AppFeats.wsKeepaliveMode`，v6.11.11 起默认 `auto`，间隔 45s，可 10–120s）。
 
 | 候选 | 定时消息 | 目的 |
 |---|---|---|
