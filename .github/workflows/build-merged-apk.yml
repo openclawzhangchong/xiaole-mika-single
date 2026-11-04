@@ -70,16 +70,25 @@ jobs:
       - name: flutter pub get
         run: flutter pub get
 
-      - name: flutter build apk (release, stable signing)
+      - name: Gradle 前置（Mika 测试输入路径 + local.properties）
         run: |
-          set -o pipefail
-          flutter build apk --release 2>&1 | tee build.log
+          # Mika 的 :mika-core:test 把 rootProject 下的 README/docs/eval 声明成输入；
+          # 嵌入小乐后 rootProject 是 android/，这里补空占位，避免 Gradle 输入校验直接失败。
+          mkdir -p android/docs android/eval android/tools/sandbox
+          touch android/README.md android/tools/sandbox/README.md
+          printf 'flutter.sdk=%s\nsdk.dir=%s\n' "$FLUTTER_ROOT" "${ANDROID_HOME:-/usr/local/lib/android/sdk}" > android/local.properties
+          cat android/local.properties
 
       - name: Mika mic-gate unit test
         run: |
           set -o pipefail
           cd android
           ./gradlew :mika-core:test --tests "com.wangzan101.mika.core.voice.MicGateTest" 2>&1 | tee ../micgate-test.log
+
+      - name: flutter build apk (release, stable signing)
+        run: |
+          set -o pipefail
+          flutter build apk --release 2>&1 | tee build.log
 
       - name: Verify APK metadata, permissions & signature
         run: |
