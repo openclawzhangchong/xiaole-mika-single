@@ -2,8 +2,8 @@
 
 一个 APK、一个包名（`com.zcstudy.xiaole`）、一个安装包。Flutter 负责界面（实时语音对话 + 任务执行），内嵌的 Kotlin 引擎以 **library 模块** 的形式编进同一个进程（内部模块名仍是 `mika-core` / `mika-app`，见文末「内部标识与外部品牌分离」）。
 
-- 基线：小乐 `master` 6.11.7 + 59（run `41807490945`，含"断线无感重连"）
-- 单包版本：`6.11.7-mika1+61`（versionCode 61 ≥ 纯小乐 59，避免装包时把别人的包顶回去）
+- 基线：小乐 `master` 6.11.11 + 63（commit `7fe3264`，文档 `2e0df3d`；含 listen stop 45s 保活、预连接音频回灌、断线无感重连）
+- 单包版本：`6.11.11-mika1+65`（versionCode 65；64 留给纯小乐 `6.11.12+64`）
 - 引擎源码：`wangzan101/Mika` 固定提交 `6661b9e9`（0.1.35）+ `patches/mika-embed.patch`
 
 ## 目录结构
@@ -95,6 +95,13 @@ flutter build apk --release
 统计：资源文案替换 619 处（默认/简体/繁体三套）、Kotlin 可见字符串 20 处、Flutter 可见文案 2 处（另 1 处录音日志）；另做了 341 处中文"小乐 "→"小乐"的空格规整。
 
 **故意没改**：日语/韩语/阿拉伯语等 9 套语言资源里的品牌词（本次面向中文用户，避免误译）；以及上节列出的所有内部标识。
+
+### 踩坑记录：批量改名的两个坑（接手必看）
+
+1. **大小写**：PowerShell 的 `-replace` **默认不区分大小写**。第一版脚本把 `name="card_back_to_mika"` 也换成了 `name="card_back_to_小乐"`，`R.string` 全部未解析，`:mika-app:compileReleaseKotlin` 直接失败（run `41821665408`）。正确做法：用区分大小写的替换，或 Python `str.replace`。
+2. **只改文本节点**：XML 里 `<string name="...">值</string>` 的 name 是标识符，值才是文案。批量脚本必须只处理 `>` 与 `<` 之间的文本，并跳过含 `http`/仓库 URL 的行（否则会把 `github.com/wangzan101/Mika` 的链接改坏）。
+
+改完自检：`grep -P 'name="[^"]*小乐'` 必须为空；再用 `git apply --check` 在固定提交的干净工作树上验证补丁。
 
 ## 麦克风互斥（实现）
 
