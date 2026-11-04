@@ -4,7 +4,7 @@ class AppConfig {
 
   // 应用信息
   static const String appName = '小乐'; // v4.0.0：品牌统一（默认智能体名前缀等）
-  static const String appVersion = '6.11.11'; // v6.11.11：⑤ listen stop 转生产默认保活（45s，零副作用），新增 [KEEPALIVE] 日志字段；detect 降为隐藏诊断。详见 CHANGELOG.md
+  static const String appVersion = '6.11.12'; // v6.11.12：保活"置位时机"前置修复——语音 listen start 前、文字发送前即暂停保活，新增 [KEEPALIVE] 置位耗时埋点。详见 CHANGELOG.md
 
   /// v4.4.0 尾音保护：AI 播放结束后丢弃麦克风音频的时长（毫秒）
   static const int defaultTailGuardMs = 300;
