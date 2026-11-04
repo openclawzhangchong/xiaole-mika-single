@@ -195,6 +195,33 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     unawaited(ProactiveScriptStore.init());
     ProactivePollService.instance.onTriggered = _handleProactiveTriggered;
     _syncProactiveService();
+    // v6.11.8：心跳实验——开发者中心切换候选后立即重建连接以生效
+    AppFeats.wsProbeRevision.addListener(_onWsProbeChanged);
+  }
+
+  /// v6.11.8：把 `AppFeats` 的字符串配置映射为管理器枚举（非法值一律视为关闭）
+  WsProbeMode _wsProbeModeFromConfig() {
+    switch (AppFeats.wsProbeMode) {
+      case 'hello':
+        return WsProbeMode.hello;
+      case 'detect':
+        return WsProbeMode.detect;
+      case 'abort':
+        return WsProbeMode.abort;
+      case 'ping':
+        return WsProbeMode.ping;
+      default:
+        return WsProbeMode.off;
+    }
+  }
+
+  /// v6.11.8：配置变更 → 若当前连接还在（说明上一候选"有效"，否则永远等不到自动重连），
+  /// 立刻主动重建连接，让新候选马上接管。探针本身不做业务保活时，下次 1005 重连也会读到新值。
+  void _onWsProbeChanged() {
+    if (!mounted) return;
+    final mode = AppFeats.wsProbeMode;
+    logger.info('[PROBE] 配置切换为 mode=$mode interval=${AppFeats.wsProbeIntervalSec}s');
+    if (_isConnected) unawaited(_reconnect());
   }
 
   /// v6.5.0：按总开关启停巡检服务（核心层不自查开关，故关闭=零流量由这里保证）
@@ -253,6 +280,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     _voiceCallTimer?.cancel();
     _otaReportTimer?.cancel();
     _reconnectUiTimer?.cancel();
+    AppFeats.wsProbeRevision.removeListener(_onWsProbeChanged);
     _mqttPresence?.stop();
     for (final t in _mcpTimers) {
       (t['timer'] as Timer?)?.cancel();
@@ -959,6 +987,9 @@ class _ChatPageState extends ConsumerState<ChatPage> {
         deviceId: deviceId,
         clientId: clientId,
         enableToken: false,
+        // v6.11.8：心跳实验配置（默认 off；开发者中心可切候选，切换即重建连接）
+        probeMode: _wsProbeModeFromConfig(),
+        probeInterval: Duration(seconds: AppFeats.wsProbeIntervalSec),
       );
 
       // 第四步: 添加事件监听器

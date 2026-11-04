@@ -106,6 +106,8 @@ class AppFeats {
     for (final k in keys) {
       set(k, false);
     }
+    // v6.11.8：心跳探针不属于布尔开关，但「全部关闭」必须把它归零（回到零业务流量）
+    if (wsProbeMode != wsProbeDefault) setWsProbe(wsProbeDefault);
     // ⚠️ 不清空逐项 MCP 工具开关（xw_mcp_*）—— 总闸全部关闭＝普通用户模式，
     // 但逐项设置是用户独立偏好，恢复总闸后原逐项配置应仍生效。
   }
@@ -163,4 +165,46 @@ class AppFeats {
   static bool get rawServerAlert => get('rawServerAlert');
   // v6.5.0：AI 主动来电总开关；默认 false=普通用户模式（不巡检、零流量）
   static bool get proactive => get('proactive');
+
+  // ---------- v6.11.8：WS 心跳实验（默认关，仅用于定位云端"业务消息空闲"回收） ----------
+  /// 候选：`off` / `hello` / `detect` / `abort` / `ping`（对照组）。
+  /// 存储键独立于 `keys` 列表——实验开关不进「全部关闭」的布尔清单，
+  /// 但 `allOff()` 会显式把探针归零（见下），保证一键回普通用户模式。
+  static const String wsProbeDefault = 'off';
+  static const String _wsProbeKey = 'xw_ws_probe_mode';
+  static const String _wsProbeSecKey = 'xw_ws_probe_interval_sec';
+
+  /// 探针配置变更通知：聊天页监听后立即重建连接，否则"当前候选有效→永远等不到重连"无法切换。
+  static final ValueNotifier<int> wsProbeRevision = ValueNotifier<int>(0);
+
+  static String get wsProbeMode =>
+      StorageService.instance.getString(_wsProbeKey) ?? wsProbeDefault;
+
+  /// 发送间隔（秒），默认 30s；限制 10–120s，避免把实验变成压测。
+  static int get wsProbeIntervalSec =>
+      (StorageService.instance.getInt(_wsProbeSecKey) ?? 30).clamp(10, 120);
+
+  static void setWsProbe(String mode, {int? intervalSec}) {
+    StorageService.instance.setString(_wsProbeKey, mode);
+    if (intervalSec != null) {
+      StorageService.instance.setInt(_wsProbeSecKey, intervalSec.clamp(10, 120));
+    }
+    wsProbeRevision.value++;
+  }
+
+  /// 开发者中心展示用中文名
+  static String get wsProbeLabel {
+    switch (wsProbeMode) {
+      case 'hello':
+        return '① 重发 hello';
+      case 'detect':
+        return '② listen detect';
+      case 'abort':
+        return '③ abort';
+      case 'ping':
+        return '④ 仅 WS ping（对照）';
+      default:
+        return '关闭';
+    }
+  }
 }

@@ -6,6 +6,23 @@
 
 ---
 
+## v6.11.8 · 2026-11-04
+
+**主题：WS 心跳实验（默认关）——4 个候选逐个验证哪条消息能续命云端 1005 回收**
+
+### 变更
+- `XiaozhiWebSocketManager` 新增 `WsProbeMode`（`off`/`hello`/`detect`/`abort`/`ping`）与探针定时器（默认 `off`，间隔 30s，可 10–120s）。
+  - ① `hello`：定时重发完整 hello（version/device-id/features/audio_params）；
+  - ② `detect`：`{"type":"listen","state":"detect"}`；
+  - ③ `abort`：`{"type":"abort","reason":"heartbeat"}`；
+  - ④ `ping`：对照组，不发业务消息，仅保留 WS 层 `pingInterval=25s`。
+  - 记录点统一前缀 `[PROBE]`：启动候选/间隔、每次 tick 序号与存活秒数、首个服务器帧时刻、断开时 `存活秒数 + 发送数 + 收到帧数 + closeCode`。
+- `AppFeats` 新增 `xw_ws_probe_mode` / `xw_ws_probe_interval_sec`（默认 `off`/30s），`allOff()` 一并归零；`wsProbeRevision` 通知聊天页立即重建连接（否则"当前候选有效→永远等不到重连"无法切下一个）。
+- 开发者中心「调试」新增 **WS 心跳实验** 入口（5 选项）。
+
+### 判定阈值（真机）
+同一手机、同一智能体、安静不说话：**任一候选让连接撑过 3 分钟且无 `code=1005`** → 该消息算"业务活跃"；仍在 ~70s 被 `1005` 回收 → 排除。每个候选 4–5 分钟。
+
 ## v6.11.7 · 2026-11-04
 
 **主题：断线改为"无感重连"——云端按业务空闲回收 1005，不再弹"已断开"，静默补连 1–4s**

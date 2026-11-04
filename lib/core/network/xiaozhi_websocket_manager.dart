@@ -10,6 +10,24 @@ import 'package:web_socket_channel/io.dart'
 /// 小智WebSocket事件类型
 enum XiaozhiEventType { connected, disconnected, message, error, binaryMessage }
 
+/// v6.11.8：WS 心跳实验候选（默认 off；仅用于定位云端"业务消息空闲"判定，生产不启用）
+enum WsProbeMode {
+  /// 关（生产默认）
+  off,
+
+  /// ① 定时重发 hello（带 version/device-id/features/audio_params）
+  hello,
+
+  /// ② 定时发 listen{state:"detect"}
+  detect,
+
+  /// ③ 定时发 abort{reason:"heartbeat"}
+  abort,
+
+  /// ④ 对照组：不发任何业务消息，仅保留 WS 层 pingInterval
+  ping,
+}
+
 /// 小智WebSocket事件
 class XiaozhiEvent {
   final XiaozhiEventType type;
@@ -58,6 +76,14 @@ class XiaozhiWebSocketManager {
   /// v4.3.3：最近一次收到服务器消息的时间（供上层判断连接是否已僵死）
   DateTime? _lastRecvAt;
 
+  // ===== v6.11.8：心跳实验（默认关闭）=====
+  final WsProbeMode _probeMode;
+  final Duration _probeInterval;
+  Timer? _probeTimer;
+  int _probeSeq = 0;
+  int _probeRecv = 0;
+  DateTime? _probeStartAt;
+
   /// 最近一次收到服务器消息的时间（null = 本次连接内尚未收到任何消息）
   DateTime? get lastReceivedAt => _lastRecvAt;
 
@@ -76,9 +102,13 @@ class XiaozhiWebSocketManager {
     bool enableToken = false,
     String? wsProtocol,
     String? clientId,
+    WsProbeMode probeMode = WsProbeMode.off,
+    Duration probeInterval = const Duration(seconds: 30),
   }) : _deviceId = deviceId,
        _clientId = clientId,
-       _enableToken = enableToken;
+       _enableToken = enableToken,
+       _probeMode = probeMode,
+       _probeInterval = probeInterval;
 
   /// 添加事件监听器
   void addListener(XiaozhiWebSocketListener listener) {
@@ -207,6 +237,8 @@ class XiaozhiWebSocketManager {
       logger.info('已连接到 $uri');
       // v6.11.6：连接建立即启动看门狗（独立 Dart Timer，不需要生命周期回调）
       _startWatchdog();
+      // v6.11.8：按实验配置启动业务保活探针（off/ping 时只打日志，不发业务消息）
+      _startProbe();
     } catch (e) {
       logger.severe('连接失败: $e');
       _dispatchEvent(
@@ -230,6 +262,9 @@ class XiaozhiWebSocketManager {
     _watchdogTimer?.cancel();
     _watchdogTimer = null;
 
+    // v6.11.8：主动断开同时停掉心跳探针
+    _stopProbe('App 主动断开');
+
     // 取消订阅
     await _streamSubscription?.cancel();
     _streamSubscription = null;
@@ -246,20 +281,77 @@ class XiaozhiWebSocketManager {
 
   /// 发送Hello消息
   void _sendHelloMessage() {
-    final hello = {
-      "type": "hello",
-      "version": 1,
-      "features": {"mcp": true},
-      "transport": "websocket",
-      "audio_params": {
-        "format": "opus",
-        "sample_rate": 16000,
-        "channels": 1,
-        "frame_duration": 60,
-      },
-    };
+    sendMessage(jsonEncode(_helloPayload()));
+  }
 
-    sendMessage(jsonEncode(hello));
+  /// v6.11.8：hello 载荷（正常握手与心跳实验共用，含 device-id/版本/特性/音频参数）
+  Map<String, dynamic> _helloPayload() => {
+        "type": "hello",
+        "version": 1,
+        "device_id": _deviceId ?? '',
+        "features": {"mcp": true},
+        "transport": "websocket",
+        "audio_params": {
+          "format": "opus",
+          "sample_rate": 16000,
+          "channels": 1,
+          "frame_duration": 60,
+        },
+      };
+
+  // ===================== v6.11.8：心跳实验 =====================
+
+  int get _probeElapsedSec => _probeStartAt == null
+      ? 0
+      : DateTime.now().difference(_probeStartAt!).inSeconds;
+
+  /// 连接建立后按配置启动探针。
+  /// 日志前缀 `[PROBE]` 便于 `adb logcat | findstr PROBE` 单线取证。
+  void _startProbe() {
+    _stopProbe('新连接');
+    _probeSeq = 0;
+    _probeRecv = 0;
+    _probeStartAt = DateTime.now();
+    final mode = _probeMode;
+    if (mode == WsProbeMode.off || mode == WsProbeMode.ping) {
+      logger.info('[PROBE] 本连接不发业务保活消息 mode=${mode.name} '
+          '（${mode == WsProbeMode.ping ? '对照组' : '已关闭'}；WS ping=${PING_INTERVAL.inSeconds}s）');
+      return;
+    }
+    final iv = _probeInterval.inSeconds;
+    logger.info('[PROBE] 启动 mode=${mode.name} interval=${iv}s');
+    _probeTimer = Timer.periodic(_probeInterval, (_) {
+      if (_manualClosed || !isConnected) return;
+      _probeSeq++;
+      logger.info('[PROBE] tick mode=${mode.name} seq=$_probeSeq '
+          'interval=${iv}s t=${_probeElapsedSec}s recv=$_probeRecv');
+      sendMessage(_probePayload(mode));
+    });
+  }
+
+  /// 各候选的保活消息载荷（唯一差异点）
+  String _probePayload(WsProbeMode mode) {
+    switch (mode) {
+      case WsProbeMode.hello:
+        return jsonEncode(_helloPayload());
+      case WsProbeMode.detect:
+        return jsonEncode({"type": "listen", "state": "detect"});
+      case WsProbeMode.abort:
+        return jsonEncode({"type": "abort", "reason": "heartbeat"});
+      case WsProbeMode.off:
+      case WsProbeMode.ping:
+        return '';
+    }
+  }
+
+  void _stopProbe(String why) {
+    if (_probeTimer != null || _probeStartAt != null) {
+      logger.info('[PROBE] 停止（$why）mode=${_probeMode.name} '
+          '存活=${_probeElapsedSec}s 发送=$_probeSeq 收到帧=$_probeRecv');
+    }
+    _probeTimer?.cancel();
+    _probeTimer = null;
+    _probeStartAt = null;
   }
 
   /// 发送文本消息
@@ -318,6 +410,13 @@ class XiaozhiWebSocketManager {
   /// 处理收到的消息
   void _onMessage(dynamic message) {
     _lastRecvAt = DateTime.now(); // v4.3.3：记录最近收包时间（供静默/僵死判断）
+    // v6.11.8：心跳实验记录点——服务器是否回过帧（首个帧单独打点）
+    if (_probeMode != WsProbeMode.off) {
+      _probeRecv++;
+      if (_probeRecv == 1) {
+        logger.info('[PROBE] 本连接首个服务器帧 t=${_probeElapsedSec}s');
+      }
+    }
     if (message is String) {
       // 文本消息
       logger.info('收到消息: $message');
@@ -337,6 +436,8 @@ class XiaozhiWebSocketManager {
     // v1.1.6: 采集服务器关闭码/原因，便于真机诊断（如 1006=异常断开）
     final code = _channel?.closeCode;
     final reason = _channel?.closeReason;
+    // v6.11.8：先结算本次探针（候选名 / 存活秒数 / 发送数 / 收到帧 / close code）
+    _stopProbe('服务器断开 code=${code ?? '-'}');
     // v4.3.3：kind=服务器 表示非主动断开（真正的连接丢失）；主动断开见 disconnect() 的 source 日志
     logger.info('连接已断开 code=$code reason=$reason attempts=$_reconnectAttempts '
         'kind=${_manualClosed ? '主动' : '服务器'}');

@@ -235,6 +235,17 @@ class _DevCenterPageState extends State<DevCenterPage> {
               icon: Icons.warning_amber,
               iconColor: AppColors.info,
             ),
+            // v6.11.8：WS 心跳实验（默认关；仅用于定位云端"业务空闲"回收，生产不启用）
+            WxCell(
+              leading: _iconTile(Icons.favorite_border, AppColors.info),
+              title: 'WS 心跳实验',
+              subtitle: '逐个验证哪条消息能续命云端 1005 回收（默认关，间隔 '
+                  '${AppFeats.wsProbeIntervalSec}s）。切换后聊天页立即重建连接，'
+                  '日志按 [PROBE] 过滤',
+              trailingText: AppFeats.wsProbeLabel,
+              showArrow: true,
+              onTap: _pickWsProbe,
+            ),
             // v6.7.0：音频能力检测（自「我」页迁入，只读展示）
             _audioCapabilitiesTile(),
             WxCell(
@@ -624,6 +635,29 @@ class _DevCenterPageState extends State<DevCenterPage> {
     final w = ProactiveScriptStore.window;
     if (w.allDay) return '全天';
     return '${_fmtMinOfDay(w.startMin)}–${_fmtMinOfDay(w.endMin)}';
+  }
+
+  // ===== v6.11.8：WS 心跳实验候选选择 =====
+
+  Future<void> _pickWsProbe() async {
+    const modes = <String>['off', 'hello', 'detect', 'abort', 'ping'];
+    const labels = <String>[
+      '关闭（生产默认）',
+      '① 定时重发 hello（含 device-id/版本）',
+      '② 定时 listen{state:"detect"}',
+      '③ 定时 abort{reason:"heartbeat"}',
+      '④ 仅保留 WS ping（对照组）',
+    ];
+    final idx = await showWxActionSheet(
+      context,
+      items: [
+        for (final l in labels) WxActionSheetItem(label: l),
+      ],
+    );
+    if (idx == null) return;
+    AppFeats.setWsProbe(modes[idx]);
+    if (mounted) setState(() {});
+    ToastUtil.show('心跳实验：${AppFeats.wsProbeLabel}');
   }
 
   Future<void> _pickProactiveInterval() async {
