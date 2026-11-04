@@ -46,11 +46,21 @@ android {
         }
     }
 
+    signingConfigs {
+        // 稳定签名（非 debug）：keystore 随仓库提交，保证每次构建证书指纹一致、可覆盖安装。
+        // 密码走环境变量，默认值与 workflow env 保持一致（公开仓库，不追求保密）。
+        create("release") {
+            storeFile = file("xiaole-release.p12")
+            storePassword = System.getenv("XIAOLE_KEYSTORE_PASSWORD") ?: "REDACTED-KEYSTORE-PASSWORD"
+            keyAlias = "xiaole"
+            keyPassword = System.getenv("XIAOLE_KEY_PASSWORD") ?: "REDACTED-KEYSTORE-PASSWORD"
+            storeType = "pkcs12"
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("release")
         }
     }
 }
