@@ -204,19 +204,13 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     AppFeats.wsProbeRevision.addListener(_onWsProbeChanged);
   }
 
-  /// v6.11.8/6.11.10：把 `AppFeats` 的字符串配置映射为管理器枚举（非法值一律视为关闭）
+  /// v6.11.11：把 `AppFeats` 的 keepalive 配置映射为管理器枚举（默认 auto）
   WsProbeMode _wsProbeModeFromConfig() {
-    switch (AppFeats.wsProbeMode) {
-      case 'detect':
-        return WsProbeMode.detect;
-      case 'stop':
-        return WsProbeMode.stop;
-      case 'pair':
-        return WsProbeMode.pair;
-      case 'mcp':
-        return WsProbeMode.mcp;
-      default:
+    switch (AppFeats.wsKeepaliveMode) {
+      case 'off':
         return WsProbeMode.off;
+      default:
+        return WsProbeMode.auto;
     }
   }
 
@@ -224,8 +218,8 @@ class _ChatPageState extends ConsumerState<ChatPage> {
   /// 立刻主动重建连接，让新候选马上接管。探针本身不做业务保活时，下次 1005 重连也会读到新值。
   void _onWsProbeChanged() {
     if (!mounted) return;
-    final mode = AppFeats.wsProbeMode;
-    logger.info('[PROBE] 配置切换为 mode=$mode interval=${AppFeats.wsProbeIntervalSec}s');
+    final mode = AppFeats.wsKeepaliveMode;
+    logger.info('[KEEPALIVE] 配置切换为 mode=$mode interval=${AppFeats.wsKeepaliveIntervalSec}s');
     if (_isConnected) unawaited(_reconnect());
   }
 
@@ -1028,7 +1022,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
         enableToken: false,
         // v6.11.8：心跳实验配置（默认 off；开发者中心可切候选，切换即重建连接）
         probeMode: _wsProbeModeFromConfig(),
-        probeInterval: Duration(seconds: AppFeats.wsProbeIntervalSec),
+        probeInterval: Duration(seconds: AppFeats.wsKeepaliveIntervalSec),
       );
 
       // 第四步: 添加事件监听器

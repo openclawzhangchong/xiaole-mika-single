@@ -3,7 +3,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Flutter-3.32.2-blue.svg" alt="Flutter">
   <img src="https://img.shields.io/badge/包名-com.zcstudy.xiaole-green.svg" alt="Package">
-  <img src="https://img.shields.io/badge/当前版本-6.11.10-success.svg" alt="Version">
+  <img src="https://img.shields.io/badge/当前版本-6.11.11-success.svg" alt="Version">
 </p>
 
 本仓库是小智客户端 Flutter 版（上游 [eiriksgata/xiaozhi-client-flutter](https://github.com/eiriksgata/xiaozhi-client-flutter)）的**微信风 UI 定制版**，由张老师定制维护。上游的架构与功能说明保留在本文档后半部分，仍然适用。
@@ -146,7 +146,8 @@
 - 真机实测（realme RMX3161，M5Stack CoreS3 身份，**全程安静不说话**）：6.11.5 无 ping 时 `16:07:53.809 → 16:08:54.071` = **60.26s** 被 `1006` 回收；6.11.6 加 WS `pingInterval=25s` 后仍按 `67.9s / 69.8s` 被 `code=1005` 静默关闭（17:10:12 / 17:11:23 / 17:12:33）⇒ **WS 控制帧 ping 不算"业务活跃"**。
 - 上游协议文档（`docs/websocket_zh.md`、`mcp-protocol_zh.md`）**没有**任何 WebSocket 心跳 / 空闲超时 / keepalive 条款（只有 hello 握手 10s 超时）；唯一有 `Keep Alive` 的是 MQTT/UDP 篇（240s），协议不同不适用。
 - 因此 6.11.7 先做**无感重连**兜底（1s→2s→4s，UI 不再报"已断开"）；6.11.8 用可开关实验逐个验证，**结论：只有 `listen{state:"detect"}` 能续命**（240s+ 无 1005，其余候选 65–68s 全断）。
-- **但 detect 有代价**：每个 tick 都会触发服务端一轮 `stt → llm → tts`（240s/8 tick 换来 8 条 `stt`、8 条 `llm`、43 条 tts 文本、344 个音频帧，并真实外放 8 段"哎，我在呢！"）⇒ **v6.11.9 起生产默认 `off`**，detect 仅留作诊断项；靠"WS ping + 无感重连"兜底。详见 [证据 §5](docs/ws-idle-reclaim-evidence.md)。
+- **但 detect 有代价**：每个 tick 都会触发服务端一轮 `stt → llm → tts`（240s/8 tick 换来 8 条 `stt`、8 条 `llm`、43 条 tts 文本、344 个音频帧，并真实外放 8 段"哎，我在呢！"）⇒ detect 只保留为**隐藏诊断项**。
+- **最终解（v6.11.11 生产默认）**：`listen{state:"stop"}` 每 **45s** 一次。真机 2026-11-04 19:32–19:38 实测 **8 tick / 6 分 0 秒零重连**，`1005`=0、`stt/tts/llm`=0、下行音频=0、`AudioTrack start`=0，下行仅 4 帧（hello + 3×mcp）⇒ **干净解，已并入生产逻辑**（`keepalive=auto`，对话中自动暂停、结束 5s 恢复）。完整证据链见 [证据 §7.1 / §10](docs/ws-idle-reclaim-evidence.md)。
 - 证据原文 + 时间序列 + 实验设计 + 406 帧构成 + 三问结论：[docs/ws-idle-reclaim-evidence.md](docs/ws-idle-reclaim-evidence.md)
 
 ## ⏪ 回退指南

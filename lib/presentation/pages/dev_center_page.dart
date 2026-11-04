@@ -235,14 +235,14 @@ class _DevCenterPageState extends State<DevCenterPage> {
               icon: Icons.warning_amber,
               iconColor: AppColors.info,
             ),
-            // v6.11.9：WS 保活探针（默认关；detect 实测有效但会触发 TTS，仅诊断用）
+            // v6.11.11：WS 保活已并入生产逻辑（默认 auto，45s listen stop）
             WxCell(
               leading: _iconTile(Icons.favorite_border, AppColors.info),
-              title: 'WS 保活探针',
-              subtitle: 'detect 可续命云端 1005 回收，但每次会触发一轮 TTS（默认关，'
-                  '间隔 ${AppFeats.wsProbeIntervalSec}s，仅会话空闲时发送）。'
-                  '切换后聊天页立即重建连接，日志按 [PROBE] 过滤',
-              trailingText: AppFeats.wsProbeLabel,
+              title: 'WS 保活',
+              subtitle: '已连接且无会话时每 ${AppFeats.wsKeepaliveIntervalSec}s 发一次 '
+                  'listen stop，续命云端 1005 回收；实测零 TTS/零下行音频。'
+                  '对话中自动暂停、结束 5s 后恢复，日志按 [KEEPALIVE] 过滤',
+              trailingText: AppFeats.wsKeepaliveLabel,
               showArrow: true,
               onTap: _pickWsProbe,
             ),
@@ -637,16 +637,13 @@ class _DevCenterPageState extends State<DevCenterPage> {
     return '${_fmtMinOfDay(w.startMin)}–${_fmtMinOfDay(w.endMin)}';
   }
 
-  // ===== v6.11.8/6.11.9：WS 保活探针选择 =====
+  // ===== v6.11.11：WS 保活开关（生产默认 auto）=====
 
   Future<void> _pickWsProbe() async {
-    const modes = <String>['off', 'detect', 'stop', 'pair', 'mcp'];
-    const labels = <String>[
-      '关闭（生产默认；仅 WS ping + 无感重连）',
-      'detect 保活（实测有效，但会触发 TTS）',
-      '⑤ listen stop（语义"停止监听"，待测）',
-      '⑥ listen start(manual)+stop 成对（待测）',
-      '⑥\' mcp notifications/initialized（待测）',
+    const modes = <String>['auto', 'off'];
+    final labels = <String>[
+      '自动（生产默认；每 ${AppFeats.wsKeepaliveIntervalSec}s listen stop）',
+      '关闭（仅 WS ping + 无感重连；不推荐）',
     ];
     final idx = await showWxActionSheet(
       context,
@@ -655,9 +652,9 @@ class _DevCenterPageState extends State<DevCenterPage> {
       ],
     );
     if (idx == null) return;
-    AppFeats.setWsProbe(modes[idx]);
+    AppFeats.setWsKeepalive(modes[idx]);
     if (mounted) setState(() {});
-    ToastUtil.show('心跳实验：${AppFeats.wsProbeLabel}');
+    ToastUtil.show('WS 保活：${AppFeats.wsKeepaliveLabel}');
   }
 
   Future<void> _pickProactiveInterval() async {

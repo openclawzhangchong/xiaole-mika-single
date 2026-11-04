@@ -13,24 +13,23 @@ enum XiaozhiEventType { connected, disconnected, message, error, binaryMessage }
 /// v6.11.9：保活方案收敛为二值。
 /// 真机实验（6.11.8+60，2026-11-04 18:20–18:24）结论：
 /// - hello/abort 与对照组同量级（65–68s 被 1005 回收）→ 无效，已剔除；
-/// - detect 是唯一撑过 3 分钟的候选（240s+ 无 1005），但每个 tick 都会触发
-///   服务端一轮 stt→llm→tts（实测 8 tick = 8 次 TTS 播放）→ **默认关闭**，
-///   只在需要极端保活且能接受"自言自语"噪音时由开发者显式开启。
+/// - detect 能撑过 3 分钟，但每个 tick 都会触发服务端一轮 stt→llm→tts
+///   （实测 8 tick = 8 次 TTS 播放）→ 仅作诊断，默认隐藏；
+/// - **v6.11.11 定案：`listen{state:"stop"}` 每 45s 一次作为生产默认保活**
+///   （8 tick / 6 分钟零副作用、零重连，实测数据见 docs/ws-idle-reclaim-evidence.md）。
 enum WsProbeMode {
-  /// 关（生产默认：仍保留 WS pingInterval + 无感重连兜底）
+  /// 关闭：不发任何保活消息（仍保留 WS ping + 无感重连兜底）
   off,
 
-  /// 定时发 listen{state:"detect"}（唯一有效保活，但有 TTS 副作用）
+  /// **v6.11.11 生产默认**：每 45s 发 `listen{state:"stop"}`。
+  /// 2026-11-04 真机实测：6 分钟 8 tick，零 stt / 零 tts / 零 llm /
+  /// 零下行音频 / 零 AudioTrack start，且零重连（1005 回收被完全跨过）。
+  auto,
+
+  /// 诊断用（默认不在开发者中心展示）：
+  /// `listen{state:"detect"}` 同样能保活，但每个 tick 会触发一轮 TTS 外放
+  /// （实测 8 tick = 8 轮），属"保活反而制造噪音"，绝不能作为生产默认。
   detect,
-
-  /// ⑤ 定时发 listen{state:"stop"}（语义"停止监听"，理论无副作用）
-  stop,
-
-  /// ⑥ 成对发 listen{start,mode:"manual"} + listen{stop}（理论无回复）
-  pair,
-
-  /// ⑥' 定时发 mcp notifications/initialized 空通知（MCP 层心跳）
-  mcp,
 }
 
 /// 小智WebSocket事件
@@ -100,13 +99,18 @@ class XiaozhiWebSocketManager {
   /// v4.3.3：最近一次收到服务器消息的时间（供上层判断连接是否已僵死）
   DateTime? _lastRecvAt;
 
-  // ===== v6.11.8：心跳实验（默认关闭）=====
+  // ===== v6.11.8：心跳实验（v6.11.11 起 auto 为生产默认）=====
   final WsProbeMode _probeMode;
   final Duration _probeInterval;
   Timer? _probeTimer;
-  int _probeSeq = 0;
+  int _probeSeq = 0; // tick 尝试次数（含被跳过的 tick）
+  int _probeSent = 0; // 实际发出的保活消息数
   int _probeRecv = 0;
   DateTime? _probeStartAt;
+  DateTime? _lastUplinkAt; // 上次保活上行的时刻（用于日志"距上次上行"）
+
+  /// 日志前缀：生产保活用 [KEEPALIVE]，诊断 detect 用 [PROBE]
+  String get _tag => _probeMode == WsProbeMode.auto ? 'KEEPALIVE' : 'PROBE';
 
   // ===== v6.11.9：会话感知（保活只在"空闲"时发）=====
   /// 是否有进行中的会话（用户上行 / listen start / 未完成回复 / TTS 播放）
@@ -357,7 +361,7 @@ class XiaozhiWebSocketManager {
     _conversationEndAt = null;
     _lastActivityAt = DateTime.now();
     if (_probeMode != WsProbeMode.off) {
-      logger.info('[PROBE] 进入会话，保活暂停（$why）');
+      logger.info('[$_tag] 进入会话，保活暂停（$why）');
     }
   }
 
@@ -368,7 +372,7 @@ class XiaozhiWebSocketManager {
     _conversationActive = false;
     _conversationEndAt = DateTime.now();
     if (_probeMode != WsProbeMode.off) {
-      logger.info('[PROBE] 会话结束，${PROBE_RESUME_DELAY.inSeconds}s 后恢复保活（$why）');
+      logger.info('[$_tag] 会话结束，${PROBE_RESUME_DELAY.inSeconds}s 后恢复保活（$why）');
     }
   }
 
@@ -380,82 +384,71 @@ class XiaozhiWebSocketManager {
   void _startProbe() {
     _stopProbe('新连接');
     _probeSeq = 0;
+    _probeSent = 0;
     _probeRecv = 0;
     _probeDownText = 0;
     _probeDownBinary = 0;
     _probeTypes.clear();
     _probeStartAt = DateTime.now();
+    _lastUplinkAt = null;
     // 新连接 = 新 session，旧会话标记作废
     _conversationActive = false;
     _conversationEndAt = null;
 
     final mode = _probeMode;
     if (mode == WsProbeMode.off) {
-      logger.info('[PROBE] 关闭（不发保活消息；仅 WS ping=${PING_INTERVAL.inSeconds}s + 无感重连）');
+      logger.info('[KEEPALIVE] 关闭（不发保活消息；仅 WS ping=${PING_INTERVAL.inSeconds}s + 无感重连）');
       return;
     }
     final iv = _probeInterval.inSeconds;
-    logger.info('[PROBE] 启动 mode=${mode.name} interval=${iv}s '
+    logger.info('[$_tag] 启动 mode=${mode.name} interval=${iv}s '
         '条件=已连接且无会话中；对话结束 ${PROBE_RESUME_DELAY.inSeconds}s 后恢复');
     _probeTimer = Timer.periodic(_probeInterval, (_) {
-      if (_manualClosed || !isConnected) return;
+      _probeSeq++;
       final now = DateTime.now();
+      if (_manualClosed || !isConnected) {
+        logger.info('[$_tag] tick#$_probeSeq t=${_probeElapsedSec}s 发送=否 原因=未连接');
+        return;
+      }
       // v6.11.9 兜底：上层漏发"会话结束"时，无活动超过 60s 自动恢复
       if (_conversationActive) {
         final last = _lastActivityAt;
         if (last == null || now.difference(last) >= CONVERSATION_STALE) {
           _conversationActive = false;
           _conversationEndAt = now;
-          logger.warning('[PROBE] 会话标记超时（${last == null ? '无活动记录' : '${now.difference(last).inSeconds}s 无活动'}），自动恢复保活');
+          logger.warning('[$_tag] 会话标记超时（${last == null ? '无活动记录' : '${now.difference(last).inSeconds}s 无活动'}），自动恢复保活');
         } else {
-          logger.info('[PROBE] skip（会话进行中）t=${_probeElapsedSec}s');
+          logger.info('[$_tag] tick#$_probeSeq t=${_probeElapsedSec}s 发送=否 原因=会话中');
           return;
         }
       }
       final end = _conversationEndAt;
       if (end != null && now.difference(end) < PROBE_RESUME_DELAY) {
-        logger.info('[PROBE] skip（会话刚结束 ${now.difference(end).inSeconds}s < ${PROBE_RESUME_DELAY.inSeconds}s）');
+        logger.info('[$_tag] tick#$_probeSeq t=${_probeElapsedSec}s 发送=否 '
+            '原因=会话刚结束 ${now.difference(end).inSeconds}s<${PROBE_RESUME_DELAY.inSeconds}s');
         return;
       }
-      _probeSeq++;
-      logger.info('[PROBE] tick mode=${mode.name} seq=$_probeSeq '
-          'interval=${iv}s t=${_probeElapsedSec}s recv=$_probeRecv');
+      final gap =
+          _lastUplinkAt == null ? '首次' : '${now.difference(_lastUplinkAt!).inSeconds}s';
       for (final payload in _probePayloads()) {
         sendMessage(payload);
       }
+      _probeSent++;
+      _lastUplinkAt = now;
+      logger.info('[$_tag] tick#$_probeSeq t=${_probeElapsedSec}s 发送=是 距上次上行=$gap '
+          'payload=${mode == WsProbeMode.auto ? 'listen:stop' : 'listen:detect'} recv=$_probeRecv');
     });
   }
 
-  /// 各候选的保活载荷（v6.11.10：新增 ⑤ stop、⑥ pair、⑥' mcp）
-  /// detect: 单条 listen detect（已知有效但有 TTS 副作用）
-  /// stop  : 单条 listen stop（"停止监听"，预期不触发回复）
-  /// pair  : listen start(mode=manual) 后立刻 stop（成对，预期不产生会话）
-  /// mcp   : MCP 协议通知 notifications/initialized（MCP 层活跃）
+  /// 各模式的保活载荷（v6.11.11：生产只剩 auto / off，detect 仅诊断）
+  /// auto  : 单条 listen stop（"停止监听"，实测不触发回复，零副作用）
+  /// detect: 单条 listen detect（能保活但有 TTS 副作用，默认隐藏）
   List<String> _probePayloads() {
     switch (_probeMode) {
+      case WsProbeMode.auto:
+        return [jsonEncode({"type": "listen", "state": "stop"})];
       case WsProbeMode.detect:
         return [jsonEncode({"type": "listen", "state": "detect"})];
-      case WsProbeMode.stop:
-        return [jsonEncode({"type": "listen", "state": "stop"})];
-      case WsProbeMode.pair:
-        return [
-          jsonEncode({
-            "type": "listen",
-            "state": "start",
-            "mode": "manual",
-          }),
-          jsonEncode({"type": "listen", "state": "stop"}),
-        ];
-      case WsProbeMode.mcp:
-        return [
-          jsonEncode({
-            "type": "mcp",
-            "payload": {
-              "jsonrpc": "2.0",
-              "method": "notifications/initialized",
-            },
-          }),
-        ];
       case WsProbeMode.off:
         return const [];
     }
@@ -466,8 +459,9 @@ class XiaozhiWebSocketManager {
       final types = _probeTypes.entries
           .map((e) => '${e.key}=${e.value}')
           .join(',');
-      logger.info('[PROBE] 停止（$why）mode=${_probeMode.name} '
-          '存活=${_probeElapsedSec}s 发送=$_probeSeq 收到帧=$_probeRecv '
+      logger.info('[$_tag] 停止（$why）mode=${_probeMode.name} '
+          '存活=${_probeElapsedSec}s tick=$_probeSeq 发送=$_probeSent '
+          '跳过=${_probeSeq - _probeSent} 收到帧=$_probeRecv '
           '文本=$_probeDownText 音频=$_probeDownBinary'
           '${types.isEmpty ? '' : ' types={$types}'}');
     }
@@ -570,21 +564,21 @@ class XiaozhiWebSocketManager {
         final t = _typeOf(message);
         _probeTypes[t] = (_probeTypes[t] ?? 0) + 1;
         if (_probeRecv == 1) {
-          logger.info('[PROBE] 本连接首个服务器帧 t=${_probeElapsedSec}s type=$t');
+          logger.info('[$_tag] 本连接首个服务器帧 t=${_probeElapsedSec}s type=$t');
         }
-        logger.info('[PROBE] 下行#${_probeRecv} 文本 type=$t preview=${_previewOf(message)}');
+        logger.info('[$_tag] 下行#${_probeRecv} 文本 type=$t preview=${_previewOf(message)}');
       } else if (message is List<int>) {
         _probeDownBinary++;
         _probeTypes['binary'] = (_probeTypes['binary'] ?? 0) + 1;
         if (_probeRecv == 1) {
-          logger.info('[PROBE] 本连接首个服务器帧 t=${_probeElapsedSec}s type=binary');
+          logger.info('[$_tag] 本连接首个服务器帧 t=${_probeElapsedSec}s type=binary');
         }
         // 音频帧量大：只对前 3 帧打首 32 字节指纹，其余只记长度，避免日志刷屏
         if (_probeDownBinary <= 3) {
-          logger.info('[PROBE] 下行#${_probeRecv} 二进制 len=${message.length} '
+          logger.info('[$_tag] 下行#${_probeRecv} 二进制 len=${message.length} '
               'head32=${_hexHead(message, 32)}');
         } else {
-          logger.info('[PROBE] 下行#${_probeRecv} 二进制 len=${message.length}');
+          logger.info('[$_tag] 下行#${_probeRecv} 二进制 len=${message.length}');
         }
       }
     }
