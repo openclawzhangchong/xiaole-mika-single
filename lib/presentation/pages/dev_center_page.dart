@@ -235,6 +235,17 @@ class _DevCenterPageState extends State<DevCenterPage> {
               icon: Icons.warning_amber,
               iconColor: AppColors.info,
             ),
+            // v6.11.11：WS 保活已并入生产逻辑（默认 auto，45s listen stop）
+            WxCell(
+              leading: _iconTile(Icons.favorite_border, AppColors.info),
+              title: 'WS 保活',
+              subtitle: '已连接且无会话时每 ${AppFeats.wsKeepaliveIntervalSec}s 发一次 '
+                  'listen stop，续命云端 1005 回收；实测零 TTS/零下行音频。'
+                  '对话中自动暂停、结束 5s 后恢复，日志按 [KEEPALIVE] 过滤',
+              trailingText: AppFeats.wsKeepaliveLabel,
+              showArrow: true,
+              onTap: _pickWsProbe,
+            ),
             // v6.7.0：音频能力检测（自「我」页迁入，只读展示）
             _audioCapabilitiesTile(),
             WxCell(
@@ -624,6 +635,26 @@ class _DevCenterPageState extends State<DevCenterPage> {
     final w = ProactiveScriptStore.window;
     if (w.allDay) return '全天';
     return '${_fmtMinOfDay(w.startMin)}–${_fmtMinOfDay(w.endMin)}';
+  }
+
+  // ===== v6.11.11：WS 保活开关（生产默认 auto）=====
+
+  Future<void> _pickWsProbe() async {
+    const modes = <String>['auto', 'off'];
+    final labels = <String>[
+      '自动（生产默认；每 ${AppFeats.wsKeepaliveIntervalSec}s listen stop）',
+      '关闭（仅 WS ping + 无感重连；不推荐）',
+    ];
+    final idx = await showWxActionSheet(
+      context,
+      items: [
+        for (final l in labels) WxActionSheetItem(label: l),
+      ],
+    );
+    if (idx == null) return;
+    AppFeats.setWsKeepalive(modes[idx]);
+    if (mounted) setState(() {});
+    ToastUtil.show('WS 保活：${AppFeats.wsKeepaliveLabel}');
   }
 
   Future<void> _pickProactiveInterval() async {

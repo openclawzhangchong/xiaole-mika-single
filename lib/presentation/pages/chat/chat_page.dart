@@ -90,6 +90,11 @@ class _ChatPageState extends ConsumerState<ChatPage> {
   // v3.1.0：想打就打——连接成功后自动执行的原操作（见 xiaoleweb.md §2.6）
   Function? _pendingAutoAction;
   String _pendingAutoLabel = '';
+  // v6.11.10：说话前预连接——2s 上限 + 失败提示，避免采音前丢第一句话
+  Timer? _preconnectTimer;
+  DateTime? _preconnectStartAt;
+  /// 预连接期间缓存的 Opus 帧（上限 40 帧 ≈ 2.4s），连上后按序回灌
+  final List<Uint8List> _preconnectAudio = <Uint8List>[];
   // v3.1.0：视觉识物（vision 接口从 MCP initialize 的 params.capabilities.vision 提取）
   String? _visionUrl;
   String? _visionToken;
@@ -195,6 +200,27 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     unawaited(ProactiveScriptStore.init());
     ProactivePollService.instance.onTriggered = _handleProactiveTriggered;
     _syncProactiveService();
+    // v6.11.8：心跳实验——开发者中心切换候选后立即重建连接以生效
+    AppFeats.wsProbeRevision.addListener(_onWsProbeChanged);
+  }
+
+  /// v6.11.11：把 `AppFeats` 的 keepalive 配置映射为管理器枚举（默认 auto）
+  WsProbeMode _wsProbeModeFromConfig() {
+    switch (AppFeats.wsKeepaliveMode) {
+      case 'off':
+        return WsProbeMode.off;
+      default:
+        return WsProbeMode.auto;
+    }
+  }
+
+  /// v6.11.8：配置变更 → 若当前连接还在（说明上一候选"有效"，否则永远等不到自动重连），
+  /// 立刻主动重建连接，让新候选马上接管。探针本身不做业务保活时，下次 1005 重连也会读到新值。
+  void _onWsProbeChanged() {
+    if (!mounted) return;
+    final mode = AppFeats.wsKeepaliveMode;
+    logger.info('[KEEPALIVE] 配置切换为 mode=$mode interval=${AppFeats.wsKeepaliveIntervalSec}s');
+    if (_isConnected) unawaited(_reconnect());
   }
 
   /// v6.5.0：按总开关启停巡检服务（核心层不自查开关，故关闭=零流量由这里保证）
@@ -253,6 +279,8 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     _voiceCallTimer?.cancel();
     _otaReportTimer?.cancel();
     _reconnectUiTimer?.cancel();
+    _preconnectTimer?.cancel();
+    AppFeats.wsProbeRevision.removeListener(_onWsProbeChanged);
     _mqttPresence?.stop();
     for (final t in _mcpTimers) {
       (t['timer'] as Timer?)?.cancel();
@@ -510,6 +538,9 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     // v6.8.1（B 项）：用户主动发消息 → 解除挂断静默窗口，保证文字聊天 TTS 不被误伤
     _liftVoiceMuteWindow();
 
+    // v6.11.9：进入会话 → 保活暂停（绝不在对话中插 detect）
+    _wsManager?.markConversationActive('发送文字');
+
     // v3.1.0：想打就打（xiaoleweb.md §2.6）——未连接时自动连接，hello ACK 后自动发送
     if (!_isConnected) {
       _ensureConnectedThen(() {
@@ -532,6 +563,8 @@ class _ChatPageState extends ConsumerState<ChatPage> {
 
   /// v3.1.0：想打就打（xiaoleweb.md §2.6）——未连接时自动发起连接，
   /// hello ACK（服务器会话确认）后自动执行原操作。
+  /// v6.11.10：加 2s 快速重连上限——连不上就提示"网络恢复中，请稍候"，
+  /// 不启动采音，避免第一句话录丢。
   void _ensureConnectedThen(Function action, String label) {
     if (_isConnected) {
       action();
@@ -539,6 +572,16 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     }
     _pendingAutoAction = action;
     _pendingAutoLabel = label;
+    _preconnectStartAt = DateTime.now();
+    _preconnectTimer?.cancel();
+    _preconnectTimer = Timer(const Duration(seconds: 2), () {
+      if (_isConnected) return;
+      _pendingAutoAction = null;
+      final dropped = _preconnectAudio.length;
+      _preconnectAudio.clear();
+      logger.warning('[PRECONNECT] 2s 内未连上（$label），丢弃缓存 $dropped 帧并提示稍候');
+      ToastUtil.show('网络恢复中，请稍候');
+    });
     if (_connectionStatus == '正在连接...') {
       ToastUtil.show('连接中…连上后自动$label');
       return;
@@ -547,10 +590,28 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     _initializeWebSocket();
   }
 
+  /// v6.11.10：连上后把预连接期间缓存的音频帧按序回灌（须在 listen start 之后调用）
+  void _flushPreconnectAudio() {
+    if (_preconnectAudio.isEmpty) return;
+    final n = _preconnectAudio.length;
+    for (final frame in _preconnectAudio) {
+      _wsManager?.sendBinaryMessage(frame);
+    }
+    _preconnectAudio.clear();
+    logger.info('[PRECONNECT] 回灌缓存音频 $n 帧');
+  }
+
   void _runPendingAutoAction() {
     final action = _pendingAutoAction;
     if (action == null) return;
     _pendingAutoAction = null;
+    _preconnectTimer?.cancel();
+    _preconnectTimer = null;
+    final started = _preconnectStartAt;
+    if (started != null) {
+      logger.info('[PRECONNECT] 成功，${DateTime.now().difference(started).inMilliseconds}ms 内连上，自动$_pendingAutoLabel');
+      _preconnectStartAt = null;
+    }
     logger.info('连接就绪，自动$_pendingAutoLabel');
     Future.delayed(const Duration(milliseconds: 300), () => action());
   }
@@ -959,6 +1020,9 @@ class _ChatPageState extends ConsumerState<ChatPage> {
         deviceId: deviceId,
         clientId: clientId,
         enableToken: false,
+        // v6.11.8：心跳实验配置（默认 off；开发者中心可切候选，切换即重建连接）
+        probeMode: _wsProbeModeFromConfig(),
+        probeInterval: Duration(seconds: AppFeats.wsKeepaliveIntervalSec),
       );
 
       // 第四步: 添加事件监听器
@@ -1938,6 +2002,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
 
     // 标记 AI 开始播放
     if (!_isAiPlaying) {
+      _wsManager?.markConversationActive('下行音频'); // v6.11.9：AI 正在播放 → 保活暂停
       setState(() {
         _isAiPlaying = true;
       });
@@ -1957,6 +2022,8 @@ class _ChatPageState extends ConsumerState<ChatPage> {
         });
         // v4.4.0：进入尾音保护（根因①——此时扬声器可能还在播最后几个字）
         _enterTailGuard();
+        // v6.11.9：音频播放结束 → 5s 后恢复保活
+        _wsManager?.markConversationIdle('音频播放结束');
         logger.info('AI 播放结束（500ms 无新音频），进入尾音保护');
       }
     });
@@ -1980,6 +2047,10 @@ class _ChatPageState extends ConsumerState<ChatPage> {
           // 处理 TTS 消息
           final state = jsonData['state'] as String?;
           final text = jsonData['text'] as String?;
+          // v6.11.9：tts start/sentence_start 都算会话进行中
+          if (state == 'start' || state == 'sentence_start') {
+            _wsManager?.markConversationActive('TTS $state');
+          }
 
           if (state == 'sentence_start' && text != null && text.isNotEmpty) {
             // AI 开始说新的一句话，追加到当前消息
@@ -2000,6 +2071,8 @@ class _ChatPageState extends ConsumerState<ChatPage> {
               _appendOrCreateChatMessage(MessageSender.ai, decorated);
             }
           } else if (state == 'end' || state == 'stop') {
+            // v6.11.9：TTS 结束 → 5s 后恢复保活
+            _wsManager?.markConversationIdle('TTS $state');
             // AI 说完了，标记播放结束
             // v3.0.0：双兼容——网页版实测服务器发的是 'stop'（部分上游发 'end'），
             // 只认其一会导致 _isAiPlaying 不复位 → 麦克风停发 → 「第二句听不见」
@@ -2016,6 +2089,8 @@ class _ChatPageState extends ConsumerState<ChatPage> {
           break;
 
         case 'stt':
+          // v6.11.9：服务端已开始识别/会话已开 → 保活暂停
+          _wsManager?.markConversationActive('stt');
           // 处理语音识别结果 - 实时追加到最后一条用户消息
           final text = jsonData['text'] as String?;
           if (text != null && text.isNotEmpty) {
@@ -2039,6 +2114,8 @@ class _ChatPageState extends ConsumerState<ChatPage> {
           break;
 
         case 'llm':
+          // v6.11.9：AI 正在生成回复（未完成回复）→ 保活暂停
+          _wsManager?.markConversationActive('llm');
           // v3.1.0：AI 情绪 → emoji 前缀（对齐网页版映射，xiaoleweb.md §2.4）
           // v4.2.0：同时触发全屏动图表情（申请书 6 号）
           final emotion = jsonData['emotion'] as String?;
@@ -2209,6 +2286,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     // 通过 WebSocket 发送音频数据
     if (_wsManager != null && _isConnected) {
       try {
+        _wsManager!.markConversationActive('上行麦克风音频'); // v6.11.9：用户正在说话
         _wsManager!.sendBinaryMessage(audioData);
         // logger.info('已发送音频数据: ${audioData.length} 字节'); // 注释掉，避免日志过多
       } catch (e) {
@@ -2216,6 +2294,14 @@ class _ChatPageState extends ConsumerState<ChatPage> {
         _showError('发送音频失败: $e');
       }
     } else {
+      // v6.11.10：说话前预连接——断线瞬间按下麦克风时，先把音频帧缓存（上限 40 帧≈2.4s），
+      // 连上并发出 listen start 后回灌，避免"第一句话录丢"。
+      if (!_isInVoiceCall && _preconnectAudio.length < 40) {
+        _preconnectAudio.add(audioData);
+        if (_preconnectAudio.length == 1) {
+          logger.info('[PRECONNECT] 断线中开始缓存上行音频');
+        }
+      }
       // v3.1.0：想打就打——触发自动连接（连上后继续说话即正常上行）。
       // 通话中由 WS 管理器自身重连兜底，不走全链路重建（避免双连接）。
       if (!_isInVoiceCall && _connectionStatus != '正在连接...') {
@@ -2233,6 +2319,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
       return;
     }
     if (_wsManager == null || !_isConnected) {
+      _preconnectAudio.clear(); // v6.11.10：松手即丢缓存，避免残留帧串到下一次说话
       return;
     }
 
@@ -2260,8 +2347,9 @@ class _ChatPageState extends ConsumerState<ChatPage> {
       return;
     }
     if (_wsManager == null || !_isConnected) {
-      // v3.1.0：想打就打——未连接时自动连接（本次 listen start 跳过，连上后重按即可）
-      _ensureConnectedThen(() {}, '开始说话');
+      // v3.1.0：想打就打——未连接时自动连接；
+      // v6.11.10：连上后自动重放本次 listen start，并回灌缓存音频，避免第一句话丢失
+      _ensureConnectedThen(_handleAudioStart, '开始说话');
       return;
     }
 
@@ -2276,6 +2364,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
 
       _wsManager!.sendMessage(jsonEncode(listenStartMessage));
       logger.info('已发送 listen start 消息: ${jsonEncode(listenStartMessage)}');
+      _flushPreconnectAudio(); // v6.11.10：回灌预连接期间缓存的音频帧
     } catch (e) {
       logger.severe('发送 listen start 消息失败: $e');
       _showError('启动录音失败: $e');
@@ -2419,6 +2508,8 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     }
     // v6.8.1（B 项）：记录挂断时刻，开启"迟到音频帧丢弃"静默窗口（根因④）。
     _voiceHangupAt = DateTime.now();
+    // v6.11.9：挂断 = 会话结束 → 5s 后恢复保活
+    _wsManager?.markConversationIdle('挂断');
     _handleContinuousListenStop(); // 复用现有停止逻辑
     if (mounted) {
       setState(() {

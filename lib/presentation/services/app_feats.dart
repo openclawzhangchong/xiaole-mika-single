@@ -106,6 +106,9 @@ class AppFeats {
     for (final k in keys) {
       set(k, false);
     }
+    // v6.11.11：WS 保活是生产逻辑（默认 auto），**不受「全部关闭」影响**——
+    // 普通用户同样需要 45s listen stop 续命，否则会频繁被云端 1005 回收。
+    // 如需彻底关闭保活，只能在开发者中心把「WS 保活」单独切到「关闭」。
     // ⚠️ 不清空逐项 MCP 工具开关（xw_mcp_*）—— 总闸全部关闭＝普通用户模式，
     // 但逐项设置是用户独立偏好，恢复总闸后原逐项配置应仍生效。
   }
@@ -163,4 +166,40 @@ class AppFeats {
   static bool get rawServerAlert => get('rawServerAlert');
   // v6.5.0：AI 主动来电总开关；默认 false=普通用户模式（不巡检、零流量）
   static bool get proactive => get('proactive');
+
+  // ---------- v6.11.11：WS 保活（生产逻辑，默认 auto） ----------
+  /// 2026-11-04 真机定案：`listen{state:"stop"}` 每 45s 一次 =
+  /// 8 tick / 6 分钟零副作用（零 stt/tts/llm/下行音频/AudioTrack start）、零重连。
+  /// 因此它不再是"诊断开关"，而是生产默认行为：
+  /// - `auto`（默认）：已连接且无会话时每 45s 发一次 listen stop；
+  /// - `off`：不发任何保活消息（仅 WS ping + 无感重连兜底）。
+  /// `detect` 只保留在底层枚举做诊断，**不进入可选集**（会触发 TTS 外放）。
+  static const String wsKeepaliveDefault = 'auto';
+  static const String _wsKeepaliveKey = 'xw_ws_keepalive';
+  static const String _wsProbeSecKey = 'xw_ws_probe_interval_sec';
+
+  /// 配置变更通知：聊天页监听后立即重建连接，让新配置即时生效。
+  static final ValueNotifier<int> wsProbeRevision = ValueNotifier<int>(0);
+
+  static String get wsKeepaliveMode {
+    final v = StorageService.instance.getString(_wsKeepaliveKey);
+    if (v != null && (v == 'auto' || v == 'off')) return v;
+    // 兼容 v6.11.10 实验键：旧值 detect/pair/mcp/stop 一律回落生产默认 auto
+    return wsKeepaliveDefault;
+  }
+
+  /// 保活间隔（秒），默认 45s；限制 10–120s，避免把保活变成压测。
+  static int get wsKeepaliveIntervalSec =>
+      (StorageService.instance.getInt(_wsProbeSecKey) ?? 45).clamp(10, 120);
+
+  static void setWsKeepalive(String mode) {
+    StorageService.instance
+        .setString(_wsKeepaliveKey, mode == 'off' ? 'off' : 'auto');
+    wsProbeRevision.value++;
+  }
+
+  /// 开发者中心展示用中文名
+  static String get wsKeepaliveLabel => wsKeepaliveMode == 'off'
+      ? '关闭（仅 ping + 无感重连）'
+      : '自动（${wsKeepaliveIntervalSec}s · listen stop）';
 }

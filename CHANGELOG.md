@@ -6,6 +6,106 @@
 
 ---
 
+## v6.11.11 · 2026-11-04
+
+**主题：⑤ `listen{state:"stop"}` 转生产默认保活（45s，零副作用）；detect 降为隐藏诊断**
+
+### 定案依据（真机 2026-11-04 19:32–19:38，`36c77fb6`）
+| 指标 | 结果 |
+|---|---|
+| tick / 存活 | 8 tick / 6 分 0 秒（跨 5 个 70s 回收窗口） |
+| `1005` / 重连 | 0 / 0 |
+| stt·tts·llm·下行音频·`AudioTrack start` | 全部 0 |
+| 下行帧 | 4（hello ×1 + mcp ×3，仅连接初始化） |
+
+### 变更
+- **保活并入生产逻辑**：开发者中心开关由「WS 保活探针（5 候选）」改为「WS 保活」二值
+  `auto`（默认）/ `off`；`auto` 每 **45s** 发一次 `listen{state:"stop"}`。
+  存储键 `xw_ws_keepalive`；旧实验键的 detect/pair/mcp/stop 值一律回落 `auto`。
+- **detect 不再可选**：底层枚举保留（`WsProbeMode.detect`）仅供诊断，开发者中心不展示，
+  避免误开触发 TTS 外放。
+- **会话感知统一**：保活与业务共用同一个"会话进行中"标记——对话中不发、结束 5s 后恢复、
+  60s 无活动兜底自动解除，杜绝两套状态互相打架。
+- **「全部关闭」不再关保活**（保活属生产行为，普通用户同样需要续命；只能单独切 `off`）。
+
+### 日志（新增 `[KEEPALIVE]`，detect 仍用 `[PROBE]`）
+- `tick#N t=…s 发送=是 距上次上行=…s payload=listen:stop recv=N`
+- `tick#N t=…s 发送=否 原因=会话中 | 未连接 | 会话刚结束 Ns<5s`
+- 停止汇总：`存活=…s tick=N 发送=M 跳过=K 收到帧=… 文本=… 音频=…`
+
+### 文档
+- `docs/ws-idle-reclaim-evidence.md` 新增 §7.1（8 tick 实测）、§9.1（`lastUpdateTime` 运行记录 +
+  「还原必须先关保活」前置）、§10（技术结论链，README 引用）。
+- 待验证（下一真机窗口 10 分钟）：A 安静 6 分钟复现；B 中途说话验证"跳过：会话中"与 5s 恢复；
+  C 两轮对话（间隔 2 分钟）验证无 stop 打断竞态。
+
+---
+
+
+## v6.11.10 · 2026-11-04
+
+**主题：无副作用保活候选（⑤/⑥，默认关）+ 说话前 2s 预连接 + 重连频率统计**
+
+### 新增保活候选（等设备窗口验证，默认全关）
+| 候选 | 每 tick 发送 | 设计意图 | 判定 |
+|---|---|---|---|
+| ⑤ `stop` | `listen{state:"stop"}` | 语义"停止监听"，预期不触发 ASR/回复 | 3 分钟无 1005 **且** 零 stt/tts/音频/`AudioTrack` start |
+| ⑥ `pair` | `listen{start,mode:"manual"}` + `listen{stop}` | 成对发送，预期不产生会话 | 同上 |
+| ⑥' `mcp` | `{"type":"mcp","payload":{"jsonrpc":"2.0","method":"notifications/initialized"}}` | MCP 层活跃通知，不含语音语义 | 同上 |
+
+任一候选只要出现 1 条 `stt` / `tts` / 下行音频 / `AudioTrack` start，即判"有效但有副作用"，与 detect 同罪，不得默认开启。
+`[PROBE]` 已含 tick / 下行 type / 音频帧 / 断开汇总，可直接用于判定。
+
+### 说话前预连接（生产改进，无条件生效）
+- `_ensureConnectedThen()` 增加 **2s 上限**：未连接时先快速重连，连上再执行采音/通话；
+  2s 未连上则**放弃本次操作**并提示「网络恢复中，请稍候」，避免把第一句话录丢。
+- 日志：`[PRECONNECT] 成功，xxx ms 内连上` / `[PRECONNECT] 2s 内未连上（label）…`。
+
+### 重连频率统计
+- `[RECONNECT] 计划 #N（连续第M次） delay=…s gap=…s code=… 距断开=…s`
+- `[RECONNECT] 成功 #成功/累计 用时=…s`
+- 每 10 次：`[RECONNECT] 汇总 累计/成功/失败/间隔(avg/min/max)/近20次 closeCode`
+- 采集：`adb logcat | findstr "[RECONNECT]"`，按小时聚合即可回答"1h≈50 次是否过频"。
+
+## v6.11.9 · 2026-11-04
+
+**主题：detect 保活收敛——探针只留 off/detect（默认关）、新增会话感知暂停、下行帧取证**
+
+### 背景（6.11.8 真机实验）
+- 4 候选实测：`hello` 68s、`abort` 65s、`ping` 对照 66–69s 全部被 `1005` 回收；**仅 `detect` 撑过 3 分钟（240s+ 无 1005）**。
+- 但 detect 的代价被查实：**每个 tick 都会触发服务端一轮 `stt → llm → tts`**。240s 内 8 tick 换来
+  8 次 `stt("小智")`、8 次 `llm("😊")`、43 条 tts 文本、344 个音频帧，并真实播放了 8 段
+  "哎，我在呢！/有什么事要我帮忙吗？"（`AudioTrack` 10 次 start）。→ **不能默认开启**。
+
+### 变更
+- `WsProbeMode` 收敛为 `off` / `detect`（`hello`/`abort`/`ping` 已删）。
+- 探针默认 `off`，默认间隔 30s → **45s**（`PROBE_DETECT_INTERVAL`）。
+- 新增会话感知：`markConversationActive()` / `markConversationIdle()`。
+  - 暂停条件：已连接且**无会话中**（发送文字、上行麦克风音频、`stt`/`llm`/`tts start`、下行音频播放）；
+  - 恢复条件：会话结束（`tts stop/end`、音频播放结束、挂断）后 **5s**（`PROBE_RESUME_DELAY`）；
+  - 兜底：会话标记 60s 无任何收发活动自动解除（`CONVERSATION_STALE`），避免永久暂停。
+- 下行取证增强（`[PROBE]`）：每条文本消息记录 `type` + 脱敏预览（`token`/`session_id` 打码，截断 32 字符）；二进制帧记录长度，前 3 帧附首 32 字节 hex 指纹；断开时汇总 `文本/音频/各 type 计数`。
+
+### 风险备注
+`detect` 保活会"为续命而自言自语"。除非服务端提供不带会话语义的保活通道，生产保持 `off`，靠 6.11.7 无感重连兜底。
+
+## v6.11.8 · 2026-11-04
+
+**主题：WS 心跳实验（默认关）——4 个候选逐个验证哪条消息能续命云端 1005 回收**
+
+### 变更
+- `XiaozhiWebSocketManager` 新增 `WsProbeMode`（`off`/`hello`/`detect`/`abort`/`ping`）与探针定时器（默认 `off`，间隔 30s，可 10–120s）。
+  - ① `hello`：定时重发完整 hello（version/device-id/features/audio_params）；
+  - ② `detect`：`{"type":"listen","state":"detect"}`；
+  - ③ `abort`：`{"type":"abort","reason":"heartbeat"}`；
+  - ④ `ping`：对照组，不发业务消息，仅保留 WS 层 `pingInterval=25s`。
+  - 记录点统一前缀 `[PROBE]`：启动候选/间隔、每次 tick 序号与存活秒数、首个服务器帧时刻、断开时 `存活秒数 + 发送数 + 收到帧数 + closeCode`。
+- `AppFeats` 新增 `xw_ws_probe_mode` / `xw_ws_probe_interval_sec`（默认 `off`/30s），`allOff()` 一并归零；`wsProbeRevision` 通知聊天页立即重建连接（否则"当前候选有效→永远等不到重连"无法切下一个）。
+- 开发者中心「调试」新增 **WS 心跳实验** 入口（5 选项）。
+
+### 判定阈值（真机）
+同一手机、同一智能体、安静不说话：**任一候选让连接撑过 3 分钟且无 `code=1005`** → 该消息算"业务活跃"；仍在 ~70s 被 `1005` 回收 → 排除。每个候选 4–5 分钟。
+
 ## v6.11.7 · 2026-11-04
 
 **主题：断线改为"无感重连"——云端按业务空闲回收 1005，不再弹"已断开"，静默补连 1–4s**
