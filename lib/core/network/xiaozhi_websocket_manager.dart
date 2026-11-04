@@ -512,7 +512,7 @@ class XiaozhiWebSocketManager {
         if (_probeRecv == 1) {
           logger.info('[PROBE] 本连接首个服务器帧 t=${_probeElapsedSec}s type=$t');
         }
-        logger.info('[PROBE] 下行#$(_probeRecv) 文本 type=$t preview=${_previewOf(message)}');
+        logger.info('[PROBE] 下行#${_probeRecv} 文本 type=$t preview=${_previewOf(message)}');
       } else if (message is List<int>) {
         _probeDownBinary++;
         _probeTypes['binary'] = (_probeTypes['binary'] ?? 0) + 1;
@@ -521,10 +521,10 @@ class XiaozhiWebSocketManager {
         }
         // 音频帧量大：只对前 3 帧打首 32 字节指纹，其余只记长度，避免日志刷屏
         if (_probeDownBinary <= 3) {
-          logger.info('[PROBE] 下行#$(_probeRecv) 二进制 len=${message.length} '
+          logger.info('[PROBE] 下行#${_probeRecv} 二进制 len=${message.length} '
               'head32=${_hexHead(message, 32)}');
         } else {
-          logger.info('[PROBE] 下行#$(_probeRecv) 二进制 len=${message.length}');
+          logger.info('[PROBE] 下行#${_probeRecv} 二进制 len=${message.length}');
         }
       }
     }
