@@ -4,7 +4,7 @@ class AppConfig {
 
   // 应用信息
   static const String appName = '小乐'; // v4.0.0：品牌统一（默认智能体名前缀等）
-  static const String appVersion = '6.11.8'; // v6.11.8：WS 心跳实验（默认关）——4 个候选可切，定位云端"业务消息空闲"回收；另含 v6.11.7 的无感重连。详见 CHANGELOG.md
+  static const String appVersion = '6.11.9'; // v6.11.9：detect 保活收敛（默认关）+ 会话感知暂停 + 下行帧取证；实测 detect 每 tick 触发 TTS，不能默认开。详见 CHANGELOG.md
 
   /// v4.4.0 尾音保护：AI 播放结束后丢弃麦克风音频的时长（毫秒）
   static const int defaultTailGuardMs = 300;

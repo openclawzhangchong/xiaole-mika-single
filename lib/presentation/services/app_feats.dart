@@ -166,8 +166,10 @@ class AppFeats {
   // v6.5.0：AI 主动来电总开关；默认 false=普通用户模式（不巡检、零流量）
   static bool get proactive => get('proactive');
 
-  // ---------- v6.11.8：WS 心跳实验（默认关，仅用于定位云端"业务消息空闲"回收） ----------
-  /// 候选：`off` / `hello` / `detect` / `abort` / `ping`（对照组）。
+  // ---------- v6.11.8/6.11.9：WS 保活探针（默认关） ----------
+  /// v6.11.9 收敛为二值：`off` / `detect`（hello/abort 实测无效，已剔除）。
+  /// **默认 off**：detect 虽能保活，但每次 tick 会触发服务端一轮 TTS（实测 8 tick=8 次），
+  /// 属"保活反而制造噪音"，必须显式开启。
   /// 存储键独立于 `keys` 列表——实验开关不进「全部关闭」的布尔清单，
   /// 但 `allOff()` 会显式把探针归零（见下），保证一键回普通用户模式。
   static const String wsProbeDefault = 'off';
@@ -180,9 +182,9 @@ class AppFeats {
   static String get wsProbeMode =>
       StorageService.instance.getString(_wsProbeKey) ?? wsProbeDefault;
 
-  /// 发送间隔（秒），默认 30s；限制 10–120s，避免把实验变成压测。
+  /// 发送间隔（秒），默认 45s；限制 10–120s，避免把保活变成压测。
   static int get wsProbeIntervalSec =>
-      (StorageService.instance.getInt(_wsProbeSecKey) ?? 30).clamp(10, 120);
+      (StorageService.instance.getInt(_wsProbeSecKey) ?? 45).clamp(10, 120);
 
   static void setWsProbe(String mode, {int? intervalSec}) {
     StorageService.instance.setString(_wsProbeKey, mode);
@@ -195,16 +197,10 @@ class AppFeats {
   /// 开发者中心展示用中文名
   static String get wsProbeLabel {
     switch (wsProbeMode) {
-      case 'hello':
-        return '① 重发 hello';
       case 'detect':
-        return '② listen detect';
-      case 'abort':
-        return '③ abort';
-      case 'ping':
-        return '④ 仅 WS ping（对照）';
+        return 'detect 保活（${wsProbeIntervalSec}s，有 TTS 副作用）';
       default:
-        return '关闭';
+        return '关闭（生产默认）';
     }
   }
 }

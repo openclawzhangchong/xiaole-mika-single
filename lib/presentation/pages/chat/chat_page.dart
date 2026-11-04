@@ -199,17 +199,11 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     AppFeats.wsProbeRevision.addListener(_onWsProbeChanged);
   }
 
-  /// v6.11.8：把 `AppFeats` 的字符串配置映射为管理器枚举（非法值一律视为关闭）
+  /// v6.11.8/6.11.9：把 `AppFeats` 的字符串配置映射为管理器枚举（非法值一律视为关闭）
   WsProbeMode _wsProbeModeFromConfig() {
     switch (AppFeats.wsProbeMode) {
-      case 'hello':
-        return WsProbeMode.hello;
       case 'detect':
         return WsProbeMode.detect;
-      case 'abort':
-        return WsProbeMode.abort;
-      case 'ping':
-        return WsProbeMode.ping;
       default:
         return WsProbeMode.off;
     }
@@ -537,6 +531,9 @@ class _ChatPageState extends ConsumerState<ChatPage> {
 
     // v6.8.1（B 项）：用户主动发消息 → 解除挂断静默窗口，保证文字聊天 TTS 不被误伤
     _liftVoiceMuteWindow();
+
+    // v6.11.9：进入会话 → 保活暂停（绝不在对话中插 detect）
+    _wsManager?.markConversationActive('发送文字');
 
     // v3.1.0：想打就打（xiaoleweb.md §2.6）——未连接时自动连接，hello ACK 后自动发送
     if (!_isConnected) {
@@ -1969,6 +1966,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
 
     // 标记 AI 开始播放
     if (!_isAiPlaying) {
+      _wsManager?.markConversationActive('下行音频'); // v6.11.9：AI 正在播放 → 保活暂停
       setState(() {
         _isAiPlaying = true;
       });
@@ -1988,6 +1986,8 @@ class _ChatPageState extends ConsumerState<ChatPage> {
         });
         // v4.4.0：进入尾音保护（根因①——此时扬声器可能还在播最后几个字）
         _enterTailGuard();
+        // v6.11.9：音频播放结束 → 5s 后恢复保活
+        _wsManager?.markConversationIdle('音频播放结束');
         logger.info('AI 播放结束（500ms 无新音频），进入尾音保护');
       }
     });
@@ -2011,6 +2011,10 @@ class _ChatPageState extends ConsumerState<ChatPage> {
           // 处理 TTS 消息
           final state = jsonData['state'] as String?;
           final text = jsonData['text'] as String?;
+          // v6.11.9：tts start/sentence_start 都算会话进行中
+          if (state == 'start' || state == 'sentence_start') {
+            _wsManager?.markConversationActive('TTS $state');
+          }
 
           if (state == 'sentence_start' && text != null && text.isNotEmpty) {
             // AI 开始说新的一句话，追加到当前消息
@@ -2031,6 +2035,8 @@ class _ChatPageState extends ConsumerState<ChatPage> {
               _appendOrCreateChatMessage(MessageSender.ai, decorated);
             }
           } else if (state == 'end' || state == 'stop') {
+            // v6.11.9：TTS 结束 → 5s 后恢复保活
+            _wsManager?.markConversationIdle('TTS $state');
             // AI 说完了，标记播放结束
             // v3.0.0：双兼容——网页版实测服务器发的是 'stop'（部分上游发 'end'），
             // 只认其一会导致 _isAiPlaying 不复位 → 麦克风停发 → 「第二句听不见」
@@ -2047,6 +2053,8 @@ class _ChatPageState extends ConsumerState<ChatPage> {
           break;
 
         case 'stt':
+          // v6.11.9：服务端已开始识别/会话已开 → 保活暂停
+          _wsManager?.markConversationActive('stt');
           // 处理语音识别结果 - 实时追加到最后一条用户消息
           final text = jsonData['text'] as String?;
           if (text != null && text.isNotEmpty) {
@@ -2070,6 +2078,8 @@ class _ChatPageState extends ConsumerState<ChatPage> {
           break;
 
         case 'llm':
+          // v6.11.9：AI 正在生成回复（未完成回复）→ 保活暂停
+          _wsManager?.markConversationActive('llm');
           // v3.1.0：AI 情绪 → emoji 前缀（对齐网页版映射，xiaoleweb.md §2.4）
           // v4.2.0：同时触发全屏动图表情（申请书 6 号）
           final emotion = jsonData['emotion'] as String?;
@@ -2240,6 +2250,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     // 通过 WebSocket 发送音频数据
     if (_wsManager != null && _isConnected) {
       try {
+        _wsManager!.markConversationActive('上行麦克风音频'); // v6.11.9：用户正在说话
         _wsManager!.sendBinaryMessage(audioData);
         // logger.info('已发送音频数据: ${audioData.length} 字节'); // 注释掉，避免日志过多
       } catch (e) {
@@ -2450,6 +2461,8 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     }
     // v6.8.1（B 项）：记录挂断时刻，开启"迟到音频帧丢弃"静默窗口（根因④）。
     _voiceHangupAt = DateTime.now();
+    // v6.11.9：挂断 = 会话结束 → 5s 后恢复保活
+    _wsManager?.markConversationIdle('挂断');
     _handleContinuousListenStop(); // 复用现有停止逻辑
     if (mounted) {
       setState(() {

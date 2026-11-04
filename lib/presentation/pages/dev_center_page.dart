@@ -235,13 +235,13 @@ class _DevCenterPageState extends State<DevCenterPage> {
               icon: Icons.warning_amber,
               iconColor: AppColors.info,
             ),
-            // v6.11.8：WS 心跳实验（默认关；仅用于定位云端"业务空闲"回收，生产不启用）
+            // v6.11.9：WS 保活探针（默认关；detect 实测有效但会触发 TTS，仅诊断用）
             WxCell(
               leading: _iconTile(Icons.favorite_border, AppColors.info),
-              title: 'WS 心跳实验',
-              subtitle: '逐个验证哪条消息能续命云端 1005 回收（默认关，间隔 '
-                  '${AppFeats.wsProbeIntervalSec}s）。切换后聊天页立即重建连接，'
-                  '日志按 [PROBE] 过滤',
+              title: 'WS 保活探针',
+              subtitle: 'detect 可续命云端 1005 回收，但每次会触发一轮 TTS（默认关，'
+                  '间隔 ${AppFeats.wsProbeIntervalSec}s，仅会话空闲时发送）。'
+                  '切换后聊天页立即重建连接，日志按 [PROBE] 过滤',
               trailingText: AppFeats.wsProbeLabel,
               showArrow: true,
               onTap: _pickWsProbe,
@@ -637,16 +637,13 @@ class _DevCenterPageState extends State<DevCenterPage> {
     return '${_fmtMinOfDay(w.startMin)}–${_fmtMinOfDay(w.endMin)}';
   }
 
-  // ===== v6.11.8：WS 心跳实验候选选择 =====
+  // ===== v6.11.8/6.11.9：WS 保活探针选择 =====
 
   Future<void> _pickWsProbe() async {
-    const modes = <String>['off', 'hello', 'detect', 'abort', 'ping'];
+    const modes = <String>['off', 'detect'];
     const labels = <String>[
-      '关闭（生产默认）',
-      '① 定时重发 hello（含 device-id/版本）',
-      '② 定时 listen{state:"detect"}',
-      '③ 定时 abort{reason:"heartbeat"}',
-      '④ 仅保留 WS ping（对照组）',
+      '关闭（生产默认；仅 WS ping + 无感重连）',
+      'detect 每 45s 保活（实测有效，但会触发 TTS）',
     ];
     final idx = await showWxActionSheet(
       context,

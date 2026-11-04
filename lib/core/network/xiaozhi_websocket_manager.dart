@@ -10,22 +10,18 @@ import 'package:web_socket_channel/io.dart'
 /// 小智WebSocket事件类型
 enum XiaozhiEventType { connected, disconnected, message, error, binaryMessage }
 
-/// v6.11.8：WS 心跳实验候选（默认 off；仅用于定位云端"业务消息空闲"判定，生产不启用）
+/// v6.11.9：保活方案收敛为二值。
+/// 真机实验（6.11.8+60，2026-11-04 18:20–18:24）结论：
+/// - hello/abort 与对照组同量级（65–68s 被 1005 回收）→ 无效，已剔除；
+/// - detect 是唯一撑过 3 分钟的候选（240s+ 无 1005），但每个 tick 都会触发
+///   服务端一轮 stt→llm→tts（实测 8 tick = 8 次 TTS 播放）→ **默认关闭**，
+///   只在需要极端保活且能接受"自言自语"噪音时由开发者显式开启。
 enum WsProbeMode {
-  /// 关（生产默认）
+  /// 关（生产默认：仍保留 WS pingInterval + 无感重连兜底）
   off,
 
-  /// ① 定时重发 hello（带 version/device-id/features/audio_params）
-  hello,
-
-  /// ② 定时发 listen{state:"detect"}
+  /// 定时发 listen{state:"detect"}（唯一有效保活，但有 TTS 副作用）
   detect,
-
-  /// ③ 定时发 abort{reason:"heartbeat"}
-  abort,
-
-  /// ④ 对照组：不发任何业务消息，仅保留 WS 层 pingInterval
-  ping,
 }
 
 /// 小智WebSocket事件
@@ -58,6 +54,17 @@ class XiaozhiWebSocketManager {
   /// v6.11.6：看门狗检查间隔（Dart 定时器，不依赖 didChangeAppLifecycleState）
   static const Duration WATCHDOG_INTERVAL = Duration(seconds: 20);
 
+  /// v6.11.9：detect 保活默认间隔。实测 30s 可保活；45s 仍留出 15–25s 余量，
+  /// 同时把"误触发 TTS"的频率降到最低（每 45s 最多一次）。
+  static const Duration PROBE_DETECT_INTERVAL = Duration(seconds: 45);
+
+  /// v6.11.9：对话结束后延迟恢复保活，避开尾音保护 / 迟到音频帧阶段。
+  static const Duration PROBE_RESUME_DELAY = Duration(seconds: 5);
+
+  /// v6.11.9：会话标记的兜底超时——若上层漏发"对话结束"，超过该时长无任何
+  /// 收发活动即自动解除标记，避免保活被永久暂停（最坏退化为 3 分钟一次）。
+  static const Duration CONVERSATION_STALE = Duration(seconds: 60);
+
   WebSocketChannel? _channel;
   String? _serverUrl;
   String? _deviceId;
@@ -84,6 +91,17 @@ class XiaozhiWebSocketManager {
   int _probeRecv = 0;
   DateTime? _probeStartAt;
 
+  // ===== v6.11.9：会话感知（保活只在"空闲"时发）=====
+  /// 是否有进行中的会话（用户上行 / listen start / 未完成回复 / TTS 播放）
+  bool _conversationActive = false;
+  DateTime? _conversationEndAt;
+  DateTime? _lastActivityAt;
+
+  // ===== v6.11.9：下行帧构成统计（证伪/证实"detect 是否制造噪音"）=====
+  int _probeDownText = 0;
+  int _probeDownBinary = 0;
+  final Map<String, int> _probeTypes = {};
+
   /// 最近一次收到服务器消息的时间（null = 本次连接内尚未收到任何消息）
   DateTime? get lastReceivedAt => _lastRecvAt;
 
@@ -103,7 +121,7 @@ class XiaozhiWebSocketManager {
     String? wsProtocol,
     String? clientId,
     WsProbeMode probeMode = WsProbeMode.off,
-    Duration probeInterval = const Duration(seconds: 30),
+    Duration probeInterval = PROBE_DETECT_INTERVAL,
   }) : _deviceId = deviceId,
        _clientId = clientId,
        _enableToken = enableToken,
@@ -299,11 +317,37 @@ class XiaozhiWebSocketManager {
         },
       };
 
-  // ===================== v6.11.8：心跳实验 =====================
+  // ===================== v6.11.8/6.11.9：心跳探针 =====================
 
   int get _probeElapsedSec => _probeStartAt == null
       ? 0
       : DateTime.now().difference(_probeStartAt!).inSeconds;
+
+  /// v6.11.9：上层（聊天页）标记"进入会话"。
+  /// 触发点：发送文字 / 上行麦克风音频 / 收到 stt|llm|tts start / 拨通语音通话。
+  /// 进入会话后保活立即暂停，绝不在对话中间插 detect。
+  void markConversationActive(String why) {
+    _conversationActive = true;
+    _conversationEndAt = null;
+    _lastActivityAt = DateTime.now();
+    if (_probeMode != WsProbeMode.off) {
+      logger.info('[PROBE] 进入会话，保活暂停（$why）');
+    }
+  }
+
+  /// v6.11.9：上层标记"会话结束"（TTS stop/end、挂断、音频播放结束）。
+  /// 5s 后恢复保活，留给尾音保护与迟到音频帧。
+  void markConversationIdle(String why) {
+    if (!_conversationActive) return;
+    _conversationActive = false;
+    _conversationEndAt = DateTime.now();
+    if (_probeMode != WsProbeMode.off) {
+      logger.info('[PROBE] 会话结束，${PROBE_RESUME_DELAY.inSeconds}s 后恢复保活（$why）');
+    }
+  }
+
+  /// 是否处于会话中（供调试页展示）
+  bool get conversationActive => _conversationActive;
 
   /// 连接建立后按配置启动探针。
   /// 日志前缀 `[PROBE]` 便于 `adb logcat | findstr PROBE` 单线取证。
@@ -311,47 +355,92 @@ class XiaozhiWebSocketManager {
     _stopProbe('新连接');
     _probeSeq = 0;
     _probeRecv = 0;
+    _probeDownText = 0;
+    _probeDownBinary = 0;
+    _probeTypes.clear();
     _probeStartAt = DateTime.now();
+    // 新连接 = 新 session，旧会话标记作废
+    _conversationActive = false;
+    _conversationEndAt = null;
+
     final mode = _probeMode;
-    if (mode == WsProbeMode.off || mode == WsProbeMode.ping) {
-      logger.info('[PROBE] 本连接不发业务保活消息 mode=${mode.name} '
-          '（${mode == WsProbeMode.ping ? '对照组' : '已关闭'}；WS ping=${PING_INTERVAL.inSeconds}s）');
+    if (mode == WsProbeMode.off) {
+      logger.info('[PROBE] 关闭（不发保活消息；仅 WS ping=${PING_INTERVAL.inSeconds}s + 无感重连）');
       return;
     }
     final iv = _probeInterval.inSeconds;
-    logger.info('[PROBE] 启动 mode=${mode.name} interval=${iv}s');
+    logger.info('[PROBE] 启动 mode=${mode.name} interval=${iv}s '
+        '条件=已连接且无会话中；对话结束 ${PROBE_RESUME_DELAY.inSeconds}s 后恢复');
     _probeTimer = Timer.periodic(_probeInterval, (_) {
       if (_manualClosed || !isConnected) return;
+      final now = DateTime.now();
+      // v6.11.9 兜底：上层漏发"会话结束"时，无活动超过 60s 自动恢复
+      if (_conversationActive) {
+        final last = _lastActivityAt;
+        if (last == null || now.difference(last) >= CONVERSATION_STALE) {
+          _conversationActive = false;
+          _conversationEndAt = now;
+          logger.warning('[PROBE] 会话标记超时（${last == null ? '无活动记录' : '${now.difference(last).inSeconds}s 无活动'}），自动恢复保活');
+        } else {
+          logger.info('[PROBE] skip（会话进行中）t=${_probeElapsedSec}s');
+          return;
+        }
+      }
+      final end = _conversationEndAt;
+      if (end != null && now.difference(end) < PROBE_RESUME_DELAY) {
+        logger.info('[PROBE] skip（会话刚结束 ${now.difference(end).inSeconds}s < ${PROBE_RESUME_DELAY.inSeconds}s）');
+        return;
+      }
       _probeSeq++;
       logger.info('[PROBE] tick mode=${mode.name} seq=$_probeSeq '
           'interval=${iv}s t=${_probeElapsedSec}s recv=$_probeRecv');
-      sendMessage(_probePayload(mode));
+      sendMessage(_probePayload());
     });
   }
 
-  /// 各候选的保活消息载荷（唯一差异点）
-  String _probePayload(WsProbeMode mode) {
-    switch (mode) {
-      case WsProbeMode.hello:
-        return jsonEncode(_helloPayload());
-      case WsProbeMode.detect:
-        return jsonEncode({"type": "listen", "state": "detect"});
-      case WsProbeMode.abort:
-        return jsonEncode({"type": "abort", "reason": "heartbeat"});
-      case WsProbeMode.off:
-      case WsProbeMode.ping:
-        return '';
-    }
-  }
+  /// detect 保活载荷（v6.11.9 仅保留这一种）
+  String _probePayload() => jsonEncode({"type": "listen", "state": "detect"});
 
   void _stopProbe(String why) {
     if (_probeTimer != null || _probeStartAt != null) {
+      final types = _probeTypes.entries
+          .map((e) => '${e.key}=${e.value}')
+          .join(',');
       logger.info('[PROBE] 停止（$why）mode=${_probeMode.name} '
-          '存活=${_probeElapsedSec}s 发送=$_probeSeq 收到帧=$_probeRecv');
+          '存活=${_probeElapsedSec}s 发送=$_probeSeq 收到帧=$_probeRecv '
+          '文本=$_probeDownText 音频=$_probeDownBinary'
+          '${types.isEmpty ? '' : ' types={$types}'}');
     }
     _probeTimer?.cancel();
     _probeTimer = null;
     _probeStartAt = null;
+    _probeDownText = 0;
+    _probeDownBinary = 0;
+    _probeTypes.clear();
+  }
+
+  /// v6.11.9：从下行 JSON 提取 type（失败返回 unknown）
+  String _typeOf(String raw) {
+    final m = RegExp(r'"type"\s*:\s*"([^"]+)"').firstMatch(raw);
+    return m?.group(1) ?? 'unknown';
+  }
+
+  /// v6.11.9：脱敏后取首 32 字符（token / session_id 一律打码）
+  String _previewOf(String raw) {
+    var s = raw
+        .replaceAll(RegExp(r'"token"\s*:\s*"[^"]*"'), '"token":"***"')
+        .replaceAll(RegExp(r'"session_id"\s*:\s*"[^"]*"'), '"session_id":"***"');
+    if (s.length > 32) s = '${s.substring(0, 32)}…';
+    return s;
+  }
+
+  /// v6.11.9：二进制帧首 N 字节 hex 摘要（音频帧无文本语义，只做指纹）
+  String _hexHead(List<int> data, int n) {
+    final take = data.length < n ? data.length : n;
+    return data
+        .sublist(0, take)
+        .map((b) => b.toRadixString(16).padLeft(2, '0'))
+        .join();
   }
 
   /// 发送文本消息
@@ -359,6 +448,7 @@ class XiaozhiWebSocketManager {
     if (_channel != null && isConnected) {
       try {
         _channel!.sink.add(message);
+        _lastActivityAt = DateTime.now();
         //打印发送的消息
         logger.info('发送消息: $message');
       } catch (e, st) {
@@ -376,6 +466,7 @@ class XiaozhiWebSocketManager {
     if (_channel != null && isConnected) {
       try {
         _channel!.sink.add(data);
+        _lastActivityAt = DateTime.now();
       } catch (e) {
         logger.severe('二进制数据发送失败: $e');
       }
@@ -410,11 +501,31 @@ class XiaozhiWebSocketManager {
   /// 处理收到的消息
   void _onMessage(dynamic message) {
     _lastRecvAt = DateTime.now(); // v4.3.3：记录最近收包时间（供静默/僵死判断）
-    // v6.11.8：心跳实验记录点——服务器是否回过帧（首个帧单独打点）
+    _lastActivityAt = _lastRecvAt;
+    // v6.11.8/6.11.9：心跳实验记录点——服务器是否回过帧、回的是什么
     if (_probeMode != WsProbeMode.off) {
       _probeRecv++;
-      if (_probeRecv == 1) {
-        logger.info('[PROBE] 本连接首个服务器帧 t=${_probeElapsedSec}s');
+      if (message is String) {
+        _probeDownText++;
+        final t = _typeOf(message);
+        _probeTypes[t] = (_probeTypes[t] ?? 0) + 1;
+        if (_probeRecv == 1) {
+          logger.info('[PROBE] 本连接首个服务器帧 t=${_probeElapsedSec}s type=$t');
+        }
+        logger.info('[PROBE] 下行#$(_probeRecv) 文本 type=$t preview=${_previewOf(message)}');
+      } else if (message is List<int>) {
+        _probeDownBinary++;
+        _probeTypes['binary'] = (_probeTypes['binary'] ?? 0) + 1;
+        if (_probeRecv == 1) {
+          logger.info('[PROBE] 本连接首个服务器帧 t=${_probeElapsedSec}s type=binary');
+        }
+        // 音频帧量大：只对前 3 帧打首 32 字节指纹，其余只记长度，避免日志刷屏
+        if (_probeDownBinary <= 3) {
+          logger.info('[PROBE] 下行#$(_probeRecv) 二进制 len=${message.length} '
+              'head32=${_hexHead(message, 32)}');
+        } else {
+          logger.info('[PROBE] 下行#$(_probeRecv) 二进制 len=${message.length}');
+        }
       }
     }
     if (message is String) {
