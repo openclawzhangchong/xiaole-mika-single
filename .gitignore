@@ -60,3 +60,13 @@ devtools_options.yaml
 # ===== 单包：Mika 引擎源码（构建时由 scripts/fetch-mika.sh 拉取并打补丁，不入库）=====
 /mika/
 /android/.gradle/
+
+# ===== 签名材料与凭据（铁律：仓库内不留私钥明文）=====
+*.p12
+*.jks
+*.keystore
+android/key.properties
+.env
+.env.local
+tools/gateway/.env
+__pycache__/
