@@ -43,8 +43,14 @@ android {
         // libonnxruntime.so（体积很大）。x86/x86_64 仅供模拟器使用，打包它们会让
         // CI runner 磁盘耗尽（v4.6.0 构建失败：`No space left on device`，剩 29MB）。
         // 真机只需 ARM：arm64-v8a（主流）+ armeabi-v7a（兼容旧机型）。
+        // xiaole.abi：CI 出的 arm64 主分发包在 gradle.properties 里置为 arm64-v8a，只打一个 ABI。
+        val onlyAbi = (project.findProperty("xiaole.abi") as String?)?.trim().orEmpty()
         ndk {
-            abiFilters += listOf("arm64-v8a", "armeabi-v7a")
+            abiFilters += if (onlyAbi.isEmpty()) {
+                listOf("arm64-v8a", "armeabi-v7a")
+            } else {
+                onlyAbi.split(",").map { it.trim() }
+            }
         }
     }
 

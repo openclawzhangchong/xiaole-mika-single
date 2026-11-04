@@ -184,6 +184,19 @@ index bf191136..23504d85 100644
          </activity>
  
          <!-- 通知里接管按钮的落点:从通知启动 Activity 才会收起通知栏,让用户直接看到挪到主屏的 App -->
+diff --git a/app/src/main/java/com/wangzan101/mika/MikaApp.kt b/app/src/main/java/com/wangzan101/mika/MikaApp.kt
+index 330634c0..c3079261 100644
+--- a/app/src/main/java/com/wangzan101/mika/MikaApp.kt
++++ b/app/src/main/java/com/wangzan101/mika/MikaApp.kt
+@@ -321,6 +321,8 @@ class MikaApp : Application(), WebOwner, SandboxOwner, TaskEnvironment.Owner, Ph
+         // 界面以外的文字(通知、服务、悬浮胶囊)按 App 语言取
+         AppLanguage.applyDefaultLocale(this)
+         UiText.source = ResourceTexts { AppLanguage.resources(this) }
++        // 麦克风互斥的运行层日志:core 是纯 JVM 模块,出口由宿主注入;普通调用,R8 不会 strip
++        com.wangzan101.mika.core.voice.MicGate.logger = { Log.i("MicGate", it) }
+         registerActivityLifecycleCallbacks(foreground)
+         // 设置 › 网络代理:Mika 自己的连接从第一个请求起就按它走;SOCKS 代理的账号密码经全进程的认证器给
+         com.wangzan101.mika.settings.NetProxyStore.get(this)
 diff --git a/app/src/main/java/com/wangzan101/mika/about/ApkUpdater.kt b/app/src/main/java/com/wangzan101/mika/about/ApkUpdater.kt
 index d7386241..8be18062 100644
 --- a/app/src/main/java/com/wangzan101/mika/about/ApkUpdater.kt
@@ -3816,10 +3829,10 @@ index 1d00725d..17779c89 100644
  // 运行时列不了资源目录:构建时扫 knowledge/apps、knowledge/sites、skills 的头部,校验后生成索引资源;校验不过构建失败
 diff --git a/core/src/main/kotlin/com/wangzan101/mika/core/voice/MicGate.kt b/core/src/main/kotlin/com/wangzan101/mika/core/voice/MicGate.kt
 new file mode 100644
-index 00000000..590b876c
+index 00000000..b6714072
 --- /dev/null
 +++ b/core/src/main/kotlin/com/wangzan101/mika/core/voice/MicGate.kt
-@@ -0,0 +1,39 @@
+@@ -0,0 +1,56 @@
 +package com.wangzan101.mika.core.voice
 +
 +/**
@@ -3840,12 +3853,28 @@ index 00000000..590b876c
 +
 +    private var owner: String? = null
 +
++    /**
++     * 运行层可直读日志的出口。
++     *
++     * core 是纯 JVM 模块,不能直接引 android.util.Log;由宿主在启动时注入(见 MikaApp)。
++     * 单测不注入即为空实现,不影响 JVM 跑测。日志点都是普通调用,release + R8 不会 strip。
++     */
++    var logger: ((String) -> Unit)? = null
++
++    private fun log(message: String) {
++        logger?.invoke(message)
++    }
++
 +    /** 同一持有者重复获取视为成功(重复 start 不会把自己锁死)。 */
 +    @Synchronized
 +    fun tryAcquire(who: String): Boolean {
 +        val current = owner
-+        if (current != null && current != who) return false
++        if (current != null && current != who) {
++            log("acquire holder=$who 被拒 当前持有者=$current 原因=已被其它租约持有")
++            return false
++        }
 +        owner = who
++        log("acquire holder=$who 成功 持有者=${current ?: "无"}")
 +        return true
 +    }
 +
@@ -3853,6 +3882,7 @@ index 00000000..590b876c
 +    @Synchronized
 +    fun release(who: String) {
 +        if (owner == who) owner = null
++        log("release holder=$who 归还 剩余=${owner ?: "无"}")
 +    }
 +
 +    /** 当前持有者;没人持有返回 null。 */

@@ -10,8 +10,10 @@
 
 **主题：保活"置位时机"前置修复——语音 `listen start` 与文字发送之前即暂停保活**
 
-> 单包线：本版以 cherry-pick `0aa7d20` 并回 `xiaole-mika-single`，版本号 `6.11.12-mika1+67`
-> （versionCode 67；64 归纯小乐、66 归 6.11.13，留空不碰）。冲突仅 `pubspec.yaml` 版本行一处。
+> 单包线：本版以 cherry-pick `0aa7d20` 并回 `xiaole-mika-single`；单包出 `6.11.12-mika1+68`，
+> 一次产出 universal（arm64+armv7）与 arm64（主分发）两个包，versionCode 同为 68、仅文件名区分。
+> 同版加入 `MicGate` 运行层日志（`Log.i("MicGate", ...)`，由 `MikaApp.onCreate` 注入出口），
+> 并在打包后剔除 opus 的 Windows/Web 资产（约 2.6 MB）。冲突仅 `pubspec.yaml` 版本行一处。
 
 ### 定位结论（v6.11.11 真机数据回溯）
 | 路径 | 旧实现置位位置 | 结论 |

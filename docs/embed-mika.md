@@ -3,7 +3,7 @@
 一个 APK、一个包名（`com.zcstudy.xiaole`）、一个安装包。Flutter 负责界面（实时语音对话 + 任务执行），内嵌的 Kotlin 引擎以 **library 模块** 的形式编进同一个进程（内部模块名仍是 `mika-core` / `mika-app`，见文末「内部标识与外部品牌分离」）。
 
 - 基线：小乐 `master` 6.11.12 + 64（commit `0aa7d20`；含 listen stop 45s 保活、预连接音频回灌、断线无感重连，以及「保活置位前置到 listen start 与文字发送之前」）
-- 单包版本：`6.11.12-mika1+67`（versionCode 67；64 归纯小乐 `6.11.12+64`、66 归纯小乐 `6.11.13+66`，均留空不碰；68 预留给最终版 `6.11.13-mika1`）
+- 单包版本：`6.11.12-mika1+68`（versionCode 68；一次产出两个包：universal `arm64+armv7` 与主分发 `arm64`，两者 versionCode 相同，仅文件名区分；64/65/66/67 均为已出过的历史号，69 预留给合入 6.11.14 的最终版）
 - 引擎源码：`wangzan101/Mika` 固定提交 `6661b9e9`（0.1.35）+ `patches/mika-embed.patch`
 
 ## 目录结构
@@ -118,40 +118,60 @@ flutter build apk --release
 
 ### 麦克风互斥运行层验证清单（装机窗口执行）
 
-> **证据现状（重要）**：本版 `MicGate` / `PcmRecorder` **没有日志**，运行层看不到 holder 值。
-> 因此分成两类证据：①小乐侧 `print`（logcat tag `flutter`）能直接证明"被拒"；②引擎侧只能靠
-> UI 文案 `voice_mic_unavailable`（中文「麦克风用不了，可能正被别的 App 占着」）+ `dumpsys` 的输入轨道数。
-> 若要在 logcat 里直接看到 `holder=xiaole/mika`，需给 `MicGate.tryAcquire/release` 各加一行 `Log.i`（另开补丁，待批）。
+> **68 起可直读日志**：`MicGate` 是纯 JVM 模块，不能直接引 `android.util.Log`；`MikaApp.onCreate`
+> 注入日志出口，三行普通调用（不在 `assert` 里，release + R8 不会 strip），单测不注入即静默：
+>
+> ```text
+> MicGate: acquire holder=xiaole 成功 持有者=无
+> MicGate: acquire holder=mika 被拒 当前持有者=xiaole 原因=已被其它租约持有
+> MicGate: release holder=xiaole 归还 剩余=无
+> ```
+>
+> `release` 不打引用计数：`MicGate` 语义是"同一 owner 可重入、只有本人能还"，没有嵌套计数可吐；
+> `剩余` 打的是归还后的实际持有者（`无` 或仍占着的 owner）。
 
 **前置**
 
 ```bash
-adb -s 36c77fb6 install -r dist/xiaole-6.11.12-mika1.apk      # 禁止 -d；只装 36c77fb6
+adb -s 36c77fb6 install -r dist/xiaole-6.11.12-mika1-arm64.apk   # 主分发 arm64；禁止 -d
 adb -s 36c77fb6 shell dumpsys package com.zcstudy.xiaole | grep -E 'versionCode|versionName'
-adb -s 36c77fb6 logcat -c && adb -s 36c77fb6 logcat -b crash -v time > crash.log &   # 全程留证
+adb -s 36c77fb6 logcat -c
+adb -s 36c77fb6 logcat -v time | grep -E 'MicGate|AudioUtil' > micgate.log &
 ```
 
-**用例（每项都要记录时间点 + 对应日志行）**
+**用例（每项记录时间点 + 对应日志行）**
 
 | # | 操作 | 期望 | 证据 |
 |---|---|---|---|
-| 1 | 小乐实时通话中（麦克风活跃），切到「小乐 · 执行」→ 引擎对话页按住说话 | 引擎**不录音**，输入栏上方出现「麦克风用不了，可能正被别的 App 占着」 | UI 截图；`logcat -s flutter:I \| grep '流式录音启动成功'`；此期间 **无** 新 `AudioRecord` 报错 |
-| 2 | 小乐这轮录音结束（松手/通话结束）后，引擎再按住说话 | 正常录音并转出文字，无 `voice_mic_unavailable` | 转文字结果截图；`AudioUtil: 停止录音` 之后成功 |
-| 3 | 反方向：引擎按住说话不放，小乐点麦克风开始录音 | 小乐跳过本次录音，**不崩、不静音对方**；引擎这轮仍能出结果 | `flutter` 日志：`AudioUtil: 麦克风被引擎占用，跳过本次录音` |
-| 4 | 引擎松手后 5s 内，小乐再录一次 | 能正常进 `流式录音启动成功`（证明 `release` 已归还） | 同一 logcat 连续两行 |
-| 5 | 快速交替 10 次（间隔 <1s，两侧轮流按住） | 每次只有一方在录；无崩溃、无 ANR；结束后两侧都能正常录 | `logcat -b crash` 为空；10 次里记录"拒/允"计数 |
-| 6 | 异常归还：录音中切后台 / 通话被结束 / 引擎任务取消，然后另一侧立刻开麦 | 另一侧能拿到麦，不出现"永久占用" | 同上；`dumpsys` 输入轨道归零后再起 |
-| 7 | 全程 `dumpsys media.audio_flinger` 抽查 3 次 | 输入线程 `ACTIVE` 轨道恒 ≤1；同一时刻不存在两条活跃录音 | 每次抓 `ACTIVE` 段前后 10 行 |
+| 1 | 小乐实时通话中（麦克风活跃），切到「小乐 · 执行」→ 引擎对话页按住说话 | 引擎不录音，提示「麦克风用不了，可能正被别的 App 占着」 | `MicGate: acquire holder=mika 被拒 当前持有者=xiaole`；UI 截图 |
+| 2 | 小乐这轮录音结束（松手/通话结束）后，引擎再按住说话 | 正常录音并转出文字 | `MicGate: acquire holder=mika 成功 持有者=无` |
+| 3 | 反方向：引擎按住说话不放，小乐点麦克风开始录音 | 小乐跳过本次录音，不崩、不静音对方 | `MicGate: acquire holder=xiaole 被拒 当前持有者=mika` + `AudioUtil: 麦克风被引擎占用，跳过本次录音` |
+| 4 | 引擎松手后 5s 内，小乐再录一次 | 能正常进 `流式录音启动成功` | `MicGate: release holder=mika 归还 剩余=无` 后紧跟 `acquire holder=xiaole 成功` |
+| 5 | 快速交替 10 次（间隔 <1s，两侧轮流按住） | 每次只有一方在录；无崩溃、无 ANR | 10 组 acquire 里"成功/被拒"成对，`logcat -b crash` 为空 |
+| 6 | 异常归还：录音中切后台 / 通话被结束 / 引擎任务取消，然后另一侧立刻开麦 | 另一侧能拿到麦，不出现永久占用 | `release ... 剩余=无` 后另一侧 `acquire ... 成功` |
+| 7 | **TTS 外放期间抢麦**：见下方构造方法 | Mika 必须被拒，不允许在 AI 外放时开录（回声/串音最重） | `MicGate: acquire holder=mika 被拒 当前持有者=xiaole` |
+| 8 | 全程 `dumpsys media.audio_flinger` 抽查 3 次 | 输入线程 `ACTIVE` 轨道恒 ≤1 | 每次抓 `ACTIVE` 段前后 10 行（辅助证据，不单独作为验收依据） |
+
+**用例 7 的构造方法（TTS 期间抢麦）**
+
+1. 进**实时通话**（连续对话，麦克风在通话期间一直持有，不是按住说话那种一松手就归还）。
+2. 说一句会引出较长回答的话，例如「给我讲一段 30 秒左右的睡前故事」。
+3. 听到第一句回复（TTS 已开始外放）后 **1–2 秒内**，在「小乐 · 执行」页触发 Mika 的语音输入（按住说话，或提一个需要录音的任务）。
+4. 期望：Mika 侧立即被拒（UI 提示 + `MicGate: acquire holder=mika 被拒 当前持有者=xiaole`），TTS 不中断、不重连。
+5. 反向补充：**按住说话**模式下发送后小乐会归还麦克风，TTS 期间 `当前持有者=无`，此时 Mika 能拿到麦。
+   这是已知缺口（要"外放期间一律禁麦"得把小乐租约持有延长到 `tts state=stop`），本轮未改，先记录。
 
 **logcat 关键字速查**
 
 ```bash
-adb -s 36c77fb6 logcat -v time | grep -E 'AudioUtil: (流式录音启动成功|停止录音|麦克风被引擎占用|启动录音失败)|麦克风用不了'
-adb -s 36c77fb6 logcat -b crash -v time            # 必须为空
-adb -s 36c77fb6 shell dumpsys media.audio_flinger | grep -n -A12 -i 'Input'   # 看 ACTIVE 轨道/pid
+adb -s 36c77fb6 logcat -v time -s MicGate:I          # 只留互斥租约三行
+adb -s 36c77fb6 logcat -v time | grep -E 'AudioUtil: (流式录音启动成功|停止录音|麦克风被引擎占用|启动录音失败)'
+adb -s 36c77fb6 logcat -b crash -v time              # 必须为空
+adb -s 36c77fb6 shell dumpsys media.audio_flinger | grep -n -A12 -i 'Input'
 ```
 
-判读原则：**同一时刻 active 输入轨道 ≤1** 且"被拒一侧"有明确痕迹，才算通过；只凭"听起来正常"不算。
+判读原则：以 `MicGate` 三行日志为准（谁持有、谁被拒、谁归还）；`dumpsys` 只作旁证。只凭"听起来正常"不算通过。
+
 
 
 ## 权限裁剪（合并清单前后）
@@ -173,7 +193,7 @@ adb -s 36c77fb6 shell dumpsys media.audio_flinger | grep -n -A12 -i 'Input'   # 
 
 CI 会 `aapt2 dump permissions` 并在发现上述三条仍在时直接失败。
 
-## 体积构成（6.11.11-mika1+65 实测 74,142,348 B）
+## 体积构成（6.11.12-mika1+67 实测 74,142,884 B；68 起双包）
 
 按 APK 内条目压缩后字节归组（占 74.0 MB 有效载荷）：
 
@@ -190,11 +210,15 @@ CI 会 `aapt2 dump permissions` 并在发现上述三条仍在时直接失败。
 
 按 ABI 汇总：`arm64-v8a` 13,136,711 + `armeabi-v7a` 11,730,680，**双 ABI 并打包占 15.8%**。
 
-可瘦点（按收益排序，均未实施）：
+可瘦点（按收益排序）：
 
-1. **只出 arm64**（真机 RMX3161 是 arm64）：省 ~11.7 MB → 约 62 MB。代价是不再兼容 32 位设备。
-2. **删掉 `opus_flutter_windows` / `opus_flutter_web` 资源**（pub 依赖把各平台资产一起打进 APK）：省 ~2.6 MB。
-3. **排查 `res/iw.png`**（740 KB 单图）：确认是否仍被引用，不用则删。
+1. **只出 arm64**（真机 RMX3161 是 arm64）：**68 已实施**，CI 额外产出 `xiaole-6.11.12-mika1-arm64.apk`
+   作为主分发包（`xiaole.abi=arm64-v8a` + `--target-platform android-arm64`），预期 ~62 MB；
+   universal 包保留给 32 位机器，两者 versionCode 同为 68。
+2. **删掉 `opus_flutter_windows` / `opus_flutter_web` 资源**：**68 已实施**，两个包构建后统一
+   `zip -d` 掉这四个 dll/wasm（约 2.6 MB）→ `zipalign` → 用同一把正式签名 `apksigner sign`，CI 断言条目不存在。
+3. **`res/iw.png` 740 KB**：已用 `aapt2 dump resources` 反查到它是 `drawable/mika_launcher_art`
+   （`nodpi`，被引擎的桌面图标/关于页引用），**确认在用，保留**，不删。
 4. **rootfs 31 MB**：可尝试裁剪无用的 busybox 软链/文档、或在 CI 里重打 xz 最高压缩；风险最高（运行环境随时可能缺工具），建议二次开发稳定后再动。
 5. **DEX 9 MB**：可评估 R8 full mode + `shrinkResources`，收益需实测（Compose/MLKit/OkHttp 反射较多，别一次开太狠）。
 6. MLKit OCR 9.8 MB 属功能刚需（屏幕文字识别），暂不动；若后续换端侧小模型可回收 4–5 MB。
@@ -203,8 +227,9 @@ CI 会 `aapt2 dump permissions` 并在发现上述三条仍在时直接失败。
 
 - rootfs 31 MB（`assets/runtime/rootfs.tar.xz`）未优化；体积拆解与可瘦点见上节「体积构成」。
 - 无障碍设备操作（点击/滑动/截屏）在合并包内未实测（真机上该服务原本是关闭状态）。
-- 麦克风互斥的**运行层**验证要等装机窗口（清单见「麦克风互斥运行层验证清单」）；设备当前由另一条线做 MCP 端到端。
-- `MicGate` 无日志，运行层看不到 holder；要 logcat 直读需另加 3 行 `Log.i`（未做）。
-- `mika/` 每次 CI 重新拉取（未做 Gradle 构建缓存优化）。
+- 麦克风互斥的**运行层**验证要等装机窗口（清单见「麦克风互斥运行层验证清单」）；两台设备当前都不许装。
+- **TTS 外放期间禁麦只在实时通话（持续持有麦克风）时成立**；按住说话模式松手即归还，TTS 期间引擎仍能开麦，
+  属已知缺口（需把小乐租约延长到 `tts state=stop`，本轮未改）。
+- `mika/` 每次 CI 重新拉取（未做 Gradle 构建缓存优化）。CI 一次约 40 分钟（双包会更久），不为小改频繁出包。
 - 日语/韩语等 9 套语言资源未改名。
-- 6.11.13（超长文本分段 + 会话标记独立过期出口）尚未合入；最终版排期 `6.11.13-mika1+68`。
+- 6.11.13 / 6.11.14 尚未合入；最终版排期 `6.11.14-mika1+69`。
