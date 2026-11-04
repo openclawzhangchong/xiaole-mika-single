@@ -1,0 +1,611 @@
+Audio event log: audio services lifecycle
+10-12 22:05:49:274 AudioService()
+
+Message handler (watch for unhandled messages):
+  Handler (com.android.server.audio.AudioService$AudioHandler) {4c5ae48} @ 1290270828
+    Looper (AudioService, tid 242) {6f554e1}
+      (Total messages: 0, polling=true, quitting=false)
+
+MediaFocusControl dump time: 下午11:57:26
+
+Audio Focus stack entries (last is top of stack):
+
+
+No external focus policy
+
+
+
+ Notify on duck:  true
+
+ In ring or call: false
+
+
+
+Audio event log: focus commands as seen by MediaFocusControl
+11-04 07:44:30:597 requestAudioFocus() from uid/pid 10269/15269 AA=USAGE_MEDIA/CONTENT_TYPE_MUSIC clientId=android.media.AudioManager@e05091ecom.bytedance.android.livesdk.player.PlayerAudioFocusController$onFocusChangeListener$1@89a7482 callingPack=com.ss.android.ugc.aweme.lite req=1 flags=0x0 sdk=34
+11-04 07:44:57:272 abandonAudioFocus() from uid/pid 10269/15269 clientId=android.media.AudioManager@e05091ecom.bytedance.android.livesdk.player.PlayerAudioFocusController$onFocusChangeListener$1@89a7482
+11-04 07:58:16:840 requestAudioFocus() from uid/pid 10270/19401 AA=USAGE_MEDIA/CONTENT_TYPE_MUSIC clientId=android.media.AudioManager@dc1f8f4com.baidu.searchbox.video.feedflow.audiofocus.FlowAudioFocusPlugin@989b3f2 callingPack=com.baidu.searchbox.lite req=2 flags=0x0 sdk=34
+11-04 07:58:52:704 requestAudioFocus() from uid/pid 10270/19401 AA=USAGE_MEDIA/CONTENT_TYPE_MUSIC clientId=android.media.AudioManager@dc1f8f4com.baidu.searchbox.video.feedflow.audiofocus.FlowAudioFocusPlugin@3ddb8d8 callingPack=com.baidu.searchbox.lite req=2 flags=0x0 sdk=34
+11-04 07:58:53:567 abandonAudioFocus() from uid/pid 10270/19401 clientId=android.media.AudioManager@dc1f8f4com.baidu.searchbox.video.feedflow.audiofocus.FlowAudioFocusPlugin@989b3f2
+11-04 07:58:53:887 requestAudioFocus() from uid/pid 10270/19401 AA=USAGE_MEDIA/CONTENT_TYPE_MUSIC clientId=android.media.AudioManager@dc1f8f4com.baidu.searchbox.video.feedflow.audiofocus.FlowAudioFocusPlugin@989b3f2 callingPack=com.baidu.searchbox.lite req=2 flags=0x0 sdk=34
+11-04 07:58:54:628 abandonAudioFocus() from uid/pid 10270/19401 clientId=android.media.AudioManager@dc1f8f4com.baidu.searchbox.video.feedflow.audiofocus.FlowAudioFocusPlugin@3ddb8d8
+11-04 07:58:54:722 abandonAudioFocus() from uid/pid 10270/19401 clientId=android.media.AudioManager@dc1f8f4com.baidu.searchbox.video.feedflow.audiofocus.FlowAudioFocusPlugin@3ddb8d8
+11-04 07:59:01:948 abandonAudioFocus() from uid/pid 10270/19401 clientId=android.media.AudioManager@dc1f8f4com.baidu.searchbox.video.feedflow.audiofocus.FlowAudioFocusPlugin@989b3f2
+11-04 07:59:02:041 abandonAudioFocus() from uid/pid 10270/19401 clientId=android.media.AudioManager@dc1f8f4com.baidu.searchbox.video.feedflow.audiofocus.FlowAudioFocusPlugin@989b3f2
+11-04 08:00:59:455 requestAudioFocus() from uid/pid 10270/19401 AA=USAGE_MEDIA/CONTENT_TYPE_MUSIC clientId=android.media.AudioManager@dc1f8f4com.baidu.searchbox.video.feedflow.audiofocus.FlowAudioFocusPlugin@df86a75 callingPack=com.baidu.searchbox.lite req=2 flags=0x0 sdk=34
+11-04 08:01:27:715 requestAudioFocus() from uid/pid 10270/19401 AA=USAGE_MEDIA/CONTENT_TYPE_MUSIC clientId=android.media.AudioManager@dc1f8f4com.baidu.searchbox.video.feedflow.audiofocus.FlowAudioFocusPlugin@1310634 callingPack=com.baidu.searchbox.lite req=2 flags=0x0 sdk=34
+11-04 08:01:28:410 abandonAudioFocus() from uid/pid 10270/19401 clientId=android.media.AudioManager@dc1f8f4com.baidu.searchbox.video.feedflow.audiofocus.FlowAudioFocusPlugin@df86a75
+11-04 08:02:36:943 requestAudioFocus() from uid/pid 10270/19401 AA=USAGE_MEDIA/CONTENT_TYPE_MUSIC clientId=android.media.AudioManager@dc1f8f4com.baidu.searchbox.video.feedflow.audiofocus.FlowAudioFocusPlugin@df86a75 callingPack=com.baidu.searchbox.lite req=2 flags=0x0 sdk=34
+11-04 08:02:37:340 abandonAudioFocus() from uid/pid 10270/19401 clientId=android.media.AudioManager@dc1f8f4com.baidu.searchbox.video.feedflow.audiofocus.FlowAudioFocusPlugin@1310634
+11-04 08:02:37:432 abandonAudioFocus() from uid/pid 10270/19401 clientId=android.media.AudioManager@dc1f8f4com.baidu.searchbox.video.feedflow.audiofocus.FlowAudioFocusPlugin@1310634
+11-04 08:02:47:438 abandonAudioFocus() from uid/pid 10270/19401 clientId=android.media.AudioManager@dc1f8f4com.baidu.searchbox.video.feedflow.audiofocus.FlowAudioFocusPlugin@df86a75
+11-04 08:02:47:527 abandonAudioFocus() from uid/pid 10270/19401 clientId=android.media.AudioManager@dc1f8f4com.baidu.searchbox.video.feedflow.audiofocus.FlowAudioFocusPlugin@df86a75
+11-04 08:18:02:037 requestAudioFocus() from uid/pid 10270/19401 AA=USAGE_MEDIA/CONTENT_TYPE_MUSIC clientId=android.media.AudioManager@dc1f8f4com.baidu.searchbox.video.feedflow.audiofocus.FlowAudioFocusPlugin@124851b callingPack=com.baidu.searchbox.lite req=2 flags=0x0 sdk=34
+11-04 08:18:24:947 requestAudioFocus() from uid/pid 10270/19401 AA=USAGE_MEDIA/CONTENT_TYPE_MUSIC clientId=android.media.AudioManager@dc1f8f4com.baidu.searchbox.video.feedflow.audiofocus.FlowAudioFocusPlugin@f172ebb callingPack=com.baidu.searchbox.lite req=2 flags=0x0 sdk=34
+11-04 08:18:25:557 abandonAudioFocus() from uid/pid 10270/19401 clientId=android.media.AudioManager@dc1f8f4com.baidu.searchbox.video.feedflow.audiofocus.FlowAudioFocusPlugin@124851b
+11-04 08:20:26:675 requestAudioFocus() from uid/pid 10270/19401 AA=USAGE_MEDIA/CONTENT_TYPE_MUSIC clientId=android.media.AudioManager@dc1f8f4com.baidu.searchbox.video.feedflow.audiofocus.FlowAudioFocusPlugin@124851b callingPack=com.baidu.searchbox.lite req=2 flags=0x0 sdk=34
+11-04 08:20:27:111 abandonAudioFocus() from uid/pid 10270/19401 clientId=android.media.AudioManager@dc1f8f4com.baidu.searchbox.video.feedflow.audiofocus.FlowAudioFocusPlugin@f172ebb
+11-04 08:20:27:259 abandonAudioFocus() from uid/pid 10270/19401 clientId=android.media.AudioManager@dc1f8f4com.baidu.searchbox.video.feedflow.audiofocus.FlowAudioFocusPlugin@f172ebb
+11-04 08:20:47:421 abandonAudioFocus() from uid/pid 10270/19401 clientId=android.media.AudioManager@dc1f8f4com.baidu.searchbox.video.feedflow.audiofocus.FlowAudioFocusPlugin@124851b
+11-04 08:20:47:526 abandonAudioFocus() from uid/pid 10270/19401 clientId=android.media.AudioManager@dc1f8f4com.baidu.searchbox.video.feedflow.audiofocus.FlowAudioFocusPlugin@124851b
+11-04 08:28:00:086 requestAudioFocus() from uid/pid 10268/3161 AA=USAGE_MEDIA/CONTENT_TYPE_MUSIC clientId=android.media.AudioManager@7cf6c4ebvl.cf@cda2970 callingPack=com.kuaishou.nebula req=1 flags=0x0 sdk=30
+11-04 08:28:21:697 abandonAudioFocus() from uid/pid 10268/3161 clientId=android.media.AudioManager@7cf6c4ebvl.cf@cda2970
+11-04 08:42:51:629 requestAudioFocus() from uid/pid 10269/15269 AA=USAGE_MEDIA/CONTENT_TYPE_MUSIC clientId=android.media.AudioManager@e05091eX.0r2Y@c2035ff callingPack=com.ss.android.ugc.aweme.lite req=1 flags=0x0 sdk=34
+11-04 08:43:14:726 requestAudioFocus() from uid/pid 10268/3161 AA=USAGE_MEDIA/CONTENT_TYPE_MUSIC clientId=android.media.AudioManager@7cf6c4ebvl.cf@ed39a4e callingPack=com.kuaishou.nebula req=1 flags=0x0 sdk=30
+11-04 08:43:17:018 abandonAudioFocus() from uid/pid 10268/3161 clientId=android.media.AudioManager@7cf6c4ebvl.cf@ed39a4e
+11-04 08:43:32:215 requestAudioFocus() from uid/pid 10268/3161 AA=USAGE_MEDIA/CONTENT_TYPE_MUSIC clientId=android.media.AudioManager@7cf6c4ebvl.cf@e66a224 callingPack=com.kuaishou.nebula req=2 flags=0x0 sdk=30
+11-04 08:43:32:684 abandonAudioFocus() from uid/pid 10268/3161 clientId=android.media.AudioManager@7cf6c4ebvl.cf@e66a224
+11-04 08:48:41:792 abandonAudioFocus() from uid/pid 10269/15269 clientId=android.media.AudioManager@e05091eX.0r2Y@c2035ff
+11-04 08:55:30:878 requestAudioFocus() from uid/pid 10270/19401 AA=USAGE_MEDIA/CONTENT_TYPE_MUSIC clientId=android.media.AudioManager@dc1f8f4com.baidu.searchbox.player.BDVideoPlayer$b@1beecc3 callingPack=com.baidu.searchbox.lite req=2 flags=0x0 sdk=34
+11-04 08:55:39:630 abandonAudioFocus() from uid/pid 10270/19401 clientId=android.media.AudioManager@dc1f8f4com.baidu.searchbox.player.BDVideoPlayer$b@1beecc3
+11-04 08:55:45:804 requestAudioFocus() from uid/pid 10268/3161 AA=USAGE_MEDIA/CONTENT_TYPE_MUSIC clientId=android.media.AudioManager@7cf6c4ebvl.cf@d5520a9 callingPack=com.kuaishou.nebula req=1 flags=0x0 sdk=30
+11-04 08:56:06:379 abandonAudioFocus() from uid/pid 10268/3161 clientId=android.media.AudioManager@7cf6c4ebvl.cf@d5520a9
+11-04 08:58:42:081 requestAudioFocus() from uid/pid 10270/19401 AA=USAGE_MEDIA/CONTENT_TYPE_MUSIC clientId=android.media.AudioManager@dc1f8f4com.baidu.searchbox.player.BDVideoPlayer$b@3720e84 callingPack=com.baidu.searchbox.lite req=2 flags=0x0 sdk=34
+11-04 08:58:52:200 abandonAudioFocus() from uid/pid 10270/19401 clientId=android.media.AudioManager@dc1f8f4com.baidu.searchbox.player.BDVideoPlayer$b@3720e84
+11-04 09:15:45:610 requestAudioFocus() from uid/pid 10269/15269 AA=USAGE_MEDIA/CONTENT_TYPE_MUSIC clientId=android.media.AudioManager@e05091eX.0r2Y@c2035ff callingPack=com.ss.android.ugc.aweme.lite req=1 flags=0x0 sdk=34
+11-04 09:22:36:960 requestAudioFocus() from uid/pid 10268/3161 AA=USAGE_MEDIA/CONTENT_TYPE_MUSIC clientId=android.media.AudioManager@7cf6c4ebvl.cf@d5520a9 callingPack=com.kuaishou.nebula req=1 flags=0x0 sdk=30
+11-04 09:23:20:036 abandonAudioFocus() from uid/pid 10268/3161 clientId=android.media.AudioManager@7cf6c4ebvl.cf@d5520a9
+11-04 09:41:46:827 abandonAudioFocus() from uid/pid 10269/15269 clientId=android.media.AudioManager@e05091eX.0r2Y@c2035ff
+11-04 12:30:55:088 abandonAudioFocus() from uid/pid 10122/25818 clientId=android.media.AudioManager@a348cc7qg3.f@42ec2f4
+11-04 15:37:47:297 requestAudioFocus() from uid/pid 10352/24220 AA=USAGE_MEDIA/CONTENT_TYPE_SPEECH clientId=android.media.AudioManager@d48cebdI1.a@a2bccb2 callingPack=com.zcstudy.xiaole req=1 flags=0x1 sdk=35
+11-04 15:37:48:955 abandonAudioFocus() from uid/pid 10352/24220 clientId=android.media.AudioManager@d48cebdI1.a@a2bccb2
+11-04 19:28:08:217 abandonAudioFocus() from uid/pid 10122/25818 clientId=android.media.AudioManager@a348cc7qg3.f@42ec2f4
+11-04 20:53:23:553 requestAudioFocus() from uid/pid 10352/21063 AA=USAGE_MEDIA/CONTENT_TYPE_SPEECH clientId=android.media.AudioManager@761e9ceI1.a@d4180ef callingPack=com.zcstudy.xiaole req=1 flags=0x1 sdk=35
+11-04 20:53:26:960 abandonAudioFocus() from uid/pid 10352/21063 clientId=android.media.AudioManager@761e9ceI1.a@d4180ef
+Multi Audio Focus enabled :false
+
+Stream volumes (device: index)
+- STREAM_VOICE_CALL:
+   Muted: false
+   Muted Internally: false
+   Min: 1
+   Max: 7
+   streamVolume:7
+   Current: 1 (earpiece): 7, 2 (speaker): 7, 40000000 (default): 5
+   Devices: earpiece
+- STREAM_SYSTEM:
+   Muted: true
+   Muted Internally: false
+   Min: 0
+   Max: 16
+   streamVolume:0
+   Current: 2 (speaker): 16, 80 (bt_a2dp): 14, 8000 (remote_submix): 14, 40000000 (default): 14
+   Devices: speaker
+- STREAM_RING:
+   Muted: true
+   Muted Internally: false
+   Min: 0
+   Max: 16
+   streamVolume:0
+   Current: 2 (speaker): 16, 80 (bt_a2dp): 14, 40000000 (default): 14
+   Devices: speaker
+- STREAM_MUSIC:
+   Muted: false
+   Muted Internally: false
+   Min: 0
+   Max: 16
+   streamVolume:0
+   Current: 2 (speaker): 0, 4 (headset): 10, 8 (headphone): 10, 80 (bt_a2dp): 1, 40000000 (default): 10
+   Devices: speaker
+- STREAM_ALARM:
+   Muted: false
+   Muted Internally: false
+   Min: 1 w/o perm:3
+   Max: 16
+   streamVolume:16
+   Current: 2 (speaker): 16, 40000000 (default): 12
+   Devices: speaker
+- STREAM_NOTIFICATION:
+   Muted: true
+   Muted Internally: false
+   Min: 0
+   Max: 16
+   streamVolume:0
+   Current: 2 (speaker): 16, 80 (bt_a2dp): 11, 40000000 (default): 11
+   Devices: speaker
+- STREAM_BLUETOOTH_SCO:
+   Muted: false
+   Muted Internally: false
+   Min: 1
+   Max: 15
+   streamVolume:8
+   Current: 1 (earpiece): 8, 40000000 (default): 8
+   Devices: earpiece
+- STREAM_SYSTEM_ENFORCED:
+   Muted: true
+   Muted Internally: false
+   Min: 0
+   Max: 16
+   streamVolume:0
+   Current: 2 (speaker): 16, 80 (bt_a2dp): 14, 8000 (remote_submix): 14, 40000000 (default): 14
+   Devices: speaker
+- STREAM_DTMF:
+   Muted: true
+   Muted Internally: false
+   Min: 0
+   Max: 16
+   streamVolume:0
+   Current: 2 (speaker): 16, 80 (bt_a2dp): 14, 8000 (remote_submix): 14, 40000000 (default): 14
+   Devices: speaker
+- STREAM_TTS:
+   Muted: false
+   Muted Internally: false
+   Min: 0
+   Max: 16
+   streamVolume:0
+   Current: 2 (speaker): 0, 4 (headset): 10, 8 (headphone): 10, 80 (bt_a2dp): 1, 40000000 (default): 10
+   Devices: speaker
+- STREAM_ACCESSIBILITY:
+   Muted: false
+   Muted Internally: false
+   Min: 0
+   Max: 15
+   streamVolume:0
+   Current: 2 (speaker): 0, 4 (headset): 9, 8 (headphone): 9, 80 (bt_a2dp): 1, 8000 (remote_submix): 10, 40000000 (default): 9
+   Devices: speaker
+- STREAM_ASSISTANT:
+   Muted: false
+   Muted Internally: false
+   Min: 0
+   Max: 15
+   streamVolume:0
+   Current: 2 (speaker): 0, 4 (headset): 9, 8 (headphone): 9, 80 (bt_a2dp): 1, 8000 (remote_submix): 10, 40000000 (default): 9
+   Devices: speaker
+
+- mute affected streams = 0x6f
+
+Volume Groups (device: index)
+- VOLUME GROUP AUDIO_STREAM_ACCESSIBILITY:
+   Min: 0
+   Max: 15
+   Current: 40000000 (default): 9
+   Devices: speaker
+- VOLUME GROUP AUDIO_STREAM_ALARM:
+   Min: 1
+   Max: 16
+   Current: 40000000 (default): 12
+   Devices: speaker
+- VOLUME GROUP AUDIO_STREAM_DTMF:
+   Min: 0
+   Max: 16
+   Current: 40000000 (default): 14
+   Devices: speaker
+- VOLUME GROUP AUDIO_STREAM_ENFORCED_AUDIBLE:
+   Min: 0
+   Max: 16
+   Current: 40000000 (default): 14
+   Devices: speaker
+- VOLUME GROUP AUDIO_STREAM_MUSIC:
+   Min: 0
+   Max: 16
+   Current: 40000000 (default): 10
+   Devices: speaker
+- VOLUME GROUP AUDIO_STREAM_NOTIFICATION:
+   Min: 0
+   Max: 16
+   Current: 40000000 (default): 11
+   Devices: speaker
+- VOLUME GROUP AUDIO_STREAM_REROUTING:
+   Min: 0
+   Max: 16
+   Current: 40000000 (default): 10
+   Devices: speaker
+- VOLUME GROUP AUDIO_STREAM_RING:
+   Min: 0
+   Max: 16
+   Current: 40000000 (default): 14
+   Devices: speaker
+- VOLUME GROUP AUDIO_STREAM_SYSTEM:
+   Min: 0
+   Max: 16
+   Current: 40000000 (default): 14
+   Devices: speaker
+- VOLUME GROUP AUDIO_STREAM_VOICE_CALL:
+   Min: 1
+   Max: 7
+   Current: 40000000 (default): 5
+   Devices: earpiece
+- VOLUME GROUP AUDIO_STREAM_ASSISTANT:
+   Min: 0
+   Max: 15
+   Current: 40000000 (default): 9
+   Devices: speaker
+- VOLUME GROUP AUDIO_STREAM_CALL_ASSISTANT:
+   Min: 0
+   Max: 16
+   Current: 40000000 (default): 10
+   Devices: speaker
+
+Ringer mode: 
+- mode (internal) = VIBRATE
+- mode (external) = VIBRATE
+- zen mode:ZEN_MODE_OFF
+- ringer mode affected streams = 0x1a6 (STREAM_SYSTEM,STREAM_RING,STREAM_NOTIFICATION,STREAM_SYSTEM_ENFORCED,STREAM_DTMF)
+- ringer mode muted streams = 0x1a6 (STREAM_SYSTEM,STREAM_RING,STREAM_NOTIFICATION,STREAM_SYSTEM_ENFORCED,STREAM_DTMF)
+- delegate = ZenModeHelper
+
+Audio mode: 
+- Requested mode = MODE_NORMAL
+- Actual mode = MODE_NORMAL
+- Mode owner: 
+   None
+- Mode owner stack: 
+   Empty
+
+Audio routes:
+  mMainType=0x0
+  mBluetoothName=null
+
+Other state:
+  mVolumeController=VolumeController(android.os.BinderProxy@d57e206,mVisible=false)
+  mSafeMediaVolumeState=SAFE_MEDIA_VOLUME_ACTIVE
+  mSafeMediaVolumeIndex=100
+  mSafeUsbMediaVolumeIndex=100
+  mSafeUsbMediaVolumeDbfs=-18.15
+  sIndependentA11yVolume=false
+  mPendingVolumeCommand=null
+  mMusicActiveMs=1560001
+  mMcc=0
+  mCameraSoundForced=false
+  mHasVibrator=true
+  mVolumePolicy=VolumePolicy[volumeDownToEnterSilent=false,volumeUpToExitSilent=false,doNotDisturbWhenSilent=false,vibrateToSilentDebounce=400]
+  mAvrcpAbsVolSupported=false
+  mBtScoOnByApp=false
+  mIsSingleVolume=false
+  mUseFixedVolume=false
+  mFixedVolumeDevices=0x1000,0x800,0x200000,0x40000,0x40001
+  mFullVolumeDevices=
+  mExtVolumeController=null
+  mHdmiAudioSystemClient=null
+  mHdmiPlaybackClient=null
+  mHdmiTvClient=null
+  mHdmiSystemAudioSupported=false
+  mHdmiCecVolumeControlEnabled=false
+  mIsCallScreeningModeSupported=false
+  mic mute FromSwitch=false FromRestrictions=false FromApi=false from system=false
+  mAssistantUid=0
+  mCurrentImeUid=0
+  mMonitorRotation=false
+  Accessibility service Uids:
+  - 10351
+  - 10357
+
+Audio policies:
+Audio event log: dynamic policy events (logged when command received by AudioService)
+
+PlaybackActivityMonitor dump time: 下午11:57:26
+
+  playback listeners:
+ (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@bed40c7 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@eab66f4 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@6def29b (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@17075f5 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@88df051 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@109aa0c (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@d252215 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@de661b7 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@9e1b31b (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@1f0408d (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@442ca91 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@e7b9937 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@9756253 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@2de65f7 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@ad5889 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@eb87ecd (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@2e58059 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@1896a93 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@616acc5 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@51b63a8 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@65b0666 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@5c1754b (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@3a5041 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@209f445 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@9971254 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@48cc8cb (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@b301b27 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@79aaf7d (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@8da8fc1 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@121b3e8 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@a1d26a7 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@9b870a6 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@6bf66fd (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@16cb626 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@419e786 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@f32d8bd (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@6f942c3 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@68ea874 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@7a7c679 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@8b21e83 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@71cf612 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@2b6839 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@50122f2 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@50ae478 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@17cffc0 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@97a7c3e (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@9270e9a (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@51db7a8 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@5d77a66 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@96aa654 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@1d0d6f2 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@cf5d3c0 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@591703e (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@d446bec (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@130524a (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@9025ad8 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@d294916 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@bae4c84 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@2b4e571 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@262920c (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@be8e0a2 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@295a148 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@5d08d06 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@805acf0 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@fa3481f (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@6f6451d (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@81864ee (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@74b2185 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@acbe163 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@8d55135 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@3be473b (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@5c6c3d1 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@2984c25 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@702137 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@d16cbb1 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@b8b93ab (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@9f02981 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@7e6238c (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@f2685a1 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@8edbf87 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@a3219db (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@c01c17 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@404dadd (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@75c43b6 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@e9b5824 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@f5ccd23 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@ab3e822 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@cb1c2b2 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@a7947d9 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@847d290 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@acec070 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@bdc7af (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@94c646e (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@237739c (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@8de597a (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@c162d88 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@689346 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@5a49a34 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@9f557fe (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@60a9dd2 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@2fcbd9b (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@51fe675 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@40b25a0 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@50c51e (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@48cfbcc (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@40152a (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@37408b8 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@6e89b07 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@b25ce4 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@2259f6 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@5bcf864 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@3121f82 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@ba7d516 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@cab4513 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@18336d0 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@146b1ce (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@12ceffc (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@d201cda (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@d570fe8 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@d1cf24e (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@cf32ca6 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@9814294 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@b86c5a3 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@5956d32 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@614b88c (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@f79f400 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@1a92a7e (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@58a502c (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@1a9708a (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@b624318 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@b60b56 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@9c478c4 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@a1f86e2 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@f25d30 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@bb32f2e (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@fc57595 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@f4a8c5 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@f5dabc8 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@7c59f39 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@c65d14b (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@f2ddb86 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@a85bc74 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@1da65fa (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@17c2a12 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@580972c (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@280b0c6 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@25335e6 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@b81e4b7 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@47c2be0 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@eed55e (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@3a8260c (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@64ee96a (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@bb796f8 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@bea3236 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@b4b2aa4 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@11f3bc2 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@8624d10 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@aa9520e (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@7872a3c (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@bac811a (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@9baae28 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@8a5e3eb (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@bb7efe1 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@38194e6 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@d2084d4 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@6fcd3c7 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@c421972 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@c6b1a40 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@6145abe (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@9079a6c (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@b3764ca (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@5efc8a9 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@c09f158 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@f1dcafd (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@1d34665 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@1c6b7eb (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@64e5995 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@553c506 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@8cf0396 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@14a8a43 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@1d72b92 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@3f3ea38 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@356a1b3 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@8f016e9 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@f0308bf (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@d8fa60f (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@3d89aea (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@fd1e177 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@52f8751 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@c33d330 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@de1264d (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@da947a (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@4086088 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@b6d7e46 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@daf0ccf (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@c57d75d (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@b84ed85 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@e4b5da3 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@1ac006 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@8ac30ff (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@941102a (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@1d8fbb8 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@62474f4 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@192d692 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@4827da2 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@c9c7bce (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@77b34b3 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@17911f0 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@72140f7 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@eb31519 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@1d2c7bf (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@be251cd (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@6f197c (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@6e0c9fc (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@90886da (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@fd3d5a7 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@d2ed1ee (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@af8483d (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@dc8b422 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@94f74b9 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@8a7c126 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@e72b14 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@d3ec9b2 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@af55d1c (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@bc405f (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@9e9a375 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@d4cb65f (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@3a1efa (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@456e9d5 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@f294e51 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@3650700 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@892f08 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@9961adf (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@57b30c6 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@db541f5 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@848cae8 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@4b3e6f3 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@80633b4 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@2e8e563 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@76be580 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@2490324 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@51f5988 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@9699352 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@54ff6dc (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@93cb618 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@f7a0ade (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@b60aeba (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@acd720 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@b0d359c (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@a456184 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@4148634 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@e6286d7 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@2dafc86 (P)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@27fb5ca (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@ef4adaf (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@2c8dc9b (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@7c8fba2 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@d2ebff0 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@15f2fee (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@757eb1c (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@aa5c4d (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@a125cfa (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@b869d08 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@7994ec6 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@4923442 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@d073990 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@193528e (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@2ce5ebc (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@a76099a (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@780aaa8 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@c9b2566 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@a89c954 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@8a431f2 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@bd4f293 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@e3f80ee (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@213241c (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@326bdfa (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@b08a17f (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@93c6608 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@459db0f (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@deac8da (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@412bfc6 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@7fbf5a5 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@203ca38 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@67fb776 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@74751e4 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@863192b (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@1a7d502 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@efa683 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@719a850 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@cb4167e (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@4db4721 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@e6296f5 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@a2562fb (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@e35dab4 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@cb27756 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@b6b1252 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@f423f4e (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@776b2e2 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@7afee20 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@966ae34 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@5511b2e (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@a9abd37 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@b78f97c (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@84019e (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@4f5cc4c (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@6b8eaf7 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@bf1699b (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@d7da511 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@8730477 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@d06814d (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@2097113 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@bc6e549 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@8900b6f (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@80f8d05 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@6d4b959 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@43bef8b (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@3fd8fcc (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@674c92a (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@a80f481 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@4d33a91 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@177f967 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@b4757bd (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@e80c503 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@f16b2b9 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@6c0ae5f (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@74bc8d3 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@7e6c175 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@a89aac9 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@7ebd17b (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@5edde2 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@7a497d6 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@b211944 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@2aa5b62 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@2092566 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@9430c30 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@3f92a85 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@c10f62e (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@756cbae (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@acc890b (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@4bb5c (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@8ebf1e5 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@6ba473a (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@9100f6b (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@eebec89 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@bd03148 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@638aae7 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@1f0a286 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@9759d06 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@f5b19f4 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@fcf2317 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@ad3e3f8 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@8ef789d (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@5a0b163 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@9f0811a (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@150ba14 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@13d46de (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@2f4c83f (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@71bb38c (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@2b4d0ef (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@ed2f2ea (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@efe64da (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@8d297e8 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@a967c78 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@7bfeee7 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@4047455 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@bf4b532 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@d6a48b7 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@eef05f8 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@46cb936 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@5ffff8d (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@ad0b953 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@a8e22f5 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@f7a0789 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@cfcb18 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@c2397af (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@dcc5fd7 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@2729345 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@ae0cee2 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@d1bffcb (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@43e65a9 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@18d72cf (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@ae1ec1 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@c9fe8d3 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@1e8cda7 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@dd82a48 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@9bce5fd (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@215b90e (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@8ca9d43 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@558ea1d (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@bf6e4f9 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@af7fa60 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@96fca9f (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@937d7b5 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@4525c8c (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@e1071bb (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@af8581a (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@b5b3a31 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@ed7fadb (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@e46c793 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@befb851 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@35169b7 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@da6888d (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@e88ea53 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@5802089 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@1add8af (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@5413c45 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@78950cb (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@c3e57c1 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@45a2ea7 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@97aefd (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@7710e43 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@353df9 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@e19021 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@a8c4b9f (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@7886f84 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@582c0b5 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@e445390 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@f2effa9 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@ee09ccf (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@af402bb (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@bebb331 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@8560f97 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@17516d (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@5620e33 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@7e49769 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@6255a8f (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@e264125 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@82710ab (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@e1ecaa1 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@440c87 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@abc6fdd (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@a4aea23 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@d952cd9 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@658057f (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@9a2bd95 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@67fb104 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@1326ce8 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@ff17a9b (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@5d56c7 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@b956bcf (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@dfdd465 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@846641d (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@8c67f48 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@54e9863 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@6fd05c7 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@d6a2519 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@536d87d (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@a8857bf (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@bbef60 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@f6ef9d5 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@18ee6bf (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@d74b0db (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@59b089a (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@bb25e51 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@b2454c1 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@4e0f3a7 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@e037fb7 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@ded8e8d (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@a1f2343 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@1466053 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@4ed87e7 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@a318689 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@1ccaeaf (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@aa30245 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@d5d7f79 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@9bf86cb (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@1d1246c (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@6e4feca (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@cf67dc1 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@aaaa4b1 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@2bdc4a7 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@d099504 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@bac34fd (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@b2d73b3 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@7780443 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@f0c23f9 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@30ca19f (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@49c809c (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@833a211 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@1e206b5 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@22d5e6d (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@a23b8bb (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@5f95931 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@d99479d (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@828e7e3 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@9cb2597 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@5eb1864 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@53d3f82 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@67356d0 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@b03d1ce (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@4ff0ffc (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@58f3cda (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@c2b2fe8 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@d344ca6 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@1776294 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@8c88d32 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@b21400 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@4ee4a7e (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@224702c (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@420908a (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@81a3442 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@a75b5d7 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@77e6318 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@b46ee28 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@d9501ad (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@37f2b56 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@7b266b4 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@b8298c4 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@2fc4e09 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@f20e6bd (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@3b87e52 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@c26c03 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@71af03c (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@a693a20 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@87a31b9 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@bb9c07f (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@8f5c55f (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@8b985aa (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@d833075 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@45a8111 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@46fd3ab (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@aa60d5d (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@4db83a3 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@23b2259 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@ad51d4d (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@d9f6d13 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@de34149 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@d89c76f (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@65aa049 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@c279c67 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@40563c6 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@2e06b2e (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@595a905 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@a008fa (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@ee7df89 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@42c60b2 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@3a5be6f (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@ded380 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@208ba97 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@7a3f805 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@17bd5fe (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@8fed63c (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@679d28b (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@51da7ac (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@858d32b (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@ef85bf6 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@4e40946 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@d440034 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@5c773d2 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@d3aeba0 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@e04fb1e (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@7f321cc (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@401ab2a (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@756fbd1 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@9670491 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@d9e2ff7 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@ae658cd (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@97bd493 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@8cb4c9 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@b8526ef (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@822d485 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@427430b (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@9413401 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@38504e7 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@28c0f3d (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@f130883 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@7767119 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@74b83bf (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@bf405d5 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@13e9cdb (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@97c2a51 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@2802bb7 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@c881a8d (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@eaf6239 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@d977990 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@33d928e (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@5fb05fe (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@70da2ab (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@e626e1d (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@2857ac (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@fa24e60 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@953fbde (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@284aca1 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@bfd840a (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@321ed59 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@c01be87 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@2994298 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@a1ff7ea (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@113a06b (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@e32aaf2 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@d777787 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@d1f4061 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@1ed9f80 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@e6c26be (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@b6336f2 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@1c9d847 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@2e020b0 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@67053c7 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@6ae819d (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@b51435 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@a0c9586 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@ac1b1e3 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@fd3423b (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@283cce (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@9f69a99 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@48c8412 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@5515e0 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@9d3893f (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@7e6dca6 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@daacf5e (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@ff4be9f (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@5dd3a19 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@f57da (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@65df4bf (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@f442e8 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@2a1960 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@7243ede (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@888007b (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@e4589bb (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@d91d8fe (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@7c446f1 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@1921231 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@329c643 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@df2e2ac (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@f80099f (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@8316aea (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@7636c11 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@3b16631 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@c904c44 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@bfa9b5c (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@9c7aeb5 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@3f44662 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@c92819b (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@7f90be4 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@e65a0bb (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@344a06d (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@a769e76 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@8711f02 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@94518ac (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@27d7533 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@a918131 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@41df8c7 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@cef7be1 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@e00233b (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@8fd3fc7 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@64daa69 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@aac258f (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@606f51d (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@585abd8 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@2841163 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@2fd778f (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@fbf8216 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@8edd660 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@b95ad84 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@522c619 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@91ec3de (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@522b9fa (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@81c60bf (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@1c9f88c (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@90aad5 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@72ec208 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@ac049db (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@fcf3fea (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@bbe1f51 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@5260f69 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@adbd62e (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@fd27bc6 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@6efa8b7 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@cbe3051 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@e73a839 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@9745f8d (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@ef1f6b4 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@96a8e52 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@74c1953 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@c84cd24 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@b6d2a58 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@5d46789 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@e11ca20 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@327bb08 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@4ff3d9e (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@4f4f7af (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@ba9cc6 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@599684c (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@412f345 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@2ada275 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@1a35fcb (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@87207b1 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@343b817 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@eb69404 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@d7adf12 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@734a6e3 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@2d668e0 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@24b0cf4 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@9f0c1d (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@4d72e92 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@6bb8063 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@e860460 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@4107461 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@27d4b86 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@c002c47 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@f7aac74 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@d7ef59d (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@2529a12 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@40945e3 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@bd01be0 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@f5a4e99 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@bc455e (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@2005d3f (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@44b160c (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@df83b55 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@d83596a (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@8278e5b (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@b9986f8 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@34e37d1 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@aefeb29 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@c83ceae (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@1660f6c (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@16f649e (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@5ac344f (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@f3c5f3b (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@9f579be (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@e3ea3b1 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@b03516c (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@207b417 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@fe8c9ed (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@5c97ab3 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@65c87dc (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@58b73ca (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@29517e9 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@78a1858 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@6f310e5 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@6d70f0f (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@69e49a5 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@ae0009b (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@87ffe17 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@77f8d2b (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@d4edb21 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@c7c64b3 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@5e7d107 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@81d085d (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@3a676a3 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@fa6cd59 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@b1fd9ff (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@e6de615 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@ea2171b (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@2e13b7c (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@d02d311 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@d93395a (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@29e3a5 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@65b72b (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@4b2c068 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@abb9126 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@1713d46 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@503d349 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@c765434 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@b53ce91 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@9e7e0a3 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@cf91c26 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@e3f4759 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@d037e14 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@4ada281 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@a775767 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@50de3ff (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@bc7afbd (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@d4109f7 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@814dd03 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@fd5c2cd (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@bd41231 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@ac227ba (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@17e465f (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@5cb0697 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@d1a1975 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@9724e93 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@9713264 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@ceae97b (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@67fd7f1 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@21b4a2 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@eb4a257 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@54110d0 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@608bec9 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@d6940ef (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@86dd362 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@a557e85 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@214bdb0 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@adca0f0 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@1d9c3ae (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@90a78ee (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@60004dc (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@932fd0b (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@8026cba (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@882dc1c (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@3f692c8 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@ddf26da (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@ada9a86 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@ba935fa (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@2ef9e08 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@e44b7c6 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@be492b4 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@2c48a52 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@d922620 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@ffcf99e (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@2c3844c (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@3bb11aa (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@5ca9938 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@9909e76 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@22c10e4 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@2602c02 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@6c3d33d (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@ee88b4f (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@d48d661 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@95b0586 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@3145e47 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@64ff674 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@edb779d (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@a79f8fe (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@ace330 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@df58ba9 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@fd0252e (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@1a3e461 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@3609e29 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@ed91c47 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@d0a05ae (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@b0fa804 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@2e26822 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@ee14070 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@5e2e46e (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@4f1f39c (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@85cd97a (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@ff8ad88 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@94f1346 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@52f1a34 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@e9497f8 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@d6274d1 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@d299b36 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@733fe40 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@3a1debe (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@17abe6c (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@e1928ca (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@28b5558 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@2090796 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@10c6f04 (P)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@a96d1ee (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@12c08c9 (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@ee32bce (S)com.android.server.audio.PlaybackActivityMonitor$PlayMonitorClient@d669aef
+
+
+  players:
+  AudioPlaybackConfiguration piid:415 deviceId:0 type:android.media.SoundPool u/pid:1000/2356 state:idle attr:AudioAttributes: usage=USAGE_ASSISTANCE_SONIFICATION content=CONTENT_TYPE_SONIFICATION flags=0x800 tags= bundle=null sessionId:0
+  AudioPlaybackConfiguration piid:423 deviceId:0 type:android.media.SoundPool u/pid:10187/3231 state:idle attr:AudioAttributes: usage=USAGE_ASSISTANCE_SONIFICATION content=CONTENT_TYPE_SONIFICATION flags=0x800 tags= bundle=null sessionId:0
+  AudioPlaybackConfiguration piid:431 deviceId:0 type:android.media.SoundPool u/pid:10187/3231 state:idle attr:AudioAttributes: usage=USAGE_ASSISTANCE_SONIFICATION content=CONTENT_TYPE_SONIFICATION flags=0x800 tags= bundle=null sessionId:0
+  AudioPlaybackConfiguration piid:439 deviceId:0 type:android.media.SoundPool u/pid:10178/3575 state:idle attr:AudioAttributes: usage=USAGE_ASSISTANCE_SONIFICATION content=CONTENT_TYPE_SONIFICATION flags=0x800 tags= bundle=null sessionId:0
+  AudioPlaybackConfiguration piid:447 deviceId:0 type:android.media.SoundPool u/pid:10187/3231 state:idle attr:AudioAttributes: usage=USAGE_ASSISTANCE_SONIFICATION content=CONTENT_TYPE_SONIFICATION flags=0x800 tags= bundle=null sessionId:0
+  AudioPlaybackConfiguration piid:487 deviceId:0 type:android.media.SoundPool u/pid:10187/3231 state:idle attr:AudioAttributes: usage=USAGE_ASSISTANCE_SONIFICATION content=CONTENT_TYPE_SONIFICATION flags=0x800 tags= bundle=null sessionId:0
+  AudioPlaybackConfiguration piid:26183 deviceId:0 type:android.media.SoundPool u/pid:10187/3231 state:idle attr:AudioAttributes: usage=USAGE_ASSISTANCE_SONIFICATION content=CONTENT_TYPE_SONIFICATION flags=0x800 tags= bundle=null sessionId:0
+  AudioPlaybackConfiguration piid:71503 deviceId:0 type:android.media.AudioTrack u/pid:10268/3161 state:paused attr:AudioAttributes: usage=USAGE_MEDIA content=CONTENT_TYPE_MUSIC flags=0xA00 tags= bundle=null sessionId:68873
+  AudioPlaybackConfiguration piid:71783 deviceId:3 type:android.media.AudioTrack u/pid:10268/3161 state:paused attr:AudioAttributes: usage=USAGE_MEDIA content=CONTENT_TYPE_MUSIC flags=0xA00 tags= bundle=null sessionId:69153
+  AudioPlaybackConfiguration piid:73159 deviceId:0 type:android.media.SoundPool u/pid:10227/24902 state:idle attr:AudioAttributes: usage=USAGE_ASSISTANCE_SONIFICATION content=CONTENT_TYPE_SONIFICATION flags=0x800 tags= bundle=null sessionId:0
+  AudioPlaybackConfiguration piid:73255 deviceId:0 type:android.media.SoundPool u/pid:10271/18632 state:idle attr:AudioAttributes: usage=USAGE_MEDIA content=CONTENT_TYPE_UNKNOWN flags=0x800 tags= bundle=null sessionId:0
+  AudioPlaybackConfiguration piid:73287 deviceId:0 type:android.media.SoundPool u/pid:1000/24044 state:idle attr:AudioAttributes: usage=USAGE_ASSISTANCE_SONIFICATION content=CONTENT_TYPE_SONIFICATION flags=0x800 tags= bundle=null sessionId:0
+  AudioPlaybackConfiguration piid:73423 deviceId:0 type:android.media.SoundPool u/pid:10180/22229 state:idle attr:AudioAttributes: usage=USAGE_ASSISTANCE_SONIFICATION content=CONTENT_TYPE_SONIFICATION flags=0x800 tags= bundle=null sessionId:0
+
+  ducked players piids:
+
+  faded out players piids:
+
+  muted player piids:
+
+  banned uids:
+
+Audio event log: playback activity as reported through PlayerBase
+11-04 16:59:14:461 new player piid:73255 uid/pid:10271/18632 type:android.media.SoundPool attr:AudioAttributes: usage=USAGE_MEDIA content=CONTENT_TYPE_UNKNOWN flags=0x800 tags= bundle=null session:0
+11-04 16:59:28:412 releasing player piid:73191
+11-04 16:59:28:412 releasing player piid:73199
+11-04 17:00:07:798 new player piid:73263 uid/pid:10263/24278 type:android.media.SoundPool attr:AudioAttributes: usage=USAGE_ASSISTANCE_SONIFICATION content=CONTENT_TYPE_SONIFICATION flags=0x800 tags= bundle=null session:0
+11-04 17:00:10:170 new player piid:73271 uid/pid:10092/24777 type:android.media.SoundPool attr:AudioAttributes: usage=USAGE_ASSISTANCE_SONIFICATION content=CONTENT_TYPE_SONIFICATION flags=0x800 tags= bundle=null session:0
+11-04 17:00:10:172 new player piid:73279 uid/pid:10092/24777 type:android.media.SoundPool attr:AudioAttributes: usage=USAGE_ASSISTANCE_SONIFICATION content=CONTENT_TYPE_SONIFICATION flags=0x800 tags= bundle=null session:0
+11-04 17:00:48:821 releasing player piid:73263
+11-04 17:01:17:845 releasing player piid:73207
+11-04 17:23:31:501 new player piid:73287 uid/pid:1000/24044 type:android.media.SoundPool attr:AudioAttributes: usage=USAGE_ASSISTANCE_SONIFICATION content=CONTENT_TYPE_SONIFICATION flags=0x800 tags= bundle=null session:0
+11-04 18:20:58:930 new player piid:73295 uid/pid:10352/29296 type:android.media.AudioTrack attr:AudioAttributes: usage=USAGE_MEDIA content=CONTENT_TYPE_MUSIC flags=0x800 tags= bundle=null session:70009
+11-04 18:20:58:933 player piid:73295 state:started DeviceId:0
+11-04 18:20:58:975 player piid:73295 state:stopped DeviceId:0
+11-04 18:20:58:999 new player piid:73303 uid/pid:10352/29296 type:android.media.AudioTrack attr:AudioAttributes: usage=USAGE_MEDIA content=CONTENT_TYPE_MUSIC flags=0x800 tags= bundle=null session:70017
+11-04 18:20:59:015 player piid:73295 state:stopped DeviceId:0
+11-04 18:20:59:016 releasing player piid:73295
+11-04 18:20:59:036 player piid:73303 state:started DeviceId:0
+11-04 18:20:59:148 player piid:73303 state:device DeviceId:3
+11-04 18:21:28:337 player piid:73303 state:device DeviceId:3
+11-04 18:21:57:495 player piid:73303 state:device DeviceId:3
+11-04 18:22:27:656 player piid:73303 state:device DeviceId:3
+11-04 18:22:58:827 player piid:73303 state:device DeviceId:3
+11-04 18:23:27:240 player piid:73303 state:device DeviceId:3
+11-04 18:23:57:293 player piid:73303 state:device DeviceId:3
+11-04 18:24:27:594 player piid:73303 state:device DeviceId:3
+11-04 18:24:57:687 player piid:73303 state:device DeviceId:3
+11-04 18:33:32:713 releasing player piid:73303
+11-04 19:28:08:270 player piid:73143 state:stopped DeviceId:0
+11-04 19:28:08:281 releasing player piid:73143
+11-04 20:16:34:151 new player piid:73311 uid/pid:10352/16548 type:android.media.AudioTrack attr:AudioAttributes: usage=USAGE_MEDIA content=CONTENT_TYPE_MUSIC flags=0x800 tags= bundle=null session:70025
+11-04 20:16:34:154 player piid:73311 state:started DeviceId:0
+11-04 20:16:34:186 player piid:73311 state:stopped DeviceId:0
+11-04 20:16:34:210 player piid:73311 state:stopped DeviceId:0
+11-04 20:16:34:210 releasing player piid:73311
+11-04 20:16:34:309 new player piid:73319 uid/pid:10352/16548 type:android.media.AudioTrack attr:AudioAttributes: usage=USAGE_MEDIA content=CONTENT_TYPE_MUSIC flags=0x800 tags= bundle=null session:70033
+11-04 20:16:34:313 player piid:73319 state:started DeviceId:0
+11-04 20:16:34:344 player piid:73319 state:device DeviceId:3
+11-04 20:18:50:764 player piid:73319 state:device DeviceId:3
+11-04 20:21:03:698 player piid:73319 state:device DeviceId:3
+11-04 20:21:47:340 player piid:73319 state:device DeviceId:3
+11-04 20:21:58:105 player piid:73319 state:device DeviceId:3
+11-04 20:22:08:044 player piid:73319 state:device DeviceId:3
+11-04 20:23:17:348 player piid:73319 state:device DeviceId:3
+11-04 20:24:02:521 releasing player piid:73319
+11-04 20:50:56:018 new player piid:73327 uid/pid:10352/21063 type:android.media.AudioTrack attr:AudioAttributes: usage=USAGE_MEDIA content=CONTENT_TYPE_MUSIC flags=0x800 tags= bundle=null session:70041
+11-04 20:50:56:022 player piid:73327 state:started DeviceId:0
+11-04 20:50:56:049 player piid:73327 state:stopped DeviceId:0
+11-04 20:50:56:058 player piid:73327 state:stopped DeviceId:0
+11-04 20:50:56:058 releasing player piid:73327
+11-04 20:50:56:129 new player piid:73335 uid/pid:10352/21063 type:android.media.AudioTrack attr:AudioAttributes: usage=USAGE_MEDIA content=CONTENT_TYPE_MUSIC flags=0x800 tags= bundle=null session:70049
+11-04 20:50:56:131 player piid:73335 state:started DeviceId:0
+11-04 20:50:56:155 player piid:73335 state:device DeviceId:3
+11-04 20:52:11:473 player piid:73335 state:device DeviceId:3
+11-04 20:53:52:816 player piid:73335 state:stopped DeviceId:0
+11-04 20:53:52:837 player piid:73335 state:stopped DeviceId:0
+11-04 20:53:52:837 releasing player piid:73335
+11-04 21:02:47:315 new player piid:73351 uid/pid:10352/23217 type:android.media.AudioTrack attr:AudioAttributes: usage=USAGE_MEDIA content=CONTENT_TYPE_MUSIC flags=0x800 tags= bundle=null session:70065
+11-04 21:02:47:319 player piid:73351 state:started DeviceId:0
+11-04 21:02:47:348 player piid:73351 state:stopped DeviceId:0
+11-04 21:02:47:363 player piid:73351 state:stopped DeviceId:0
+11-04 21:02:47:363 releasing player piid:73351
+11-04 21:02:47:442 new player piid:73359 uid/pid:10352/23217 type:android.media.AudioTrack attr:AudioAttributes: usage=USAGE_MEDIA content=CONTENT_TYPE_MUSIC flags=0x800 tags= bundle=null session:70073
+11-04 21:02:47:445 player piid:73359 state:started DeviceId:0
+11-04 21:02:47:487 player piid:73359 state:device DeviceId:3
+11-04 21:03:18:793 player piid:73359 state:device DeviceId:3
+11-04 21:03:35:407 player piid:73359 state:device DeviceId:3
+11-04 21:04:21:835 player piid:73359 state:device DeviceId:3
+11-04 21:39:16:302 releasing player piid:73359
+11-04 21:56:43:847 new player piid:73367 uid/pid:10352/13094 type:android.media.AudioTrack attr:AudioAttributes: usage=USAGE_MEDIA content=CONTENT_TYPE_MUSIC flags=0x800 tags= bundle=null session:70081
+11-04 21:56:43:853 player piid:73367 state:started DeviceId:0
+11-04 21:56:43:893 player piid:73367 state:stopped DeviceId:0
+11-04 21:56:43:902 player piid:73367 state:stopped DeviceId:0
+11-04 21:56:43:902 releasing player piid:73367
+11-04 21:56:43:976 new player piid:73375 uid/pid:10352/13094 type:android.media.AudioTrack attr:AudioAttributes: usage=USAGE_MEDIA content=CONTENT_TYPE_MUSIC flags=0x800 tags= bundle=null session:70089
+11-04 21:56:43:979 player piid:73375 state:started DeviceId:0
+11-04 21:56:44:013 player piid:73375 state:device DeviceId:3
+11-04 21:56:56:289 releasing player piid:73375
+11-04 21:59:36:757 new player piid:73383 uid/pid:10352/14166 type:android.media.AudioTrack attr:AudioAttributes: usage=USAGE_MEDIA content=CONTENT_TYPE_MUSIC flags=0x800 tags= bundle=null session:70097
+11-04 21:59:36:759 player piid:73383 state:started DeviceId:0
+11-04 21:59:36:787 player piid:73383 state:stopped DeviceId:0
+11-04 21:59:36:826 player piid:73383 state:stopped DeviceId:0
+11-04 21:59:36:826 releasing player piid:73383
+11-04 21:59:36:880 new player piid:73391 uid/pid:10352/14166 type:android.media.AudioTrack attr:AudioAttributes: usage=USAGE_MEDIA content=CONTENT_TYPE_MUSIC flags=0x800 tags= bundle=null session:70105
+11-04 21:59:36:892 player piid:73391 state:started DeviceId:0
+11-04 21:59:36:905 player piid:73391 state:device DeviceId:3
+11-04 21:59:47:156 releasing player piid:73391
+11-04 22:14:44:484 new player piid:73399 uid/pid:10073/16351 type:android.media.SoundPool attr:AudioAttributes: usage=USAGE_ASSISTANCE_SONIFICATION content=CONTENT_TYPE_SONIFICATION flags=0x800 tags= bundle=null session:0
+11-04 22:15:30:738 releasing player piid:73271
+11-04 22:15:30:739 releasing player piid:73279
+11-04 22:24:46:922 releasing player piid:73399
+11-04 22:26:29:145 new player piid:73407 uid/pid:10073/16728 type:android.media.SoundPool attr:AudioAttributes: usage=USAGE_ASSISTANCE_SONIFICATION content=CONTENT_TYPE_SONIFICATION flags=0x800 tags= bundle=null session:0
+11-04 22:32:47:727 releasing player piid:73407
+11-04 22:32:56:411 new player piid:73415 uid/pid:10073/22466 type:android.media.SoundPool attr:AudioAttributes: usage=USAGE_ASSISTANCE_SONIFICATION content=CONTENT_TYPE_SONIFICATION flags=0x800 tags= bundle=null session:0
+11-04 22:34:54:847 releasing player piid:73415
+11-04 22:35:36:984 new player piid:73423 uid/pid:10180/22229 type:android.media.SoundPool attr:AudioAttributes: usage=USAGE_ASSISTANCE_SONIFICATION content=CONTENT_TYPE_SONIFICATION flags=0x800 tags= bundle=null session:0
+11-04 22:46:01:190 releasing player piid:69079
+11-04 23:07:35:812 releasing player piid:73223
+11-04 23:07:35:838 releasing player piid:73231
+11-04 23:07:35:846 releasing player piid:73247
+11-04 23:07:35:858 releasing player piid:73239
+11-04 23:07:35:865 releasing player piid:73215
+
+  allowed capture policies:
+
+RecordActivityMonitor dump time: 下午11:57:26
+
+
+Audio event log: recording activity received by AudioService
+11-03 16:44:49:183 rec stop riid:70799 uid:10350 session:68305 src:VOICE_COMMUNICATION silenced pack:com.zcstudy.micbridge.a16
+11-03 16:44:49:330 rec update riid:70807 uid:10350 session:68313 src:VOICE_COMMUNICATION silenced pack:com.zcstudy.micbridge.a16
+11-03 16:44:57:369 rec stop riid:70807 uid:10350 session:68313 src:VOICE_COMMUNICATION silenced pack:com.zcstudy.micbridge.a16
+11-03 16:44:57:539 rec update riid:70815 uid:10350 session:68321 src:VOICE_COMMUNICATION silenced pack:com.zcstudy.micbridge.a16
+11-03 16:45:05:600 rec stop riid:70815 uid:10350 session:68321 src:VOICE_COMMUNICATION silenced pack:com.zcstudy.micbridge.a16
+11-03 16:45:05:682 rec update riid:70823 uid:10350 session:68329 src:VOICE_COMMUNICATION silenced pack:com.zcstudy.micbridge.a16
+11-03 16:45:13:776 rec stop riid:70823 uid:10350 session:68329 src:VOICE_COMMUNICATION silenced pack:com.zcstudy.micbridge.a16
+11-03 16:45:13:872 rec update riid:70831 uid:10350 session:68337 src:VOICE_COMMUNICATION silenced pack:com.zcstudy.micbridge.a16
+11-03 16:45:21:947 rec stop riid:70831 uid:10350 session:68337 src:VOICE_COMMUNICATION silenced pack:com.zcstudy.micbridge.a16
+11-03 16:45:22:026 rec start riid:70839 uid:10350 session:68345 src:VOICE_COMMUNICATION silenced pack:com.zcstudy.micbridge.a16
+11-03 16:45:30:097 rec stop riid:70839 uid:10350 session:68345 src:VOICE_COMMUNICATION silenced pack:com.zcstudy.micbridge.a16
+11-03 16:45:30:294 rec update riid:70847 uid:10350 session:68353 src:VOICE_COMMUNICATION silenced pack:com.zcstudy.micbridge.a16
+11-03 16:45:38:299 rec stop riid:70847 uid:10350 session:68353 src:VOICE_COMMUNICATION silenced pack:com.zcstudy.micbridge.a16
+11-03 16:45:38:378 rec update riid:70855 uid:10350 session:68361 src:VOICE_COMMUNICATION silenced pack:com.zcstudy.micbridge.a16
+11-03 16:45:46:474 rec stop riid:70855 uid:10350 session:68361 src:VOICE_COMMUNICATION silenced pack:com.zcstudy.micbridge.a16
+11-03 16:45:46:536 rec update riid:70863 uid:10350 session:68369 src:VOICE_COMMUNICATION silenced pack:com.zcstudy.micbridge.a16
+11-03 16:45:54:622 rec stop riid:70863 uid:10350 session:68369 src:VOICE_COMMUNICATION silenced pack:com.zcstudy.micbridge.a16
+11-03 16:45:54:731 rec start riid:70871 uid:10350 session:68377 src:VOICE_COMMUNICATION silenced pack:com.zcstudy.micbridge.a16
+11-03 16:46:02:787 rec stop riid:70871 uid:10350 session:68377 src:VOICE_COMMUNICATION silenced pack:com.zcstudy.micbridge.a16
+11-03 16:46:02:862 rec update riid:70879 uid:10350 session:68385 src:VOICE_COMMUNICATION silenced pack:com.zcstudy.micbridge.a16
+11-03 16:46:10:972 rec stop riid:70879 uid:10350 session:68385 src:VOICE_COMMUNICATION silenced pack:com.zcstudy.micbridge.a16
+11-03 16:46:11:059 rec update riid:70887 uid:10350 session:68393 src:VOICE_COMMUNICATION silenced pack:com.zcstudy.micbridge.a16
+11-03 16:46:19:163 rec stop riid:70887 uid:10350 session:68393 src:VOICE_COMMUNICATION silenced pack:com.zcstudy.micbridge.a16
+11-03 16:46:19:253 rec update riid:70895 uid:10350 session:68401 src:VOICE_COMMUNICATION silenced pack:com.zcstudy.micbridge.a16
+11-03 16:46:27:338 rec stop riid:70895 uid:10350 session:68401 src:VOICE_COMMUNICATION silenced pack:com.zcstudy.micbridge.a16
+11-03 16:46:27:495 rec update riid:70903 uid:10350 session:68409 src:VOICE_COMMUNICATION silenced pack:com.zcstudy.micbridge.a16
+11-03 16:46:35:510 rec stop riid:70903 uid:10350 session:68409 src:VOICE_COMMUNICATION silenced pack:com.zcstudy.micbridge.a16
+11-03 16:46:35:592 rec update riid:70911 uid:10350 session:68417 src:VOICE_COMMUNICATION silenced pack:com.zcstudy.micbridge.a16
+11-03 16:46:43:735 rec stop riid:70911 uid:10350 session:68417 src:VOICE_COMMUNICATION silenced pack:com.zcstudy.micbridge.a16
+11-03 16:46:43:822 rec update riid:70919 uid:10350 session:68425 src:VOICE_COMMUNICATION silenced pack:com.zcstudy.micbridge.a16
+11-03 16:46:51:888 rec stop riid:70919 uid:10350 session:68425 src:VOICE_COMMUNICATION silenced pack:com.zcstudy.micbridge.a16
+11-03 16:46:51:975 rec update riid:70927 uid:10350 session:68433 src:VOICE_COMMUNICATION silenced pack:com.zcstudy.micbridge.a16
+11-03 16:47:00:078 rec stop riid:70927 uid:10350 session:68433 src:VOICE_COMMUNICATION silenced pack:com.zcstudy.micbridge.a16
+11-03 16:47:00:209 rec start riid:70935 uid:10350 session:68441 src:VOICE_COMMUNICATION silenced pack:com.zcstudy.micbridge.a16
+11-03 16:47:08:277 rec stop riid:70935 uid:10350 session:68441 src:VOICE_COMMUNICATION silenced pack:com.zcstudy.micbridge.a16
+11-03 16:47:08:354 rec update riid:70943 uid:10350 session:68449 src:VOICE_COMMUNICATION silenced pack:com.zcstudy.micbridge.a16
+11-03 16:47:16:441 rec stop riid:70943 uid:10350 session:68449 src:VOICE_COMMUNICATION silenced pack:com.zcstudy.micbridge.a16
+11-03 16:47:16:517 rec start riid:70951 uid:10350 session:68457 src:VOICE_COMMUNICATION silenced pack:com.zcstudy.micbridge.a16
+11-03 16:47:24:612 rec stop riid:70951 uid:10350 session:68457 src:VOICE_COMMUNICATION silenced pack:com.zcstudy.micbridge.a16
+11-03 16:47:24:699 rec update riid:70959 uid:10350 session:68465 src:VOICE_COMMUNICATION silenced pack:com.zcstudy.micbridge.a16
+11-03 16:47:32:764 rec stop riid:70959 uid:10350 session:68465 src:VOICE_COMMUNICATION silenced pack:com.zcstudy.micbridge.a16
+11-03 16:47:32:899 rec update riid:70967 uid:10350 session:68473 src:VOICE_COMMUNICATION silenced pack:com.zcstudy.micbridge.a16
+11-03 16:47:40:964 rec stop riid:70967 uid:10350 session:68473 src:VOICE_COMMUNICATION silenced pack:com.zcstudy.micbridge.a16
+11-03 16:47:41:053 rec update riid:70975 uid:10350 session:68481 src:VOICE_COMMUNICATION silenced pack:com.zcstudy.micbridge.a16
+11-03 16:47:42:700 rec update riid:70975 uid:10350 session:68481 src:VOICE_COMMUNICATION not silenced pack:com.zcstudy.micbridge.a16
+11-03 16:47:49:157 rec stop riid:70975 uid:10350 session:68481 src:VOICE_COMMUNICATION not silenced pack:com.zcstudy.micbridge.a16
+11-04 15:37:47:297 rec update riid:73167 uid:10352 session:69985 src:VOICE_COMMUNICATION not silenced pack:com.zcstudy.xiaole
+11-04 15:37:48:917 rec stop riid:73167 uid:10352 session:69985 src:VOICE_COMMUNICATION not silenced pack:com.zcstudy.xiaole
+11-04 20:53:23:553 rec update riid:73343 uid:10352 session:70057 src:VOICE_COMMUNICATION not silenced pack:com.zcstudy.xiaole
+11-04 20:53:26:944 rec stop riid:73343 uid:10352 session:70057 src:VOICE_COMMUNICATION not silenced pack:com.zcstudy.xiaole
+
+AudioDeviceBroker:
+  Message handler (watch for unhandled messages):
+    Handler (com.android.server.audio.AudioDeviceBroker$BrokerHandler) {991fe60} @ 1290270879
+      Looper (AudioDeviceBroker, tid 243) {ceabf19}
+        (Total messages: 0, polling=true, quitting=false)
+
+  Preferred devices for strategy:
+
+  Connected devices:
+
+  APM Connected device (A2DP sink only):
+
+  Communication route clients:
+
+  Computed Preferred communication device: null
+
+  Applied Preferred communication device: null
+  Active communication device: AudioDeviceAttributes: role:output type:earpiece addr:
+  mCommunicationStrategyId: 14
+
+  mModeOwnerPid: 0
+
+  mBluetoothHeadset: null
+  mBluetoothHeadsetDevice: null
+  mScoAudioState: SCO_STATE_INACTIVE
+  mScoAudioMode: SCO_MODE_VIRTUAL_CALL
+
+  mHearingAid: null
+  mA2dp: null
+  mAvrcpAbsVolSupported: false
+
+SoundEffects:
+  Message handler (watch for unhandled messages):
+  Handler (com.android.server.audio.SoundEffectsHelper$SfxHandler) {c832bde} @ 1290270879
+    Looper (AS.SfxWorker, tid 241) {6eb81bf}
+      (Total messages: 0, polling=true, quitting=false)
+  Default attenuation (dB): -6
+Audio event log: Sound Effects Loading
+10-12 22:05:52:371 effects loading started
+10-12 22:05:53:332 effect Effect_Tick.ogg loaded
+10-12 22:05:53:339 effect KeypressStandard.ogg loaded
+10-12 22:05:53:369 effect KeypressSpacebar.ogg loaded
+10-12 22:05:53:409 effect KeypressReturn.ogg loaded
+10-12 22:05:53:441 effect KeypressDelete.ogg loaded
+10-12 22:05:53:471 effect KeypressInvalid.ogg loaded
+10-12 22:05:53:471 effects loading completed
+
+
+
+Event logs:
+Audio event log: phone state (logged after successful call to AudioSystem.setPhoneState(int, int))
+
+
+Audio event log: wired/A2DP/hearing aid device connection
+10-12 22:05:52:356 onUpdateCommunicationRoute, preferredCommunicationDevice: null eventSource: resetBluetoothSco
+10-12 22:05:52:358 removePreferredDevicesForStrategySync, strategy: 14
+10-12 22:05:55:230 onUpdateCommunicationRoute, preferredCommunicationDevice: null eventSource: resetBluetoothSco
+10-12 22:05:55:243 removePreferredDevicesForStrategySync, strategy: 14
+
+
+Audio event log: force use (logged before setForceUse() is executed)
+10-31 10:00:00:282 setForceUse(FOR_DOCK, FORCE_ANALOG_DOCK) due to readDockAudioSettings
+10-31 10:30:00:201 setForceUse(FOR_DOCK, FORCE_ANALOG_DOCK) due to readDockAudioSettings
+10-31 22:00:00:159 setForceUse(FOR_DOCK, FORCE_ANALOG_DOCK) due to readDockAudioSettings
+11-01 07:00:00:178 setForceUse(FOR_DOCK, FORCE_ANALOG_DOCK) due to readDockAudioSettings
+11-01 10:00:00:339 setForceUse(FOR_DOCK, FORCE_ANALOG_DOCK) due to readDockAudioSettings
+11-01 10:30:00:243 setForceUse(FOR_DOCK, FORCE_ANALOG_DOCK) due to readDockAudioSettings
+11-01 22:00:00:140 setForceUse(FOR_DOCK, FORCE_ANALOG_DOCK) due to readDockAudioSettings
+11-02 07:00:00:257 setForceUse(FOR_DOCK, FORCE_ANALOG_DOCK) due to readDockAudioSettings
+11-02 10:00:00:372 setForceUse(FOR_DOCK, FORCE_ANALOG_DOCK) due to readDockAudioSettings
+11-02 10:30:00:105 setForceUse(FOR_DOCK, FORCE_ANALOG_DOCK) due to readDockAudioSettings
+11-02 22:00:00:208 setForceUse(FOR_DOCK, FORCE_ANALOG_DOCK) due to readDockAudioSettings
+11-03 07:00:00:301 setForceUse(FOR_DOCK, FORCE_ANALOG_DOCK) due to readDockAudioSettings
+11-03 10:00:00:260 setForceUse(FOR_DOCK, FORCE_ANALOG_DOCK) due to readDockAudioSettings
+11-03 10:30:00:095 setForceUse(FOR_DOCK, FORCE_ANALOG_DOCK) due to readDockAudioSettings
+11-03 22:00:00:241 setForceUse(FOR_DOCK, FORCE_ANALOG_DOCK) due to readDockAudioSettings
+11-04 07:00:00:186 setForceUse(FOR_DOCK, FORCE_ANALOG_DOCK) due to readDockAudioSettings
+11-04 09:00:59:692 setForceUse(FOR_DOCK, FORCE_ANALOG_DOCK) due to readDockAudioSettings
+11-04 10:30:00:229 setForceUse(FOR_DOCK, FORCE_ANALOG_DOCK) due to readDockAudioSettings
+11-04 22:00:00:110 setForceUse(FOR_DOCK, FORCE_ANALOG_DOCK) due to readDockAudioSettings
+11-04 22:14:35:731 setForceUse(FOR_DOCK, FORCE_ANALOG_DOCK) due to readDockAudioSettings
+
+
+Audio event log: volume changes (logged when command received by AudioService)
+11-03 08:08:48:537 adjustSuggestedStreamVolume(sugg:USE_DEFAULT_STREAM_TYPE dir:ADJUST_RAISE flags:0x1011) from android/android uid:1000
+11-03 08:08:48:567 adjustSuggestedStreamVolume(sugg:USE_DEFAULT_STREAM_TYPE dir:ADJUST_RAISE flags:0x1011) from android/android uid:1000
+11-03 08:08:48:615 adjustSuggestedStreamVolume(sugg:USE_DEFAULT_STREAM_TYPE dir:ADJUST_RAISE flags:0x1011) from android/android uid:1000
+11-03 08:08:48:665 adjustSuggestedStreamVolume(sugg:USE_DEFAULT_STREAM_TYPE dir:ADJUST_RAISE flags:0x1011) from android/android uid:1000
+11-03 08:08:48:715 adjustSuggestedStreamVolume(sugg:USE_DEFAULT_STREAM_TYPE dir:ADJUST_RAISE flags:0x1011) from android/android uid:1000
+11-03 08:08:48:765 adjustSuggestedStreamVolume(sugg:USE_DEFAULT_STREAM_TYPE dir:ADJUST_RAISE flags:0x1011) from android/android uid:1000
+11-03 08:08:48:815 adjustSuggestedStreamVolume(sugg:USE_DEFAULT_STREAM_TYPE dir:ADJUST_RAISE flags:0x1011) from android/android uid:1000
+11-03 08:08:48:867 adjustSuggestedStreamVolume(sugg:USE_DEFAULT_STREAM_TYPE dir:ADJUST_RAISE flags:0x1011) from android/android uid:1000
+11-03 08:08:48:913 adjustSuggestedStreamVolume(sugg:USE_DEFAULT_STREAM_TYPE dir:ADJUST_RAISE flags:0x1011) from android/android uid:1000
+11-03 08:08:48:964 adjustSuggestedStreamVolume(sugg:USE_DEFAULT_STREAM_TYPE dir:ADJUST_RAISE flags:0x1011) from android/android uid:1000
+11-03 08:08:49:617 adjustSuggestedStreamVolume(sugg:USE_DEFAULT_STREAM_TYPE dir:ADJUST_LOWER flags:0x1011) from android/android uid:1000
+11-03 08:08:49:955 adjustSuggestedStreamVolume(sugg:USE_DEFAULT_STREAM_TYPE dir:ADJUST_LOWER flags:0x1011) from android/android uid:1000
+11-03 08:08:50:496 adjustSuggestedStreamVolume(sugg:USE_DEFAULT_STREAM_TYPE dir:ADJUST_LOWER flags:0x1011) from android/android uid:1000
+11-03 08:10:21:083 setStreamVolume(stream:STREAM_MUSIC index:9 flags:0x0) from com.kuaishou.nebula
+11-03 08:10:35:313 adjustSuggestedStreamVolume(sugg:STREAM_MUSIC dir:ADJUST_LOWER flags:0x1011) from android/android uid:1000
+11-03 08:10:35:349 adjustSuggestedStreamVolume(sugg:STREAM_MUSIC dir:ADJUST_LOWER flags:0x1011) from android/android uid:1000
+11-03 08:10:35:388 adjustSuggestedStreamVolume(sugg:STREAM_MUSIC dir:ADJUST_LOWER flags:0x1011) from android/android uid:1000
+11-03 08:10:35:443 adjustSuggestedStreamVolume(sugg:STREAM_MUSIC dir:ADJUST_LOWER flags:0x1011) from android/android uid:1000
+11-03 08:10:35:499 adjustSuggestedStreamVolume(sugg:STREAM_MUSIC dir:ADJUST_LOWER flags:0x1011) from android/android uid:1000
+11-03 08:10:35:563 adjustSuggestedStreamVolume(sugg:STREAM_MUSIC dir:ADJUST_LOWER flags:0x1011) from android/android uid:1000
+11-03 08:10:35:586 adjustSuggestedStreamVolume(sugg:STREAM_MUSIC dir:ADJUST_LOWER flags:0x1011) from android/android uid:1000
+11-03 08:10:35:695 adjustSuggestedStreamVolume(sugg:STREAM_MUSIC dir:ADJUST_LOWER flags:0x1011) from android/android uid:1000
+11-03 08:10:35:749 adjustSuggestedStreamVolume(sugg:STREAM_MUSIC dir:ADJUST_LOWER flags:0x1011) from android/android uid:1000
+11-03 08:10:35:797 adjustSuggestedStreamVolume(sugg:STREAM_MUSIC dir:ADJUST_LOWER flags:0x1011) from android/android uid:1000
+11-03 08:10:35:809 adjustSuggestedStreamVolume(sugg:STREAM_MUSIC dir:ADJUST_LOWER flags:0x1011) from android/android uid:1000
+11-03 08:10:35:857 adjustSuggestedStreamVolume(sugg:STREAM_MUSIC dir:ADJUST_LOWER flags:0x1011) from android/android uid:1000
+11-03 08:10:35:870 adjustSuggestedStreamVolume(sugg:STREAM_MUSIC dir:ADJUST_LOWER flags:0x1011) from android/android uid:1000
+11-03 08:10:35:904 adjustSuggestedStreamVolume(sugg:STREAM_MUSIC dir:ADJUST_LOWER flags:0x1011) from android/android uid:1000
+11-03 08:10:35:958 adjustSuggestedStreamVolume(sugg:STREAM_MUSIC dir:ADJUST_LOWER flags:0x1011) from android/android uid:1000
+11-03 08:10:36:009 adjustSuggestedStreamVolume(sugg:STREAM_MUSIC dir:ADJUST_LOWER flags:0x1011) from android/android uid:1000
+11-03 08:10:36:051 adjustSuggestedStreamVolume(sugg:STREAM_MUSIC dir:ADJUST_LOWER flags:0x1011) from android/android uid:1000
+11-03 08:10:36:159 adjustSuggestedStreamVolume(sugg:STREAM_MUSIC dir:ADJUST_LOWER flags:0x1011) from android/android uid:1000
+11-03 08:10:36:176 adjustSuggestedStreamVolume(sugg:STREAM_MUSIC dir:ADJUST_LOWER flags:0x1011) from android/android uid:1000
+11-03 08:10:36:213 adjustSuggestedStreamVolume(sugg:STREAM_MUSIC dir:ADJUST_LOWER flags:0x1011) from android/android uid:1000
+11-03 08:10:36:310 adjustSuggestedStreamVolume(sugg:STREAM_MUSIC dir:ADJUST_LOWER flags:0x1011) from android/android uid:1000
+11-03 08:10:36:350 adjustSuggestedStreamVolume(sugg:STREAM_MUSIC dir:ADJUST_LOWER flags:0x1011) from android/android uid:1000
+11-03 08:10:36:391 adjustSuggestedStreamVolume(sugg:STREAM_MUSIC dir:ADJUST_LOWER flags:0x1011) from android/android uid:1000
+11-03 08:10:36:483 adjustSuggestedStreamVolume(sugg:STREAM_MUSIC dir:ADJUST_LOWER flags:0x1011) from android/android uid:1000
+11-03 08:10:37:014 adjustSuggestedStreamVolume(sugg:STREAM_MUSIC dir:ADJUST_LOWER flags:0x1011) from android/android uid:1000
+11-03 08:10:37:072 adjustSuggestedStreamVolume(sugg:STREAM_MUSIC dir:ADJUST_LOWER flags:0x1011) from android/android uid:1000
+
+
+Supported System Usages:
+	USAGE_CALL_ASSISTANT
