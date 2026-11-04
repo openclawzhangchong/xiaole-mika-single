@@ -60,7 +60,7 @@ flutter build apk --release
 | 1 | `app/build.gradle.kts` | `com.android.application` → `com.android.library`；去掉插件版本（交给宿主）；去掉 `applicationId`/`versionCode`/`versionName`/ABI splits/perf 构建类型；`project(":core")` → `project(":mika-core")` | application 模块不能被另一个 application 依赖 |
 | 2 | `core/build.gradle.kts` | 插件改 `id(...)`；`libs.` → `mikaLibs.` | 宿主已有 `libs` 版本目录，避免同名冲突 |
 | 3 | `app/src/main/AndroidManifest.xml` | `<application>` 去掉全部应用级属性；`MainActivity` 去掉 LAUNCHER、`exported=false` | 清单合并只能有一个 Application 来源；library 不得自带入口 |
-| 4 | `core/.../voice/MicGate.kt`（新增） | 进程内麦克风租约（`tryAcquire/release/holder`，可重入、只能本人释放） | 小乐通话与引擎录音同进程，系统不再互斥 |
+| 4 | `core/.../voice/MicGate.kt`（新增） | 进程内麦克风租约（`tryAcquire/release/holder`，可重入、只能本人释放）；68 起增加日志出口（`logger` 由 `MikaApp` 注入 `Log.i`） | 小乐通话与引擎录音同进程，系统不再互斥；运行层要能直读谁持有/谁被拒 |
 | 5 | `voice/PcmRecorder.kt` | `start()` 先拿租约、失败不开流；`release()` 归还 | 拿不到就不录，避免两路 MIC 互相静音 |
 | 6 | `core/src/test/.../MicGateTest.kt`（新增） | JVM 单测（互斥/可重入/只能本人释放） | CI 里可复现的验证证据 |
 | 7 | 资源 `values`/`values-zh`/`values-b+zh+Hant` + 8 个 Kotlin 文件 | 用户可见的 "Mika" → "小乐"（文案层，见下节） | 品牌统一；不动类名/包名/协议标识 |
