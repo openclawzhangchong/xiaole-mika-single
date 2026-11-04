@@ -276,6 +276,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     _textController.dispose();
     _scrollController.dispose();
     _aiPlayingTimer?.cancel();
+    _textSegmentTimer?.cancel();
     _voiceCallTimer?.cancel();
     _otaReportTimer?.cancel();
     _reconnectUiTimer?.cancel();
@@ -530,6 +531,41 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     );
   }
 
+  /// v6.11.13：`listen{state:"detect"}` 的文字载荷有服务端长度上限。
+  /// 2026-11-04 真机二分实测（ASCII）：≤33 字符正常收 + 回 TTS；≥34 字符被
+  /// `alert{status:ERROR, message:"Detect is only for wake words, do not send long texts."}`
+  /// 拒绝且不产生任何 stt/llm/tts。按 33 切段，优先在标点/空白处断开。
+  static const int kTextDetectMaxRunes = 33;
+
+  /// 待发送的文字分段队列（>1 段时按"上一段 TTS 结束"逐段发送）
+  final List<String> _textSegments = [];
+  Timer? _textSegmentTimer;
+
+  /// 按 [maxRunes] 切段：优先回退到 8 个字符内的标点或空白，避免把词劈开
+  List<String> _splitTextForDetect(String text, int maxRunes) {
+    final runes = text.runes.toList();
+    if (runes.length <= maxRunes) return [text];
+    final out = <String>[];
+    var start = 0;
+    while (start < runes.length) {
+      var end = start + maxRunes < runes.length ? start + maxRunes : runes.length;
+      if (end < runes.length) {
+        final floor = end - 8 < start + 1 ? start + 1 : end - 8;
+        for (var i = end - 1; i >= floor; i--) {
+          final c = String.fromCharCode(runes[i]);
+          if ('。！？；，、.,!?;: '.contains(c)) {
+            end = i + 1;
+            break;
+          }
+        }
+      }
+      final seg = String.fromCharCodes(runes.sublist(start, end)).trim();
+      if (seg.isNotEmpty) out.add(seg);
+      start = end;
+    }
+    return out;
+  }
+
   /// 发送文本消息
   void _sendTextMessage() {
     final text = _textController.text.trim();
@@ -545,24 +581,60 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     _wsManager?.markConversationActive('发送文字');
     logger.info('[KEEPALIVE] 置位 来源=发送文字 耗时=${DateTime.now().difference(vetoAt).inMilliseconds}ms 顺序=发送前');
 
-    // v3.1.0：想打就打（xiaoleweb.md §2.6）——未连接时自动连接，hello ACK 后自动发送
-    if (!_isConnected) {
-      _ensureConnectedThen(() {
-        _wsManager?.sendTextRequest(text);
-        _setTyping(true);
-      }, '发送消息');
-      _textController.clear();
-      _setTyping(true);
-      _scrollToBottom();
-      return;
+    // v6.11.13：超长文字分段——服务端会对 detect 的长文本静默拒绝（只回 alert），
+    // 用户视角就是"打完一段话零回应"。这里显式提示并自动分段，绝不静默丢。
+    final segments = _splitTextForDetect(text, kTextDetectMaxRunes);
+    if (segments.length > 1) {
+      logger.info('[TEXTSPLIT] 原文 ${text.runes.length} 字 > ${kTextDetectMaxRunes} 字，'
+          '分 ${segments.length} 段发送');
+      ToastUtil.show('文字较长，已自动分 ${segments.length} 段发送（每段 ≤$kTextDetectMaxRunes 字）');
     }
-
-    // 调用接口发送消息
-    _wsManager?.sendTextRequest(text);
 
     _textController.clear();
     _setTyping(true);
     _scrollToBottom();
+
+    // 若队列里还有上一轮的段未发完，追加而不是覆盖——绝不静默丢用户的字
+    final hadPending = _textSegments.isNotEmpty;
+    _textSegments.addAll(segments);
+    if (!hadPending) _sendNextTextSegment();
+  }
+
+  /// v6.11.13：发送队列中的下一段；未连接则先连后发
+  void _sendNextTextSegment() {
+    if (_textSegments.isEmpty) return;
+    final seg = _textSegments.removeAt(0);
+    if (!_isConnected) {
+      _ensureConnectedThen(() {
+        _wsManager?.sendTextRequest(seg);
+        _setTyping(true);
+        _armTextSegmentTimeout();
+      }, '发送消息');
+      return;
+    }
+    _wsManager?.sendTextRequest(seg);
+    _setTyping(true);
+    _armTextSegmentTimeout();
+  }
+
+  /// 兜底：某段 20s 内没有等到 TTS 结束（例如服务端未回），继续发下一段，
+  /// 避免整条队列卡死导致"用户打了话却没有回应"。
+  void _armTextSegmentTimeout() {
+    _textSegmentTimer?.cancel();
+    if (_textSegments.isEmpty) return;
+    _textSegmentTimer = Timer(const Duration(seconds: 20), () {
+      if (_textSegments.isEmpty) return;
+      logger.warning('[TEXTSPLIT] 20s 未见 TTS 结束，继续发送（剩 ${_textSegments.length} 段）');
+      _sendNextTextSegment();
+    });
+  }
+
+  /// v6.11.13：一轮回复结束（TTS stop/end）→ 立刻发下一段
+  void _flushTextSegmentsOnTurnEnd() {
+    _textSegmentTimer?.cancel();
+    if (_textSegments.isEmpty) return;
+    logger.info('[TEXTSPLIT] 上一段回复结束，继续发送（剩 ${_textSegments.length} 段）');
+    _sendNextTextSegment();
   }
 
   /// v3.1.0：想打就打（xiaoleweb.md §2.6）——未连接时自动发起连接，
@@ -2077,6 +2149,8 @@ class _ChatPageState extends ConsumerState<ChatPage> {
           } else if (state == 'end' || state == 'stop') {
             // v6.11.9：TTS 结束 → 5s 后恢复保活
             _wsManager?.markConversationIdle('TTS $state');
+            // v6.11.13：本轮结束 → 若还有超长文字的分段待发，立即续发下一段
+            _flushTextSegmentsOnTurnEnd();
             // AI 说完了，标记播放结束
             // v3.0.0：双兼容——网页版实测服务器发的是 'stop'（部分上游发 'end'），
             // 只认其一会导致 _isAiPlaying 不复位 → 麦克风停发 → 「第二句听不见」
