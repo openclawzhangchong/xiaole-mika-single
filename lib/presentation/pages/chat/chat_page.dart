@@ -2325,6 +2325,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
       return;
     }
     if (_wsManager == null || !_isConnected) {
+      _preconnectAudio.clear(); // v6.11.10：松手即丢缓存，避免残留帧串到下一次说话
       return;
     }
 
