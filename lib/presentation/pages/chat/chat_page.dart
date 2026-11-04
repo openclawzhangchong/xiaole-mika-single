@@ -538,8 +538,12 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     // v6.8.1（B 项）：用户主动发消息 → 解除挂断静默窗口，保证文字聊天 TTS 不被误伤
     _liftVoiceMuteWindow();
 
-    // v6.11.9：进入会话 → 保活暂停（绝不在对话中插 detect）
+    // v6.11.12：置位必须早于任何网络动作——先暂停保活，再发消息。
+    // 若等发送流程走完再置位，"用户已开口 / 帧已在途"到置位之间就是一个
+    // 保活可合法插入的窗口（45s 边界撞上就会把 listen stop 塞进对话）。
+    final vetoAt = DateTime.now();
     _wsManager?.markConversationActive('发送文字');
+    logger.info('[KEEPALIVE] 置位 来源=发送文字 耗时=${DateTime.now().difference(vetoAt).inMilliseconds}ms 顺序=发送前');
 
     // v3.1.0：想打就打（xiaoleweb.md §2.6）——未连接时自动连接，hello ACK 后自动发送
     if (!_isConnected) {
@@ -2334,6 +2338,9 @@ class _ChatPageState extends ConsumerState<ChatPage> {
 
       _wsManager!.sendMessage(jsonEncode(listenStopMessage));
       logger.info('已发送 listen stop 消息: ${jsonEncode(listenStopMessage)}');
+      // v6.11.12 核查结论：松手**不**解除会话标记——ASR/LLM 仍在服务端排队，
+      // 若此处 markIdle，5s 后保活可能在"等待识别"窗口插入 stop，反而打断本轮。
+      // 解除一律由 TTS stop/end 触发；纯静音无回复时由 60s 无活动兜底自动解除。
     } catch (e) {
       logger.severe('发送 listen stop 消息失败: $e');
     }
@@ -2346,6 +2353,11 @@ class _ChatPageState extends ConsumerState<ChatPage> {
       logger.info('通话进行中，忽略按键说话的 listen start（防 mode 交叉）');
       return;
     }
+    // v6.11.12：**必须在 listen start 上行之前置位**。
+    // 旧版靠 _handleAudioSend 的首帧音频才置位，"麦克风已开、置位未到"的
+    // 几十~几百 ms 窗口里若撞上 45s 保活 tick，会把 listen stop 插到 start 之前/之后，
+    // 服务端可能提前收束本轮识别（表现为"说话被打断"）。置位提前，宁可多停一档。
+    _wsManager?.markConversationActive('开始说话');
     if (_wsManager == null || !_isConnected) {
       // v3.1.0：想打就打——未连接时自动连接；
       // v6.11.10：连上后自动重放本次 listen start，并回灌缓存音频，避免第一句话丢失

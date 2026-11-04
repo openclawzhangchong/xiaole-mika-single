@@ -6,6 +6,37 @@
 
 ---
 
+## v6.11.12 · 2026-11-04
+
+**主题：保活"置位时机"前置修复——语音 `listen start` 与文字发送之前即暂停保活**
+
+### 定位结论（v6.11.11 真机数据回溯）
+| 路径 | 旧实现置位位置 | 结论 |
+|---|---|---|
+| 文字 `_sendTextMessage` | `_liftVoiceMuteWindow()` 之后、`_ensureConnectedThen/sendTextRequest` **之前** | **顺序正确**，无 await 阻塞；实测 4–5s 是 adb 注入链路（3 次 `adb shell input` 往返 + 2×500ms sleep），非 App 代码 |
+| 语音 `_handleAudioStart` | **无置位**，靠 `_handleAudioSend` 首帧音频置位 | **真实缺陷**：`listen start` 已上行、置位未到的窗口内若撞 45s tick，会把 `listen stop` 插进本轮（服务端提前收束识别） |
+| `_handleAudioStop` | 无 `markIdle` | 符合预期：ASR/LLM 仍在队列，松手即解除反而会让 5s 后的 stop 插入"等待识别"窗口 |
+
+### 变更
+- `_handleAudioStart()`：在 `listen start` 上行（含预连接分支）**之前**置位
+  `markConversationActive('开始说话')`；宁可多停一档，也不让保活帧插入对话。
+- `_sendTextMessage()`：置位前加毫秒埋点
+  `[KEEPALIVE] 置位 来源=发送文字 耗时=Nms 顺序=发送前`（N 恒 ≈0，用于证明置位未被 await 拖后）。
+- `_handleAudioStop()`：补注释锁定"松手不解除"的设计意图（解除只由 `TTS stop/end` 触发，静音无回复走 60s 兜底）。
+
+### 5s 恢复门槛核查（无叠加）
+- `markConversationIdle` 只在 `_conversationActive == true` 时更新 `_conversationEndAt`；
+  后到的 idle（如"音频播放结束 500ms"晚于 `TTS stop`）会被 `if (!_conversationActive) return` 直接丢弃。
+- 实测：`TTS stop` 20:16:36.462 → 首个恢复 tick 20:17:14（间隔 38s，首次可发送点），
+  实际门槛 = `TTS stop + 5s`，**不叠加**那 500ms 音频定时器。
+
+### 待验证（必须补，且不接受"运气好"结论）
+- 跨越 tick 的 B 段：让会话时长 **≥50s**（真人连续说，或两条消息间隔 20s 连发），
+  tick 必然落在会话内，日志须出现 `发送=否 原因=会话中`，并确认 `tts start→end` 区间内零 `listen stop` 上行。
+
+---
+
+
 ## v6.11.11 · 2026-11-04
 
 **主题：⑤ `listen{state:"stop"}` 转生产默认保活（45s，零副作用）；detect 降为隐藏诊断**
