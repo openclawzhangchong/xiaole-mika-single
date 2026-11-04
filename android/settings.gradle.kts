@@ -30,9 +30,11 @@ plugins {
 }
 
 // Mika 自己的版本目录(嵌入后 Mika 不再是根工程,libs.* 访问器改用 mikaLibs.*)
-versionCatalogs {
-    create("mikaLibs") {
-        from(files("../mika/gradle/libs.versions.toml"))
+dependencyResolutionManagement {
+    versionCatalogs {
+        create("mikaLibs") {
+            from(files("../mika/gradle/libs.versions.toml"))
+        }
     }
 }
 
