@@ -1,0 +1,447 @@
+diff --git a/app/build.gradle.kts b/app/build.gradle.kts
+index 8bba3e32..d3d4a091 100644
+--- a/app/build.gradle.kts
++++ b/app/build.gradle.kts
+@@ -1,8 +1,10 @@
+ plugins {
+-    alias(libs.plugins.android.application)
+-    alias(libs.plugins.kotlin.android)
+-    alias(libs.plugins.kotlin.compose)
+-    alias(libs.plugins.kotlin.serialization)
++    // 嵌入小乐:本模块由 com.android.application 降为 library,由小乐的 :app 依赖。
++    // 插件版本统一由宿主(xiaole)的 settings.gradle.kts 给出,这里不再声明版本。
++    id("com.android.library")
++    id("org.jetbrains.kotlin.android")
++    id("org.jetbrains.kotlin.plugin.compose")
++    id("org.jetbrains.kotlin.plugin.serialization")
+ }
+ 
+ // 关于页上的构建编号:当前提交的短哈希;没有 git(如从源码包编译)时写 dev
+@@ -15,58 +17,25 @@ android {
+     compileSdk = 36
+ 
+     defaultConfig {
+-        applicationId = "com.wangzan101.mika"
++        // 作为 library 不设 applicationId/versionCode;版本号改成 BuildConfig 字段给源码用。
+         minSdk = 30
+-        targetSdk = 35
+-        versionCode = 36
+-        versionName = "0.1.35"
+-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
++        buildConfigField("String", "VERSION_NAME", "\"0.1.35\"")
+         buildConfigField("String", "GIT_HASH", "\"$gitHash\"")
+         // 关于页版本号后的 Beta 标记;出正式版时改成 false
+         buildConfigField("boolean", "BETA", "true")
+     }
+ 
+-    // 沙箱程序只有 arm64 版本(jniLibs/arm64-v8a);APK 不限 ABI,别的设备照常安装、显示「此设备不支持沙箱」。
+-    // 沙箱程序要从 nativeLibraryDir 直接执行,安装时必须解到磁盘
+-    packaging { jniLibs { useLegacyPackaging = true } }
+-
+-    // 发布用的包(perf、release)按架构再出一份:除了全架构包,另出只带 arm64-v8a 原生库的小包。
+-    // 两个包代码、资源、版本号、签名都一样,只差 lib/ 下的其他架构;各自是完整 APK,不是一起安装的拆分包。
+-    // 产物:app-universal-<类型>.apk、app-arm64-v8a-<类型>.apk。拆分对所有构建类型生效,
+-    // 所以只在这次构建要出 perf/release 包时打开,单独构建调试包时产物仍是 app-debug.apk。
+-    splits {
+-        abi {
+-            isEnable = gradle.startParameter.taskNames.any { Regex("(?i)(perf|release)").containsMatchIn(it) }
+-            reset()
+-            include("arm64-v8a")
+-            isUniversalApk = true
+-        }
+-    }
+-    // 自带的运行环境(assets/runtime/rootfs.tar.xz,tools/sandbox/build-runtime.py 生成)已是 xz,不再压一遍
+-    androidResources { noCompress += "xz" }
++    // 原先 application 的 packaging/splits/noCompress 已移到宿主的 :app 模块(library 不能设这些)。
+ 
+     compileOptions {
+         sourceCompatibility = JavaVersion.VERSION_17
+         targetCompatibility = JavaVersion.VERSION_17
+     }
+ 
+-    // 评测任务集(仓库根目录 eval/tasks)打进测试包的 assets,真机评测跑器从那里读题
+-    sourceSets.getByName("androidTest").assets.srcDir(rootProject.file("eval/tasks"))
++    // 评测任务集 assets 只给 androidTest;嵌入后仓库根目录换了,这条不再需要。
+ 
+     buildTypes {
+-        // 真机验收时并排安装,保留发行版和用户数据;默认构建标识不变。
+-        if (providers.gradleProperty("devInstall").isPresent) getByName("debug") {
+-            applicationIdSuffix = ".dev"
+-            resValue("string", "app_name", "Mika Dev")
+-        }
+-        // 看流畅度用的包:和发布版一样不可调试(调试包不做预先编译,界面慢好几倍,手感不作数),
+-        // 用本机调试签名,能直接覆盖调试包、保留数据;可被性能工具采样。./gradlew :app:assemblePerf
+-        create("perf") {
+-            initWith(getByName("release"))
+-            signingConfig = signingConfigs.getByName("debug")
+-            isProfileable = true
+-            matchingFallbacks += "release"
+-        }
++        // 只剩 release/debug 两种;原 application 的 perf/devInstall 变体去掉。
+     }
+ 
+     buildFeatures {
+@@ -81,38 +50,38 @@ kotlin {
+ }
+ 
+ dependencies {
+-    implementation(project(":core"))
+-    implementation(libs.protobuf.lite)
+-    implementation(platform(libs.compose.bom))
+-    implementation(libs.compose.ui)
+-    implementation(libs.compose.material3)
+-    implementation(libs.androidx.activity.compose)
+-    implementation(libs.androidx.webkit)
+-    implementation(libs.kotlinx.coroutines.android)
+-    implementation(libs.okhttp)
+-    implementation(libs.kotlinx.serialization.json)
+-    implementation(libs.xz)
+-    implementation(libs.commonmark)
+-    implementation(libs.commonmark.ext.gfm.tables)
+-    implementation(libs.commonmark.ext.gfm.strikethrough)
++    implementation(project(":mika-core"))
++    implementation(mikaLibs.protobuf.lite)
++    implementation(platform(mikaLibs.compose.bom))
++    implementation(mikaLibs.compose.ui)
++    implementation(mikaLibs.compose.material3)
++    implementation(mikaLibs.androidx.activity.compose)
++    implementation(mikaLibs.androidx.webkit)
++    implementation(mikaLibs.kotlinx.coroutines.android)
++    implementation(mikaLibs.okhttp)
++    implementation(mikaLibs.kotlinx.serialization.json)
++    implementation(mikaLibs.xz)
++    implementation(mikaLibs.commonmark)
++    implementation(mikaLibs.commonmark.ext.gfm.tables)
++    implementation(mikaLibs.commonmark.ext.gfm.strikethrough)
+     // 两种识别模型都随 APK 安装；首次使用不依赖 Play 服务下载。
+-    implementation(libs.mlkit.text.recognition)
+-    implementation(libs.mlkit.text.recognition.chinese)
++    implementation(mikaLibs.mlkit.text.recognition)
++    implementation(mikaLibs.mlkit.text.recognition.chinese)
+ 
+-    testImplementation(libs.junit)
+-    testImplementation(libs.kotlinx.coroutines.test)
+-    testImplementation(libs.okhttp.mockwebserver)
++    testImplementation(mikaLibs.junit)
++    testImplementation(mikaLibs.kotlinx.coroutines.test)
++    testImplementation(mikaLibs.okhttp.mockwebserver)
+     // 沙箱路径契约(core 的 testFixtures):AndroidSandbox 在 JVM 与真机上都跑同一套
+-    testImplementation(testFixtures(project(":core")))
+-    androidTestImplementation(testFixtures(project(":core")))
++    testImplementation(testFixtures(project(":mika-core")))
++    androidTestImplementation(testFixtures(project(":mika-core")))
+ 
+-    androidTestImplementation(platform(libs.compose.bom))
+-    androidTestImplementation(libs.compose.ui.test.junit4)
+-    debugImplementation(libs.compose.ui.test.manifest)
+-    androidTestImplementation(libs.androidx.test.runner)
+-    androidTestImplementation(libs.androidx.test.ext.junit)
+-    androidTestImplementation(libs.okhttp.mockwebserver)
+-    androidTestImplementation(libs.junit)
++    androidTestImplementation(platform(mikaLibs.compose.bom))
++    androidTestImplementation(mikaLibs.compose.ui.test.junit4)
++    debugImplementation(mikaLibs.compose.ui.test.manifest)
++    androidTestImplementation(mikaLibs.androidx.test.runner)
++    androidTestImplementation(mikaLibs.androidx.test.ext.junit)
++    androidTestImplementation(mikaLibs.okhttp.mockwebserver)
++    androidTestImplementation(mikaLibs.junit)
+ }
+ 
+ // LicensesTest 读仓库的 licenses/THIRD_PARTY_NOTICES.md:让它参与测试的增量判断
+diff --git a/app/src/main/AndroidManifest.xml b/app/src/main/AndroidManifest.xml
+index bf191136..23504d85 100644
+--- a/app/src/main/AndroidManifest.xml
++++ b/app/src/main/AndroidManifest.xml
+@@ -79,26 +79,17 @@
+         </intent>
+     </queries>
+ 
+-    <application
+-        android:name=".MikaApp"
+-        android:allowBackup="false"
+-        android:icon="@mipmap/ic_launcher"
+-        android:supportsRtl="true"
+-        android:label="@string/app_name"
+-        android:localeConfig="@xml/locales_config"
+-        android:networkSecurityConfig="@xml/network_security_config"
+-        android:theme="@android:style/Theme.Material.Light.NoActionBar">
++    <!-- 嵌入小乐:Application 类/图标/名称/主题由宿主的 :app 清单决定,这里不再声明,避免清单合并冲突。
++         MikaApp 由小乐 android:name 显式指向 com.wangzan101.mika.MikaApp。 -->
++    <application>
+         <!-- 界面只有一个:从桌面、通知、别的 App 或命令打开都回到这一个(新的打开交给 onNewIntent),不在上面叠出第二个 -->
++        <!-- 嵌入后不作为桌面入口(避免两个图标),由小乐的 Flutter 界面用显式 Intent 打开。 -->
+         <activity
+             android:name=".ui.MainActivity"
+-            android:exported="true"
++            android:exported="false"
+             android:launchMode="singleTask"
+             android:theme="@style/Theme.Mika"
+             android:windowSoftInputMode="adjustResize">
+-            <intent-filter>
+-                <action android:name="android.intent.action.MAIN" />
+-                <category android:name="android.intent.category.LAUNCHER" />
+-            </intent-filter>
+         </activity>
+ 
+         <!-- 通知里接管按钮的落点:从通知启动 Activity 才会收起通知栏,让用户直接看到挪到主屏的 App -->
+diff --git a/app/src/main/java/com/wangzan101/mika/voice/PcmRecorder.kt b/app/src/main/java/com/wangzan101/mika/voice/PcmRecorder.kt
+index 3aed210b..c0cab445 100644
+--- a/app/src/main/java/com/wangzan101/mika/voice/PcmRecorder.kt
++++ b/app/src/main/java/com/wangzan101/mika/voice/PcmRecorder.kt
+@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
+ import android.media.AudioFormat
+ import android.media.AudioRecord
+ import android.media.MediaRecorder
++import com.wangzan101.mika.core.voice.MicGate
+ import java.io.IOException
+ import kotlin.math.sqrt
+ import kotlinx.coroutines.CoroutineScope
+@@ -36,45 +37,56 @@ class PcmRecorder(private val maxMs: Int = 60_000, private val streaming: Boolea
+     private var job: Job? = null
+     private var pcm = ShortArray(0)
+     private var size = 0
++    /** 本次录音是否持有进程内麦克风租约;拿到后无论怎么结束都要还。 */
++    private var holdsMicGate = false
+ 
+     @SuppressLint("MissingPermission") // 权限由调用方在 start 之前检查
+     override fun start(): Boolean {
+         synchronized(lock) {
+             if (record != null) return false
+-            val minBuf = AudioRecord.getMinBufferSize(Wav.RATE, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT)
+-            if (minBuf <= 0) return false
+-            val chunk = Wav.RATE / 20 // 50ms 一块
+-            val rec = try {
+-                AudioRecord(
+-                    MediaRecorder.AudioSource.MIC, Wav.RATE,
+-                    AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT,
+-                    maxOf(minBuf, chunk * 2 * 4),
+-                )
+-            } catch (_: SecurityException) {
+-                return false
+-            } catch (_: IllegalArgumentException) {
+-                return false
+-            }
+-            if (rec.state != AudioRecord.STATE_INITIALIZED) {
+-                rec.release()
+-                return false
+-            }
++            // 与小乐实时通话共用一支麦克风:拿不到租约就不开流,避免同进程两路录音把对方打成静音。
++            if (!MicGate.tryAcquire(MicGate.MIKA)) return false
++            var ok = false
+             try {
+-                rec.startRecording()
+-            } catch (_: IllegalStateException) {
+-                rec.release()
+-                return false
+-            }
+-            if (rec.recordingState != AudioRecord.RECORDSTATE_RECORDING) {
+-                rec.release()
+-                return false
++                val minBuf = AudioRecord.getMinBufferSize(Wav.RATE, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT)
++                if (minBuf <= 0) return false
++                val chunk = Wav.RATE / 20 // 50ms 一块
++                val rec = try {
++                    AudioRecord(
++                        MediaRecorder.AudioSource.MIC, Wav.RATE,
++                        AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT,
++                        maxOf(minBuf, chunk * 2 * 4),
++                    )
++                } catch (_: SecurityException) {
++                    return false
++                } catch (_: IllegalArgumentException) {
++                    return false
++                }
++                if (rec.state != AudioRecord.STATE_INITIALIZED) {
++                    rec.release()
++                    return false
++                }
++                try {
++                    rec.startRecording()
++                } catch (_: IllegalStateException) {
++                    rec.release()
++                    return false
++                }
++                if (rec.recordingState != AudioRecord.RECORDSTATE_RECORDING) {
++                    rec.release()
++                    return false
++                }
++                pcm = ShortArray(Wav.RATE * maxMs / 1000)
++                size = 0
++                _level.value = 0f
++                record = rec
++                holdsMicGate = true
++                job = scope.launch { readLoop(rec, chunk) }
++                ok = true
++                return true
++            } finally {
++                if (!ok) MicGate.release(MicGate.MIKA)
+             }
+-            pcm = ShortArray(Wav.RATE * maxMs / 1000)
+-            size = 0
+-            _level.value = 0f
+-            record = rec
+-            job = scope.launch { readLoop(rec, chunk) }
+-            return true
+         }
+     }
+ 
+@@ -154,5 +166,10 @@ class PcmRecorder(private val maxMs: Int = 60_000, private val streaming: Boolea
+     private fun release(rec: AudioRecord) {
+         try { rec.stop() } catch (_: IllegalStateException) {}
+         rec.release()
++        // 录音结束(正常 stop、录满自动停、cancel)都要把麦克风租约还回去,否则小乐的通话再也拿不到麦克风。
++        if (holdsMicGate) {
++            holdsMicGate = false
++            MicGate.release(MicGate.MIKA)
++        }
+     }
+ }
+diff --git a/core/build.gradle.kts b/core/build.gradle.kts
+index 1d00725d..17779c89 100644
+--- a/core/build.gradle.kts
++++ b/core/build.gradle.kts
+@@ -1,9 +1,9 @@
+ import com.google.protobuf.gradle.*
+ 
+ plugins {
+-    alias(libs.plugins.protobuf)
+-    alias(libs.plugins.kotlin.jvm)
+-    alias(libs.plugins.kotlin.serialization)
++    id("com.google.protobuf")
++    id("org.jetbrains.kotlin.jvm")
++    id("org.jetbrains.kotlin.plugin.serialization")
+     // 沙箱路径契约测试放在 testFixtures,app 的 AndroidSandbox 也跑同一套
+     `java-test-fixtures`
+ }
+@@ -22,25 +22,25 @@ val extractTraceSchemas by tasks.registering(Sync::class) {
+ }
+ sourceSets.main { proto.srcDir(extractTraceSchemas) }
+ protobuf {
+-    protoc { artifact = "com.google.protobuf:protoc:${libs.versions.protobuf.get()}" }
++    protoc { artifact = "com.google.protobuf:protoc:${mikaLibs.versions.protobuf.get()}" }
+     generateProtoTasks {
+         all().configureEach { builtins { named("java") { option("lite") } } }
+     }
+ }
+ 
+ dependencies {
+-    implementation(libs.protobuf.lite)
+-    traceSchemas(libs.otel.proto)
+-    implementation(libs.okhttp)
+-    implementation(libs.kotlinx.serialization.json)
+-    implementation(libs.kotlinx.coroutines.core)
+-    implementation(libs.commons.compress)
+-    testImplementation(libs.junit)
+-    testImplementation(libs.okhttp.mockwebserver)
+-    testImplementation(libs.kotlinx.coroutines.test)
++    implementation(mikaLibs.protobuf.lite)
++    traceSchemas(mikaLibs.otel.proto)
++    implementation(mikaLibs.okhttp)
++    implementation(mikaLibs.kotlinx.serialization.json)
++    implementation(mikaLibs.kotlinx.coroutines.core)
++    implementation(mikaLibs.commons.compress)
++    testImplementation(mikaLibs.junit)
++    testImplementation(mikaLibs.okhttp.mockwebserver)
++    testImplementation(mikaLibs.kotlinx.coroutines.test)
+     // 测试里的 TLS 1.3 与导出密钥:用和 Android 平台同源的 TLS 实现,只进测试类路径
+-    testImplementation(libs.conscrypt.openjdk.uber)
+-    testFixturesImplementation(libs.junit)
++    testImplementation(mikaLibs.conscrypt.openjdk.uber)
++    testFixturesImplementation(mikaLibs.junit)
+ }
+ 
+ // 运行时列不了资源目录:构建时扫 knowledge/apps、knowledge/sites、skills 的头部,校验后生成索引资源;校验不过构建失败
+diff --git a/core/src/main/kotlin/com/wangzan101/mika/core/voice/MicGate.kt b/core/src/main/kotlin/com/wangzan101/mika/core/voice/MicGate.kt
+new file mode 100644
+index 00000000..590b876c
+--- /dev/null
++++ b/core/src/main/kotlin/com/wangzan101/mika/core/voice/MicGate.kt
+@@ -0,0 +1,39 @@
++package com.wangzan101.mika.core.voice
++
++/**
++ * 同一进程内的麦克风租约。
++ *
++ * 并入小乐单包后,小乐的实时通话录音(MediaRecorder/AudioRecord)与 Mika 的按住说话([com.wangzan101.mika.voice.PcmRecorder])
++ * 跑在同一个进程、同一个 UID 下,系统不会再替它们做互斥,两路同时开流时有的机型会把其中一路静音。
++ * 所以这里用一把进程内的互斥锁:谁先拿到租约谁录,另一方直接放弃本次录音(而不是排队等待,避免按住说话"按下去没反应若干秒")。
++ *
++ * 放在 core(纯 JVM)里,可以被 Mika 和小乐两个模块共用,也能用普通的 JVM 单测覆盖。
++ */
++object MicGate {
++    /** 小乐实时通话的持有者标识。 */
++    const val XIAOLE = "xiaole"
++
++    /** Mika 按住说话/语音输入的持有者标识。 */
++    const val MIKA = "mika"
++
++    private var owner: String? = null
++
++    /** 同一持有者重复获取视为成功(重复 start 不会把自己锁死)。 */
++    @Synchronized
++    fun tryAcquire(who: String): Boolean {
++        val current = owner
++        if (current != null && current != who) return false
++        owner = who
++        return true
++    }
++
++    /** 只有持有者能释放,别的模块调 release 不会误放别人的租约。 */
++    @Synchronized
++    fun release(who: String) {
++        if (owner == who) owner = null
++    }
++
++    /** 当前持有者;没人持有返回 null。 */
++    @Synchronized
++    fun holder(): String? = owner
++}
+diff --git a/core/src/test/kotlin/com/wangzan101/mika/core/voice/MicGateTest.kt b/core/src/test/kotlin/com/wangzan101/mika/core/voice/MicGateTest.kt
+new file mode 100644
+index 00000000..14d4d55e
+--- /dev/null
++++ b/core/src/test/kotlin/com/wangzan101/mika/core/voice/MicGateTest.kt
+@@ -0,0 +1,43 @@
++package com.wangzan101.mika.core.voice
++
++import org.junit.After
++import org.junit.Assert.assertEquals
++import org.junit.Assert.assertFalse
++import org.junit.Assert.assertNull
++import org.junit.Assert.assertTrue
++import org.junit.Test
++
++/** 单包内小乐通话与 Mika 录音共用一支麦克风,租约必须互斥、可重入、只能本人释放。 */
++class MicGateTest {
++    @After
++    fun cleanup() {
++        MicGate.release(MicGate.XIAOLE)
++        MicGate.release(MicGate.MIKA)
++    }
++
++    @Test
++    fun holderCanRecordAndOtherIsRefused() {
++        assertTrue(MicGate.tryAcquire(MicGate.XIAOLE))
++        assertEquals(MicGate.XIAOLE, MicGate.holder())
++        assertFalse(MicGate.tryAcquire(MicGate.MIKA))
++        assertEquals(MicGate.XIAOLE, MicGate.holder())
++    }
++
++    @Test
++    fun sameOwnerCanReacquire() {
++        assertTrue(MicGate.tryAcquire(MicGate.XIAOLE))
++        assertTrue(MicGate.tryAcquire(MicGate.XIAOLE))
++        assertEquals(MicGate.XIAOLE, MicGate.holder())
++    }
++
++    @Test
++    fun onlyHolderCanReleaseThenNextOwnerSucceeds() {
++        assertTrue(MicGate.tryAcquire(MicGate.XIAOLE))
++        MicGate.release(MicGate.MIKA)
++        assertEquals(MicGate.XIAOLE, MicGate.holder())
++        MicGate.release(MicGate.XIAOLE)
++        assertNull(MicGate.holder())
++        assertTrue(MicGate.tryAcquire(MicGate.MIKA))
++        assertEquals(MicGate.MIKA, MicGate.holder())
++    }
++}

@@ -30,6 +30,10 @@ class MainActivity : FlutterActivity() {
                     result,
                 )
                 "engineInfo" -> b.engineInfo(result)
+                // 麦克风互斥:小乐录音前拿租约,停止录音后还回去;Mika 侧的 PcmRecorder 用同一把锁。
+                "acquireMic" -> b.acquireMic(result)
+                "releaseMic" -> b.releaseMic(result)
+                "micHolder" -> b.micHolder(result)
                 else -> result.notImplemented()
             }
         }

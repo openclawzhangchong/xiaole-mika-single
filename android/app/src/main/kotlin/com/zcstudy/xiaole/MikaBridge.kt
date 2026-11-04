@@ -8,6 +8,7 @@ import com.wangzan101.mika.core.model.Capabilities
 import com.wangzan101.mika.core.model.ModelRole
 import com.wangzan101.mika.core.remote.RemoteStatus
 import com.wangzan101.mika.core.remote.StartOutcome
+import com.wangzan101.mika.core.voice.MicGate
 import com.wangzan101.mika.settings.ProviderConfig
 import com.wangzan101.mika.settings.ProviderStore
 import com.wangzan101.mika.task.RemoteTaskHub
@@ -100,6 +101,25 @@ class MikaBridge(private val context: Context, private val channel: MethodChanne
                 reply { result.error("mika_provider_failed", e.message ?: e.toString(), null) }
             }
         }
+    }
+
+    /**
+     * 麦克风互斥:小乐的实时通话与 Mika 的按住说话在同一个进程里,系统不再替它们做互斥。
+     * 拿不到租约就返回 false,调用方应放弃这次录音(而不是排长队等)。
+     */
+    fun acquireMic(result: MethodChannel.Result) {
+        val ok = MicGate.tryAcquire(MicGate.XIAOLE)
+        result.success(ok)
+    }
+
+    fun releaseMic(result: MethodChannel.Result) {
+        MicGate.release(MicGate.XIAOLE)
+        result.success(true)
+    }
+
+    /** 调试用:看当前谁在录(小乐 / mika / null)。 */
+    fun micHolder(result: MethodChannel.Result) {
+        result.success(MicGate.holder())
     }
 
     fun openMikaUi(result: MethodChannel.Result) {

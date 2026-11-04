@@ -8,6 +8,7 @@ import 'package:opus_dart/opus_dart.dart';
 import 'package:audio_session/audio_session.dart';
 import 'package:flutter_pcm_sound/flutter_pcm_sound.dart';
 import 'package:xiaozhi_client_flutter/app/config/app_config.dart';
+import 'package:xiaozhi_client_flutter/core/mika/mika_bridge.dart';
 import 'package:xiaozhi_client_flutter/core/storage/storage_service.dart';
 
 /// 音频工具类，用于处理Opus音频编解码和录制播放
@@ -269,6 +270,14 @@ class AudioUtil {
         }
       }
 
+      // 与小乐同进程的 Mika 录音共用一支麦克风：先拿租约，拿不到说明 Mika 正在录，本次直接放弃，
+      // 否则两路 MIC 同时开流，云端可能只听到其中一路（表现为“按住说话云端听不到”）。
+      final micGranted = await MikaBridge.acquireMic();
+      if (!micGranted) {
+        print('$TAG: 麦克风被 Mika 占用，跳过本次录音');
+        return;
+      }
+
       // 尝试直接使用音频流
       try {
         print('$TAG: 尝试启动流式录音 (AEC: $enableAEC, 降噪: $enableAEC, AGC: $enableAEC)');
@@ -320,27 +329,34 @@ class AudioUtil {
           onError: (error) {
             print('$TAG: 音频流错误: $error');
             _isRecording = false;
+            unawaited(MikaBridge.releaseMic());
           },
           onDone: () {
             print('$TAG: 音频流结束');
             _isRecording = false;
+            unawaited(MikaBridge.releaseMic());
           },
         );
       } catch (e) {
         print('$TAG: 流式录音失败: $e');
         _isRecording = false;
+        await MikaBridge.releaseMic();
         rethrow;
       }
     } catch (e, stackTrace) {
       print('$TAG: 启动录音失败: $e');
       print(stackTrace);
       _isRecording = false;
+      await MikaBridge.releaseMic();
     }
   }
 
   /// 停止录音
   static Future<String?> stopRecording() async {
-    if (!_isRecorderInitialized || !_isRecording) return null;
+    if (!_isRecorderInitialized || !_isRecording) {
+      await MikaBridge.releaseMic();
+      return null;
+    }
 
     // 取消定时器
     _audioProcessingTimer?.cancel();
@@ -359,6 +375,9 @@ class AudioUtil {
       print('$TAG: 停止录音失败: $e');
       _isRecording = false;
       return null;
+    } finally {
+      // 无论正常停止还是异常，都要把麦克风租约还给 Mika，否则“按住说话”永远拿不到麦克风。
+      await MikaBridge.releaseMic();
     }
   }
 

@@ -71,4 +71,40 @@ class MikaBridge {
   /// 打开 Mika 原有界面（配模型、看任务记录、开无障碍）。
   static Future<bool> openMikaUi() async =>
       await _channel.invokeMethod<bool>('openMikaUi') ?? false;
+
+  /// 录音前申请麦克风租约。Mika 的按住说话用同一把锁：
+  /// 拿不到说明 Mika 正在录音，本次通话应直接放弃，避免两路 MIC 把对方打成静音。
+  ///
+  /// 非 Android 平台（桌面/测试）没有这个通道，视为"随便用"。
+  static Future<bool> acquireMic() async {
+    try {
+      return await _channel.invokeMethod<bool>('acquireMic') ?? true;
+    } on MissingPluginException {
+      return true;
+    } on PlatformException {
+      return true;
+    }
+  }
+
+  /// 停止录音后一定要还租约（异常路径也要还，否则麦克风会被永久占住）。
+  static Future<void> releaseMic() async {
+    try {
+      await _channel.invokeMethod<bool>('releaseMic');
+    } on MissingPluginException {
+      // 非 Android 平台，忽略
+    } on PlatformException {
+      // 引擎没起或已销毁，忽略
+    }
+  }
+
+  /// 当前麦克风持有者：`xiaole` / `mika` / `null`。调试与自检用。
+  static Future<String?> micHolder() async {
+    try {
+      return await _channel.invokeMethod<String>('micHolder');
+    } on MissingPluginException {
+      return null;
+    } on PlatformException {
+      return null;
+    }
+  }
 }

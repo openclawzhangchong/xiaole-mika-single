@@ -56,3 +56,7 @@ test/failures/
 .flutter
 .flutter_tool_state
 devtools_options.yaml
+
+# ===== 单包：Mika 引擎源码（构建时由 scripts/fetch-mika.sh 拉取并打补丁，不入库）=====
+/mika/
+/android/.gradle/

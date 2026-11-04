@@ -1,4 +1,5 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
     <!-- 权限声明 -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.CAMERA" />
@@ -30,6 +31,15 @@
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
     <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
     <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
+
+    <!-- 嵌入 Mika 后做权限裁剪：下面三条只服务于 Mika 独立 App 的场景，
+         合并版不暴露 Mika 设置/自更新/相册面板，用 tools:node="remove" 从合并清单里剔除。 -->
+    <!-- Mika 自更新（下载新 APK 覆盖安装）；合并版不提供自更新 -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" tools:node="remove" />
+    <!-- 仅用于"用 adb 授权后自动打开无障碍服务"；合并版让用户手动在系统设置里开启 -->
+    <uses-permission android:name="android.permission.WRITE_SECURE_SETTINGS" tools:node="remove" />
+    <!-- Mika 相册面板的 Android 14 部分授权；合并版不暴露该面板，保留小乐自己的 READ_MEDIA_IMAGES 即可 -->
+    <uses-permission android:name="android.permission.READ_MEDIA_VISUAL_USER_SELECTED" tools:node="remove" />
 
     <application
         android:label="小乐"
