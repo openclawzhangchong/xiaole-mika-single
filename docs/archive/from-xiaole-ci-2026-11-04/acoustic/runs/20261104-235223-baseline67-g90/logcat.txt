@@ -1,0 +1,233 @@
+--------- beginning of main
+11-04 23:52:32.389 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.815. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:32.391 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 35.114. prev severity:3. cur severity:0 New severity:0
+11-04 23:52:32.391 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.557. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:32.392 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.259. prev severity:0. cur severity:0 New severity:0
+--------- beginning of system
+11-04 23:52:32.395 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:52:32.423 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:52:32.425 W/OplusSlaPolicy( 2356): isCellUsageExceeded == false.
+11-04 23:52:32.427 D/PhoneInterfaceManager( 3950): [PhoneIntfMgr] QueryTelephonyChecker-getDataNetworkTypeForSubscriber: packageName = android, isGrant = true
+11-04 23:52:32.673 I/ACOUSTIC_MARK( 7843): SESSION START tag=baseline67-g90 runs=5 wav=speech-zh-g90.wav
+11-04 23:52:32.767 I/ACOUSTIC_MARK( 7844): RUN 1 START
+11-04 23:52:32.870 D/AppSwitchObserverHelper( 3662): packageName: com.zcstudy.xiaole,com.android.settings
+11-04 23:52:32.923 E/KernelCpuUidActiveTimeReader( 2356): Negative delta from active time for uid: 10179, delta: -6
+11-04 23:52:32.923 E/KernelCpuUidActiveTimeReader( 2356): Negative delta from active time for uid: 50141, delta: -145
+11-04 23:52:32.923 E/KernelCpuUidActiveTimeReader( 2356): Negative delta from active time for uid: 50005, delta: -1
+11-04 23:52:32.923 E/KernelCpuUidActiveTimeReader( 2356): Negative delta from active time for uid: 50301, delta: -246
+11-04 23:52:32.923 E/KernelCpuUidActiveTimeReader( 2356): Negative delta from active time for uid: 50267, delta: -332
+11-04 23:52:32.923 E/KernelCpuUidActiveTimeReader( 2356): Negative delta from active time for uid: 10219, delta: -27
+11-04 23:52:32.923 E/KernelCpuUidActiveTimeReader( 2356): Negative delta from active time for uid: 10049, delta: -7
+11-04 23:52:32.923 E/KernelCpuUidActiveTimeReader( 2356): Negative delta from active time for uid: 50304, delta: -459
+11-04 23:52:32.923 E/KernelCpuUidActiveTimeReader( 2356): Negative delta from active time for uid: 10146, delta: -13
+11-04 23:52:32.923 E/KernelCpuUidActiveTimeReader( 2356): Negative delta from active time for uid: 50346, delta: -1266
+11-04 23:52:32.923 E/KernelCpuUidActiveTimeReader( 2356): Negative delta from active time for uid: 10141, delta: -141
+11-04 23:52:32.923 E/KernelCpuUidActiveTimeReader( 2356): Negative delta from active time for uid: 10196, delta: -21
+11-04 23:52:32.923 E/KernelCpuUidActiveTimeReader( 2356): Negative delta from active time for uid: 10068, delta: -15
+11-04 23:52:32.923 E/KernelCpuUidActiveTimeReader( 2356): Negative delta from active time for uid: 10110, delta: -5
+11-04 23:52:32.924 E/KernelCpuUidActiveTimeReader( 2356): Negative delta from active time for uid: 10220, delta: -16
+11-04 23:52:32.924 E/KernelCpuUidActiveTimeReader( 2356): Negative delta from active time for uid: 10118, delta: -5
+11-04 23:52:32.924 E/KernelCpuUidActiveTimeReader( 2356): Negative delta from active time for uid: 10100, delta: -9
+11-04 23:52:32.924 E/KernelCpuUidActiveTimeReader( 2356): Negative delta from active time for uid: 10205, delta: -10
+11-04 23:52:32.925 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 10179, delta: -11
+11-04 23:52:32.925 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 50214, delta: -6
+11-04 23:52:32.925 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 50235, delta: -2
+11-04 23:52:32.925 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 50175, delta: -2
+11-04 23:52:32.925 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 50141, delta: -173
+11-04 23:52:32.925 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 50238, delta: -1
+11-04 23:52:32.925 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 50005, delta: -1
+11-04 23:52:32.925 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 50225, delta: -5
+11-04 23:52:32.925 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 50301, delta: -293
+11-04 23:52:32.925 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 50212, delta: -1
+11-04 23:52:32.925 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 50267, delta: -443
+11-04 23:52:32.925 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 10219, delta: -29
+11-04 23:52:32.925 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 50076, delta: -2
+11-04 23:52:32.926 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 50186, delta: -2
+11-04 23:52:32.926 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 50262, delta: -3
+11-04 23:52:32.926 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 10049, delta: -6
+11-04 23:52:32.926 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 50304, delta: -487
+11-04 23:52:32.926 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 10146, delta: -9
+11-04 23:52:32.927 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 50346, delta: -1344
+11-04 23:52:32.927 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 50223, delta: -1
+11-04 23:52:32.927 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 50210, delta: -1
+11-04 23:52:32.927 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 10141, delta: -202
+11-04 23:52:32.927 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 50032, delta: -1
+11-04 23:52:32.927 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 10196, delta: -35
+11-04 23:52:32.927 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 50087, delta: -1
+11-04 23:52:32.927 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 50095, delta: -1
+11-04 23:52:32.927 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 10068, delta: -10
+11-04 23:52:32.928 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 50179, delta: -1
+11-04 23:52:32.928 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 10110, delta: -4
+11-04 23:52:32.928 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 10220, delta: -16
+11-04 23:52:32.928 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 10118, delta: -5
+11-04 23:52:32.928 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 50009, delta: -1
+11-04 23:52:32.928 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 50229, delta: -1
+11-04 23:52:32.928 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 50250, delta: -2
+11-04 23:52:32.929 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 50059, delta: -1
+11-04 23:52:32.929 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 50169, delta: -3
+11-04 23:52:32.929 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 10100, delta: -15
+11-04 23:52:32.929 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 50135, delta: -1
+11-04 23:52:32.929 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 50245, delta: -2
+11-04 23:52:32.929 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 10218, delta: -4
+11-04 23:52:32.929 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 50253, delta: -5
+11-04 23:52:32.929 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 10205, delta: -11
+11-04 23:52:32.929 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 50185, delta: -2
+11-04 23:52:32.929 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 50206, delta: -3
+11-04 23:52:32.929 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 50261, delta: -3
+11-04 23:52:32.952 E/Battery ( 3662): AppStats: Uid = 10352; pkgName = com.zcstudy.xiaole; CpuFgTime = 0 ms; CpuBgTime = 0 ms.
+11-04 23:52:32.952 E/Battery ( 3662): AppStats: Uid = 10352; pkgName = com.zcstudy.xiaole; CpuKernelFgTime = 0 ms; CpuKernelBgTime = 0 ms.
+11-04 23:52:32.952 E/Battery ( 3662): AppStats: Uid = 10352; pkgName = com.zcstudy.xiaole; CpuUserFgTime = 0 ms ; CpuUserBgTime = 0 ms.
+11-04 23:52:32.952 E/Battery ( 3662): AppStats: Uid = 10352; pkgName = com.zcstudy.xiaole; CpuFgPower = 0.0 mAh.; CpuBgPower = 0.0 mAh.
+11-04 23:52:32.952 E/Battery ( 3662): AppStats: Uid = 10352; pkgName = com.zcstudy.xiaole; AlarmFgWakeupCount = 0; AlarmBgWakeupCount = 0
+11-04 23:52:32.952 E/Battery ( 3662): AppStats: Uid = 10352; pkgName = com.zcstudy.xiaole; JobFgCount = 0; JobBgCount = 0; JobFgTime = 0; JobBgTime = 0
+11-04 23:52:32.952 E/Battery ( 3662): AppStats: Uid = 10352; pkgName = com.zcstudy.xiaole; SyncFgCount = 0; SyncBgCount = 0; SyncFgTime = 0; SyncBgTime = 0
+11-04 23:52:32.952 E/Battery ( 3662): AppStats: Uid = 10352; pkgName = com.zcstudy.xiaole; WakeLockFgTime = 0 ms; WakeLockFgPower = 0.0 mAh.; WakeLockBgTime = 0 ms; WakeLockBgPower = 0.0 mAh.
+11-04 23:52:32.952 E/Battery ( 3662): AppStats: Uid = 10352; pkgName = com.zcstudy.xiaole; ScreenFgTime = 12903553 ms; ScreenFgPower = 287.06821104722223 mAh.
+11-04 23:52:32.952 E/Battery ( 3662): AppStats: Uid = 10352; pkgName = com.zcstudy.xiaole; FgWifiRxBytes = -7337003 Bytes; BgWifiRxBytes = 123749418 Bytes; FgWifiTxBytes = -4512290 Bytes; BgWifiTxBytes = 68358285 Bytes; FgWifiRxPackets = -19445 ; BgWifiRxPackets = 323751 ; FgWifiTxPackets = -22699 ; BgWifiTxPackets = 376750 ; FgWiFiScanTimeMs = 0 ; BgWiFiScanTimeMs = 0 ; FgWiFiBatchScanTimeMs = 0 ; BgWiFiBatchScanTimeMs = 0 
+11-04 23:52:32.952 E/Battery ( 3662): AppStats: Uid = 10352; pkgName = com.zcstudy.xiaole; FgWifiRxPacketsPower = -0.18229688704013824 mAh; BgWifiRxPacketsPower = 3.035165786743164 mAh; FgWifiTxPacketsPower = -0.21280314028263092 mAh; BgWifiTxPacketsPower = 3.532031536102295 mAh; FgWifiScanPower = 0.0 mAh; BgWifiScanPower = 0.0 mAh; FgWifiBatchScanPower = 0.0 mAh; BgWifiBatchScanPower = 0.0 mAh; FgWiFiTotalPower = -0.39510002732276917 mAh; BgWiFiTotalPower = 6.567197322845459 mAh.
+11-04 23:52:32.952 E/Battery ( 3662): AppStats: Uid = 10352; pkgName = com.zcstudy.xiaole; FgGpsTime = 0 ms; BgGpsTime = 0 ms.
+11-04 23:52:32.952 E/Battery ( 3662): AppStats: Uid = 10352; pkgName = com.zcstudy.xiaole; FgGpsPower = 0.0 mAh; BgGpsPower = 0.0 mAh.
+11-04 23:52:32.953 E/Battery ( 3662): AppStats: Uid = 10352; pkgName = com.zcstudy.xiaole; FgSensorTime = 0 ms; BgSensorTime = 0 ms.
+11-04 23:52:32.953 E/Battery ( 3662): AppStats: Uid = 10352; pkgName = com.zcstudy.xiaole; FgSensorPower = 0.0 mAh; BgSensorPower = 0.0 mAh.
+11-04 23:52:32.953 E/Battery ( 3662): AppStats: Uid = 10352; pkgName = com.zcstudy.xiaole; FgCameraTime = 0 ms; BgCameraTime = 0 ms
+11-04 23:52:32.953 E/Battery ( 3662): AppStats: Uid = 10352; pkgName = com.zcstudy.xiaole; FgCameraPower = 0.0 mAh; BgCameraPower = 0.0 mAh
+11-04 23:52:32.953 E/Battery ( 3662): AppStats: Uid = 10352; pkgName = com.zcstudy.xiaole; FgFlashLightTime = 0 ms; BgFlashLightTime = 0 ms
+11-04 23:52:32.953 E/Battery ( 3662): AppStats: Uid = 10352; pkgName = com.zcstudy.xiaole; FgFlashLightPower = 0.0 mAh; BgFlashLightPower = 0.0 mAh
+11-04 23:52:33.176 E/sensors-hal( 1187): ssc_conn_event_cb:659, event[0] msg_id=1025, ts=38279292667528 sensor_type = pedometer_minute  Wakeup
+11-04 23:52:33.177 E/sensors-hal( 1187): handle_sns_client_event:83, pedometer_minute: report_ts=33186,counter=1791.000000 move_status =[SNS_CMC_STATIONARY] time_gap = 0 run_counter=0.000000 walk_counter=1455.000000
+11-04 23:52:33.182 I/StepApp_StepDataPreHandler( 3662): (main)onSensorChanged raw data: step=1791.0 state=3.0 minuteDelta=0.0 timestamp=1993701539302922 steprun=0.0 stepwalk=1455.0 formatted data: step=1791 state=3 timestamp=1993701539302922 time=1793807553175 steprun=0 stepwalk=1455
+11-04 23:52:33.391 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.815. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:33.392 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 35.114. prev severity:3. cur severity:0 New severity:0
+11-04 23:52:33.393 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.557. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:33.393 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.259. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:33.656 D/OplusAtlasService( 4534): getAttributeByAppName module:oplus-getStreamMaxVolume packageName:com.cat.readall
+11-04 23:52:33.660 D/OplusAtlasService( 4534): checkIsInDaemonlistByUid module:judge-sco-actualy uid:10271
+11-04 23:52:33.672 D/OplusAtlasService( 4534): getAttributeByAppName module:oplus-getStreamMaxVolume packageName:com.cat.readall
+11-04 23:52:33.863 D/OplusBpfNetworkStats( 2356): succ update config 1,10357,2 over
+11-04 23:52:34.397 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.815. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:34.399 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 35.084. prev severity:3. cur severity:0 New severity:0
+11-04 23:52:34.399 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.616. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:34.399 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.335. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:34.432 I/mars::stn( 6923): [longlink_connect_monitor.cc:536, OnHeartbeatAlarmReceived]:longlink_progress on_heartbeat_alarm, time: 1993702797, is_noop_timeout:false
+11-04 23:52:34.437 I/OplusHansManager ( 2356): uid=10271, pkg=com.cat.readall cannot transition from R to M, importance=widget
+11-04 23:52:34.437 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:52:34.439 I/OplusHansManager ( 2356): uid=10351, pkg=com.wangzan101.mika cannot transition from M to F, importance=floatWindow
+11-04 23:52:34.441 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:52:34.455 W/ProcessStats( 2356): Tracking association SourceState{ad1deb4 system/1000 BTopFgs #515438} whose proc state 2 is better than process ProcessState{5aa2266 com.wangzan101.mika/10351 pkg=com.wangzan101.mika} proc state 3 (8 skipped)
+11-04 23:52:34.463 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:52:34.485 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:52:34.486 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:52:34.487 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:52:34.490 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:52:34.493 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:52:34.498 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:52:34.501 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:52:34.504 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:52:34.506 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:52:34.519 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:52:34.521 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:52:34.524 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:52:34.527 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:52:34.528 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:52:34.534 I/mars::stn( 6923): [longlink_connect_monitor.cc:530, OnHeartbeatAlarmSet]:longlink_progress on_heartbeat_set, time: 1993702899, time interval:580000
+11-04 23:52:34.542 I/mars::stn( 6923): [longlink_connect_monitor.cc:530, OnHeartbeatAlarmSet]:longlink_progress on_heartbeat_set, time: 1993702907, time interval:580000
+11-04 23:52:34.578 E/IHansComunication( 7857): HANS printMessageBody: RCVed message body: type = 4, port = 86870, caller_pid = -1, caller_uid = -1, target_pid = -1, target_uid = 10249, pkg_cmd = -1
+11-04 23:52:34.590 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:52:34.597 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:52:34.601 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:52:34.605 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:52:34.664 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:52:34.698 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:52:35.013 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:52:35.263 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:52:35.304 W/d.process.medi( 7511): Reducing the number of considered missed Gc histogram windows from 484 to 100
+11-04 23:52:35.350 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:batterytemp: 31.9. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:35.350 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.815. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:35.350 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU1temp: 34.9. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:35.352 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 35.084. prev severity:3. cur severity:0 New severity:0
+11-04 23:52:35.352 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:GPUtemp: 35.2. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:35.353 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU7temp: 35.2. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:35.353 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.616. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:35.353 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.335. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:35.353 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU6temp: 34.9. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:35.353 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU5temp: 34.9. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:35.354 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU0temp: 34.9. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:35.354 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU4temp: 35.6. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:35.354 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU3temp: 35.6. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:35.354 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU2temp: 35.2. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:35.403 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.815. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:35.405 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 35.09. prev severity:3. cur severity:0 New severity:0
+11-04 23:52:35.406 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.616. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:35.406 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.335. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:35.431 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:52:35.459 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:52:35.461 W/OplusSlaPolicy( 2356): isCellUsageExceeded == false.
+11-04 23:52:35.463 D/PhoneInterfaceManager( 3950): [PhoneIntfMgr] QueryTelephonyChecker-getDataNetworkTypeForSubscriber: packageName = android, isGrant = true
+11-04 23:52:36.405 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.815. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:36.407 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 35.084. prev severity:3. cur severity:0 New severity:0
+11-04 23:52:36.408 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.616. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:36.409 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.335. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:36.783 V/SearchWidgetService(25818): updateDarkWord: 珠峰南坡海拔4410米酒店雪中被烧毁
+11-04 23:52:36.794 W/Bundle  (25818): Key versionDate expected String but value was a java.lang.Integer.  The default value <null> was returned.
+11-04 23:52:36.795 W/Bundle  (25818): Attempt to cast generated internal exception:
+11-04 23:52:36.795 W/Bundle  (25818): java.lang.ClassCastException: java.lang.Integer cannot be cast to java.lang.String
+11-04 23:52:36.795 W/Bundle  (25818): 	at android.os.BaseBundle.getString(BaseBundle.java:1199)
+11-04 23:52:36.795 W/Bundle  (25818): 	at com.heytap.browser.search.widget.utils.LauncherWidgetHelper.y(LauncherWidgetHelper.kt:62)
+11-04 23:52:36.795 W/Bundle  (25818): 	at com.heytap.browser.search.widget.utils.LauncherWidgetHelper.E(LauncherWidgetHelper.kt:1)
+11-04 23:52:36.795 W/Bundle  (25818): 	at com.heytap.browser.search.widget.utils.LauncherWidgetHelper.N(LauncherWidgetHelper.kt:27)
+11-04 23:52:36.795 W/Bundle  (25818): 	at com.heytap.browser.search.widget.updater.FirstStyleWidgetUpdater.N(FirstStyleWidgetUpdater.kt:3)
+11-04 23:52:36.795 W/Bundle  (25818): 	at com.heytap.browser.search.widget.updater.b.S(BaseWidgetUpdater.kt:18)
+11-04 23:52:36.795 W/Bundle  (25818): 	at com.heytap.browser.search.widget.updater.WidgetUpdaterRegistry.H(WidgetUpdaterRegistry.kt:26)
+11-04 23:52:36.795 W/Bundle  (25818): 	at com.heytap.browser.search.widget.updater.WidgetUpdaterRegistry.A(WidgetUpdaterRegistry.kt:15)
+11-04 23:52:36.795 W/Bundle  (25818): 	at com.heytap.browser.search.widget.updater.WidgetUpdaterRegistry.h(Unknown Source:0)
+11-04 23:52:36.795 W/Bundle  (25818): 	at com.heytap.browser.search.widget.updater.m.run(Unknown Source:6)
+11-04 23:52:36.795 W/Bundle  (25818): 	at android.os.Handler.handleCallback(Handler.java:938)
+11-04 23:52:36.795 W/Bundle  (25818): 	at android.os.Handler.dispatchMessage(Handler.java:99)
+11-04 23:52:36.795 W/Bundle  (25818): 	at android.os.Looper.loopOnce(Looper.java:233)
+11-04 23:52:36.795 W/Bundle  (25818): 	at android.os.Looper.loop(Looper.java:344)
+11-04 23:52:36.795 W/Bundle  (25818): 	at android.os.HandlerThread.run(HandlerThread.java:67)
+11-04 23:52:36.864 D/OplusBpfNetworkStats( 2356): succ update config 1,10357,3 over
+11-04 23:52:37.120 E/OplusNetworkStatsNative( 2356): bpfGetAppPurStatsTotal return 0
+11-04 23:52:37.409 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.815. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:37.412 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 35.037. prev severity:3. cur severity:0 New severity:0
+11-04 23:52:37.413 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.616. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:37.413 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.335. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:37.925 I/OplusHansManager ( 2356): uid=10249, pkg=com.tencent.mm can transition from M to F
+11-04 23:52:37.925 I/OplusHansManager ( 2356): uid=10249, pkg=com.tencent.mm F enter()
+11-04 23:52:37.945 I/OplusHansManager ( 2356): freeze uid: 10249 com.tencent.mm pids: [16137, 6923] scene: LcdOn
+11-04 23:52:37.947 I/OplusHansManager ( 2356): p_BC uid=10249 pkg=com.tencent.mm
+11-04 23:52:37.947 D/IHansComunication( 7857): HansComunication::addUid-- 10249
+11-04 23:52:37.948 D/IHansComunication( 7857): HANS sendMessageToKernel: threadId = 477988973744, netLinkSetup = 1, type = PKG, targetUid = 10249, pkgCmd = ADD_ONE_UID
+11-04 23:52:38.350 I/OplusHansManager ( 2356): uid=10253, pkg=com.oplus.games can transition from M to F
+11-04 23:52:38.350 I/OplusHansManager ( 2356): uid=10253, pkg=com.oplus.games F enter()
+11-04 23:52:38.359 I/OplusHansManager ( 2356): freeze uid: 10253 com.oplus.games pids: [24556] scene: LcdOn
+11-04 23:52:38.362 E/netd    ( 1008): dispachCmd:oplushans
+11-04 23:52:38.362 E/OplusFirewallController( 1008): OplusFirewallController sethanscmd[setrule] over return 0
+11-04 23:52:38.362 E/netd    ( 1008): dispachCmd cmd:oplushans  result:success
+11-04 23:52:38.364 E/netd    ( 1008): dispachCmd:destroyAllSocketForUid
+11-04 23:52:38.364 E/netd    ( 1008): destroyAllSocketForUid:10253
+11-04 23:52:38.364 I/OplusHansManager ( 2356): p_BC uid=10253 pkg=com.oplus.games
+11-04 23:52:38.369 E/netd    ( 1008): dispachCmd cmd:destroyAllSocketForUid  result:success
+11-04 23:52:38.370 D/OAppNetControlService( 2356): Hans update:[10253=true][0|0] blackList:[10349, 10253]
+11-04 23:52:38.413 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.815. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:38.415 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 35.031. prev severity:3. cur severity:0 New severity:0
+11-04 23:52:38.416 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.616. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:38.416 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.335. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:38.466 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:52:38.485 D/SwtpMonitorThread( 1537): read swtp_status_buf: 0,255,255,255
+11-04 23:52:38.497 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:52:38.499 W/OplusSlaPolicy( 2356): isCellUsageExceeded == false.
+11-04 23:52:38.500 D/PhoneInterfaceManager( 3950): [PhoneIntfMgr] QueryTelephonyChecker-getDataNetworkTypeForSubscriber: packageName = android, isGrant = true
+11-04 23:52:39.419 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 32.006. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:39.421 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 35.013. prev severity:3. cur severity:0 New severity:0
+11-04 23:52:39.421 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.814. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:39.422 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.431. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:39.867 D/OplusBpfNetworkStats( 2356): succ update config 1,10357,4 over
+11-04 23:52:39.950 D/IHansComunication( 7857): HansComunication::configCheckedUid-- 10249, type = 0
+11-04 23:52:39.950 D/IHansComunication( 7857): HANS sendMessageToKernel: threadId = 477988973744, netLinkSetup = 1, type = FROZEN_TRANS, targetUid = 10249, pkgCmd = PKG_CMD_MAX
+11-04 23:52:40.236 E/horae   ( 4569): specified Tz is empty!
+11-04 23:52:40.238 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU1temp: 34.3. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:40.238 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU7temp: 34.9. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:40.239 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU6temp: 34.6. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:40.239 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU5temp: 34.3. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:40.239 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU0temp: 34.6. prev severity:0. cur severity:0 New severity:0
