@@ -1,0 +1,7 @@
+﻿"name","verdict","stt","alert","inj"
+"cjk14p","ACCEPT","yes","no","码点=15 utf8字节=45 utf16=15 text=春江潮水连海平海上明月共潮生，"
+"cjk15p","ACCEPT","yes","no","码点=16 utf8字节=48 utf16=16 text=春江潮水连海平海上明月共潮生滟，"
+"cjk16p","REJECT","no","yes","码点=17 utf8字节=51 utf16=17 text=春江潮水连海平海上明月共潮生滟滟，"
+"real15","ACCEPT","yes","no","码点=15 utf8字节=29 utf16=15 text=帮我查下iPhone15多少钱"
+"real11","ACCEPT","yes","no","码点=12 utf8字节=24 utf16=12 text=帮我看下iPhone价格"
+"real12a","ACCEPT","yes","no","码点=11 utf8字节=33 utf16=11 text=今天天气怎么样适合出门"
