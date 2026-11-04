@@ -49,13 +49,15 @@ android {
     }
 
     signingConfigs {
-        // 稳定签名（非 debug）：keystore 随仓库提交，保证每次构建证书指纹一致、可覆盖安装。
-        // 密码走环境变量，默认值与 workflow env 保持一致（公开仓库，不追求保密）。
+        // 稳定签名（非 debug）：keystore 不入库，构建时由 CI 从 secret 解码到本路径，用完即删。
+        // 铁律「同包名必须同签名」：证书 SHA-256 必须与发布基线一致，见 docs/embed-mika.md。
         create("release") {
             storeFile = file("xiaole-release.p12")
-            storePassword = System.getenv("XIAOLE_KEYSTORE_PASSWORD") ?: "REDACTED-KEYSTORE-PASSWORD"
+            storePassword = System.getenv("XIAOLE_KEYSTORE_PASSWORD")
+                ?: error("XIAOLE_KEYSTORE_PASSWORD 未设置（本地构建请自行导出 secret 到环境变量）")
             keyAlias = "xiaole"
-            keyPassword = System.getenv("XIAOLE_KEY_PASSWORD") ?: "REDACTED-KEYSTORE-PASSWORD"
+            keyPassword = System.getenv("XIAOLE_KEY_PASSWORD")
+                ?: error("XIAOLE_KEY_PASSWORD 未设置（本地构建请自行导出 secret 到环境变量）")
             storeType = "pkcs12"
         }
     }
@@ -63,6 +65,13 @@ android {
     buildTypes {
         release {
             signingConfig = signingConfigs.getByName("release")
+            isMinifyEnabled = true
+            // 嵌入 Mika:保留运行时动态加载的类(内置助手 HelperMain 等),
+            // R8 看不到静态引用会把它们剥掉,导致手机操作的 shell 连接起不来。
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
         }
     }
 
