@@ -118,6 +118,11 @@ class XiaozhiWebSocketManager {
   DateTime? _conversationEndAt;
   DateTime? _lastActivityAt;
 
+  /// v6.11.13：会话标记的独立过期定时器。
+  /// 旧实现只在 tick 时刻检查 60s 空闲，最坏要等下一个 tick（+45s），
+  /// 慢于云端 60–70s 回收线，导致云端先断开（1005 → 重连）。
+  Timer? _conversationStaleTimer;
+
   // ===== v6.11.9：下行帧构成统计（证伪/证实"detect 是否制造噪音"）=====
   int _probeDownText = 0;
   int _probeDownBinary = 0;
@@ -360,6 +365,10 @@ class XiaozhiWebSocketManager {
     _conversationActive = true;
     _conversationEndAt = null;
     _lastActivityAt = DateTime.now();
+    // v6.11.13：首次进入会话时挂独立过期定时器；后续续约不重建（避免语音路径
+    // 每帧 16 次 cancel/new）。到期时再按"最后一次活动的剩余时间"续约。
+    _conversationStaleTimer ??=
+        Timer(CONVERSATION_STALE, _expireConversationIfStale);
     if (_probeMode != WsProbeMode.off) {
       logger.info('[$_tag] 进入会话，保活暂停（$why）');
     }
@@ -371,6 +380,8 @@ class XiaozhiWebSocketManager {
     if (!_conversationActive) return;
     _conversationActive = false;
     _conversationEndAt = DateTime.now();
+    _conversationStaleTimer?.cancel();
+    _conversationStaleTimer = null;
     if (_probeMode != WsProbeMode.off) {
       logger.info('[$_tag] 会话结束，${PROBE_RESUME_DELAY.inSeconds}s 后恢复保活（$why）');
     }
@@ -378,6 +389,43 @@ class XiaozhiWebSocketManager {
 
   /// 是否处于会话中（供调试页展示）
   bool get conversationActive => _conversationActive;
+
+  /// v6.11.13：会话标记的独立过期出口。
+  /// 60s 内没有任何收发活动即解除；若期间有活动则按剩余时间续约。
+  /// 解除时立刻补发一帧保活，把"最长无上行间隔"重新压回 60s 附近，
+  /// 保证解除动作本身早于云端 60–70s 的回收线（不再依赖 tick 的 45s 节拍）。
+  void _expireConversationIfStale() {
+    if (!_conversationActive) {
+      _conversationStaleTimer = null;
+      return;
+    }
+    final last = _lastActivityAt;
+    final idle =
+        last == null ? CONVERSATION_STALE : DateTime.now().difference(last);
+    if (idle < CONVERSATION_STALE) {
+      // 仍有活动：按剩余时间续约，保证"最坏 60s"不被活动刷新拖成无限
+      _conversationStaleTimer?.cancel();
+      _conversationStaleTimer = Timer(
+        CONVERSATION_STALE - idle,
+        _expireConversationIfStale,
+      );
+      return;
+    }
+    _conversationActive = false;
+    _conversationEndAt = DateTime.now();
+    logger.warning('[$_tag] 会话标记过期（独立定时器：${idle.inSeconds}s 无收发活动），恢复保活');
+    if (_probeMode == WsProbeMode.auto && isConnected && !_manualClosed) {
+      final now = DateTime.now();
+      final gap = _lastUplinkAt == null
+          ? '首次'
+          : '${now.difference(_lastUplinkAt!).inSeconds}s';
+      for (final payload in _probePayloads()) {
+        sendMessage(payload);
+      }
+      _lastUplinkAt = now;
+      logger.info('[$_tag] 会话标记过期 → 立即补发保活（距上次上行=$gap）');
+    }
+  }
 
   /// 连接建立后按配置启动探针。
   /// 日志前缀 `[PROBE]` 便于 `adb logcat | findstr PROBE` 单线取证。
@@ -394,6 +442,8 @@ class XiaozhiWebSocketManager {
     // 新连接 = 新 session，旧会话标记作废
     _conversationActive = false;
     _conversationEndAt = null;
+    _conversationStaleTimer?.cancel();
+    _conversationStaleTimer = null;
 
     final mode = _probeMode;
     if (mode == WsProbeMode.off) {
@@ -410,17 +460,14 @@ class XiaozhiWebSocketManager {
         logger.info('[$_tag] tick#$_probeSeq t=${_probeElapsedSec}s 发送=否 原因=未连接');
         return;
       }
-      // v6.11.9 兜底：上层漏发"会话结束"时，无活动超过 60s 自动恢复
+      // v6.11.13：会话过期统一交给独立定时器（_expireConversationIfStale），
+      // 这里只做一次兜底调用，避免 tick 与定时器两套判定漂移。
       if (_conversationActive) {
-        final last = _lastActivityAt;
-        if (last == null || now.difference(last) >= CONVERSATION_STALE) {
-          _conversationActive = false;
-          _conversationEndAt = now;
-          logger.warning('[$_tag] 会话标记超时（${last == null ? '无活动记录' : '${now.difference(last).inSeconds}s 无活动'}），自动恢复保活');
-        } else {
-          logger.info('[$_tag] tick#$_probeSeq t=${_probeElapsedSec}s 发送=否 原因=会话中');
-          return;
-        }
+        _expireConversationIfStale();
+      }
+      if (_conversationActive) {
+        logger.info('[$_tag] tick#$_probeSeq t=${_probeElapsedSec}s 发送=否 原因=会话中');
+        return;
       }
       final end = _conversationEndAt;
       if (end != null && now.difference(end) < PROBE_RESUME_DELAY) {
@@ -467,6 +514,8 @@ class XiaozhiWebSocketManager {
     }
     _probeTimer?.cancel();
     _probeTimer = null;
+    _conversationStaleTimer?.cancel();
+    _conversationStaleTimer = null;
     _probeStartAt = null;
     _probeDownText = 0;
     _probeDownBinary = 0;

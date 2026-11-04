@@ -202,6 +202,84 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     _syncProactiveService();
     // v6.11.8：心跳实验——开发者中心切换候选后立即重建连接以生效
     AppFeats.wsProbeRevision.addListener(_onWsProbeChanged);
+    // v6.11.14：调试注入通道（仅开发者模式已授权时生效）
+    unawaited(_consumeDebugInjection());
+  }
+
+  /// v6.11.14：中文文本注入通道（仅开发者模式已授权时生效）。
+  /// `adb shell input text` 只支持 ASCII，无法验证中文边界，故开一个 adb 入口：
+  /// ```
+  /// adb shell am force-stop com.zcstudy.xiaole
+  /// adb shell am start -n com.zcstudy.xiaole/.MainActivity \
+  ///   -e debug_send_texts "中文一<换行>中文二"
+  /// ```
+  /// 每条**原样单帧发送**（绕过分段逻辑），用于量服务端真实长度边界；
+  /// 每条之间间隔 12s，日志前缀 `[DEBUGINJECT]`。
+  static const MethodChannel _debugChannel = MethodChannel('xiaole/debug');
+
+  Future<void> _consumeDebugInjection() async {
+    if (!AppFeats.devAuthed) return;
+    await _consumeRawInjection();
+    await _consumeSegInjection();
+  }
+
+  /// 原样单帧注入（`-e debug_send_texts`），**绕过分段**，用于量服务端真实边界
+  Future<void> _consumeRawInjection() async {
+    try {
+      final raw = await _debugChannel.invokeMethod<String>('takeDebugTexts');
+      if (raw == null || raw.trim().isEmpty) return;
+      final items =
+          raw.split('\n').where((e) => e.trim().isNotEmpty).toList();
+      logger.info('[DEBUGINJECT] 收到 ${items.length} 条注入文本');
+      for (var i = 0; i < items.length; i++) {
+        final t = items[i];
+        logger.info('[DEBUGINJECT] ${i + 1}/${items.length} 码点=${t.runes.length} '
+            'utf8字节=${utf8.encode(t).length} utf16=${t.length} text=$t');
+        _injectRawText(t);
+        if (i < items.length - 1) {
+          await Future.delayed(const Duration(seconds: 12));
+        }
+      }
+    } catch (e) {
+      logger.warning('[DEBUGINJECT] 注入通道不可用: $e');
+    }
+  }
+
+  /// 走**真实发送路径**（含分段/排队/兜底）（`-e debug_send_text_seg`），
+  /// 用于回归"中文长文本一定被切开且每段都收到回复"
+  Future<void> _consumeSegInjection() async {
+    try {
+      final raw = await _debugChannel.invokeMethod<String>('takeDebugSegTexts');
+      if (raw == null || raw.trim().isEmpty) return;
+      final items =
+          raw.split('\n').where((e) => e.trim().isNotEmpty).toList();
+      logger.info('[DEBUGINJECT] 收到 ${items.length} 条分段回归文本');
+      for (var i = 0; i < items.length; i++) {
+        final t = items[i];
+        logger.info('[DEBUGINJECT] 分段回归 ${i + 1}/${items.length} 码点=${t.runes.length} '
+            'utf8字节=${utf8.encode(t).length} text=$t');
+        _textController.text = t;
+        _sendTextMessage();
+        if (i < items.length - 1) {
+          await Future.delayed(const Duration(seconds: 30));
+        }
+      }
+    } catch (e) {
+      logger.warning('[DEBUGINJECT] 分段注入通道不可用: $e');
+    }
+  }
+
+  void _injectRawText(String text) {
+    _wsManager?.markConversationActive('调试注入');
+    if (_isConnected) {
+      _wsManager?.sendTextRequest(text);
+      _setTyping(true);
+      return;
+    }
+    _ensureConnectedThen(() {
+      _wsManager?.sendTextRequest(text);
+      _setTyping(true);
+    }, '调试注入');
   }
 
   /// v6.11.11：把 `AppFeats` 的 keepalive 配置映射为管理器枚举（默认 auto）
@@ -276,6 +354,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     _textController.dispose();
     _scrollController.dispose();
     _aiPlayingTimer?.cancel();
+    _textSegmentTimer?.cancel();
     _voiceCallTimer?.cancel();
     _otaReportTimer?.cancel();
     _reconnectUiTimer?.cancel();
@@ -530,6 +609,95 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     );
   }
 
+  /// v6.11.14：`listen{state:"detect"}` 的文字载荷上限实测（2026-11-04 真机，
+  /// 官方 api.xiaozhi.me 云端，拒绝时回
+  /// `alert{status:ERROR, message:"Detect is only for wake words, do not send long texts."}`
+  /// 且不产生任何 stt/llm/tts）。
+  ///
+  /// 结论：云端**不是**按单一"字符数"或"UTF-8 字节数"卡的——同一 48 字节的
+  /// 纯汉字 16 字通过，而 11 个 emoji（44 字节）被拒，48 字节的 16 汉字+2 标点
+  /// （18 码点）被拒。实测边界随内容类别变化，因此按类别取最小安全值：
+  ///
+  /// | 内容类别                | 通过        | 被拒        | 采用上限 |
+  /// |-------------------------|-------------|-------------|----------|
+  /// | 纯 ASCII 字母数字       | 40          | 60          | 33       |
+  /// | 纯汉字（可含标点）      | 16 码点     | 17 码点     | 12       |
+  /// | 真实中英混排            | 15 码点     | —           | 12       |
+  /// | 单字母交替式混排        | 12 码点     | 13 码点     | 12       |
+  /// | 纯 emoji（astral）      | 10          | 11          | 10       |
+  ///
+  /// 采用值一律比实测通过值再低一档，宁可多切一段，也不冒"零回应"的险。
+  /// 切段同时按**码点**与**UTF-8 字节**两个口径累加（字节上限来自实测通过值），
+  /// 未来云端口径若变化，只需调 [_textLimitsFor] 的四个数字，切段逻辑不用重写。
+  final List<String> _textSegments = [];
+  Timer? _textSegmentTimer;
+
+  static const _TextLimits _limitsAscii = _TextLimits(33, 33);
+  static const _TextLimits _limitsCjk = _TextLimits(12, 45);
+  static const _TextLimits _limitsAstral = _TextLimits(10, 40);
+
+  /// 依内容类别选上限：含 astral（emoji）→ 10；纯 ASCII → 33；其余（汉字/混排）→ 12
+  _TextLimits _textLimitsFor(String text) {
+    var hasAstral = false;
+    var hasNonAscii = false;
+    for (final r in text.runes) {
+      if (r > 0x7F) hasNonAscii = true;
+      if (r > 0xFFFF) hasAstral = true;
+    }
+    if (hasAstral) return _limitsAstral;
+    if (!hasNonAscii) return _limitsAscii;
+    return _limitsCjk;
+  }
+
+  static int _utf8LenOfRune(int rune) {
+    if (rune <= 0x7F) return 1;
+    if (rune <= 0x7FF) return 2;
+    if (rune <= 0xFFFF) return 3;
+    return 4;
+  }
+
+  /// 按 [limits] 切段：码点与字节同时累加，先到者为准；
+  /// 断开处优先回退到 6 个码点内的标点或空白，避免把词劈开。
+  List<String> _splitTextForDetect(String text, _TextLimits limits) {
+    final runes = text.runes.toList();
+    var totalBytes = 0;
+    for (final r in runes) {
+      totalBytes += _utf8LenOfRune(r);
+    }
+    if (runes.length <= limits.maxRunes && totalBytes <= limits.maxBytes) {
+      return [text];
+    }
+
+    final out = <String>[];
+    var start = 0;
+    while (start < runes.length) {
+      var end = start;
+      var bytes = 0;
+      while (end < runes.length) {
+        final b = _utf8LenOfRune(runes[end]);
+        if (end - start >= limits.maxRunes || bytes + b > limits.maxBytes) break;
+        bytes += b;
+        end++;
+      }
+      if (end == start) end = start + 1; // 单个码点就超限时也保证前进
+
+      if (end < runes.length) {
+        final floor = end - 6 < start + 1 ? start + 1 : end - 6;
+        for (var i = end - 1; i >= floor; i--) {
+          final c = String.fromCharCode(runes[i]);
+          if ('。！？；，、.,!?;: '.contains(c)) {
+            end = i + 1;
+            break;
+          }
+        }
+      }
+      final seg = String.fromCharCodes(runes.sublist(start, end)).trim();
+      if (seg.isNotEmpty) out.add(seg);
+      start = end;
+    }
+    return out;
+  }
+
   /// 发送文本消息
   void _sendTextMessage() {
     final text = _textController.text.trim();
@@ -545,24 +713,63 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     _wsManager?.markConversationActive('发送文字');
     logger.info('[KEEPALIVE] 置位 来源=发送文字 耗时=${DateTime.now().difference(vetoAt).inMilliseconds}ms 顺序=发送前');
 
-    // v3.1.0：想打就打（xiaoleweb.md §2.6）——未连接时自动连接，hello ACK 后自动发送
-    if (!_isConnected) {
-      _ensureConnectedThen(() {
-        _wsManager?.sendTextRequest(text);
-        _setTyping(true);
-      }, '发送消息');
-      _textController.clear();
-      _setTyping(true);
-      _scrollToBottom();
-      return;
+    // v6.11.13：超长文字分段——服务端会对 detect 的长文本静默拒绝（只回 alert），
+    // 用户视角就是"打完一段话零回应"。这里显式提示并自动分段，绝不静默丢。
+    final limits = _textLimitsFor(text);
+    final segments = _splitTextForDetect(text, limits);
+    if (segments.length > 1) {
+      logger.info('[TEXTSPLIT] 原文 ${text.runes.length}码点/${utf8.encode(text).length}字节 '
+          '> 上限 ${limits.maxRunes}码点/${limits.maxBytes}字节，分 ${segments.length} 段 '
+          '（每段码点=${segments.map((e) => e.runes.length).join('/')} '
+          '字节=${segments.map((e) => utf8.encode(e).length).join('/')}）');
+      ToastUtil.show('文字较长，已自动分 ${segments.length} 段发送（每段 ≤${limits.maxRunes} 字）');
     }
-
-    // 调用接口发送消息
-    _wsManager?.sendTextRequest(text);
 
     _textController.clear();
     _setTyping(true);
     _scrollToBottom();
+
+    // 若队列里还有上一轮的段未发完，追加而不是覆盖——绝不静默丢用户的字
+    final hadPending = _textSegments.isNotEmpty;
+    _textSegments.addAll(segments);
+    if (!hadPending) _sendNextTextSegment();
+  }
+
+  /// v6.11.13：发送队列中的下一段；未连接则先连后发
+  void _sendNextTextSegment() {
+    if (_textSegments.isEmpty) return;
+    final seg = _textSegments.removeAt(0);
+    if (!_isConnected) {
+      _ensureConnectedThen(() {
+        _wsManager?.sendTextRequest(seg);
+        _setTyping(true);
+        _armTextSegmentTimeout();
+      }, '发送消息');
+      return;
+    }
+    _wsManager?.sendTextRequest(seg);
+    _setTyping(true);
+    _armTextSegmentTimeout();
+  }
+
+  /// 兜底：某段 20s 内没有等到 TTS 结束（例如服务端未回），继续发下一段，
+  /// 避免整条队列卡死导致"用户打了话却没有回应"。
+  void _armTextSegmentTimeout() {
+    _textSegmentTimer?.cancel();
+    if (_textSegments.isEmpty) return;
+    _textSegmentTimer = Timer(const Duration(seconds: 20), () {
+      if (_textSegments.isEmpty) return;
+      logger.warning('[TEXTSPLIT] 20s 未见 TTS 结束，继续发送（剩 ${_textSegments.length} 段）');
+      _sendNextTextSegment();
+    });
+  }
+
+  /// v6.11.13：一轮回复结束（TTS stop/end）→ 立刻发下一段
+  void _flushTextSegmentsOnTurnEnd() {
+    _textSegmentTimer?.cancel();
+    if (_textSegments.isEmpty) return;
+    logger.info('[TEXTSPLIT] 上一段回复结束，继续发送（剩 ${_textSegments.length} 段）');
+    _sendNextTextSegment();
   }
 
   /// v3.1.0：想打就打（xiaoleweb.md §2.6）——未连接时自动发起连接，
@@ -2077,6 +2284,8 @@ class _ChatPageState extends ConsumerState<ChatPage> {
           } else if (state == 'end' || state == 'stop') {
             // v6.11.9：TTS 结束 → 5s 后恢复保活
             _wsManager?.markConversationIdle('TTS $state');
+            // v6.11.13：本轮结束 → 若还有超长文字的分段待发，立即续发下一段
+            _flushTextSegmentsOnTurnEnd();
             // AI 说完了，标记播放结束
             // v3.0.0：双兼容——网页版实测服务器发的是 'stop'（部分上游发 'end'），
             // 只认其一会导致 _isAiPlaying 不复位 → 麦克风停发 → 「第二句听不见」
@@ -2735,4 +2944,11 @@ class _ChatPageState extends ConsumerState<ChatPage> {
       ],
     );
   }
+}
+
+/// v6.11.14：单个文本分段的双口径上限（码点数 / UTF-8 字节数）
+class _TextLimits {
+  const _TextLimits(this.maxRunes, this.maxBytes);
+  final int maxRunes;
+  final int maxBytes;
 }

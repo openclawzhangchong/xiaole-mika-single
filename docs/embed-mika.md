@@ -2,8 +2,8 @@
 
 一个 APK、一个包名（`com.zcstudy.xiaole`）、一个安装包。Flutter 负责界面（实时语音对话 + 任务执行），内嵌的 Kotlin 引擎以 **library 模块** 的形式编进同一个进程（内部模块名仍是 `mika-core` / `mika-app`，见文末「内部标识与外部品牌分离」）。
 
-- 基线：小乐 `master` 6.11.12 + 64（commit `0aa7d20`；含 listen stop 45s 保活、预连接音频回灌、断线无感重连，以及「保活置位前置到 listen start 与文字发送之前」）
-- 单包版本：`6.11.12-mika1+68`（versionCode 68；一次产出两个包：universal `arm64+armv7` 与主分发 `arm64`，两者 versionCode 相同，仅文件名区分；64/65/66/67 均为已出过的历史号，69 预留给合入 6.11.14 的最终版）
+- 基线：小乐 `master` 6.11.14 + 68（commit `61f60ec`；含 listen stop 45s 保活、预连接音频回灌、断线无感重连、「保活置位前置到 listen start 与文字发送之前」，以及「分段上限按内容类别取值」与「会话标记独立 60s 过期 + 解除即补发保活」）
+- 单包版本：`6.11.14-mika1+69`（versionCode 69；一次产出两个包：universal `arm64+armv7` 与主分发 `arm64`，两者 versionCode 相同，仅文件名区分；64–68 均为已出过的历史号）
 - 引擎源码：`wangzan101/Mika` 固定提交 `6661b9e9`（0.1.35）+ `patches/mika-embed.patch`
 
 ## 目录结构
@@ -76,6 +76,24 @@ flutter build apk --release
 - 开源许可证页的版权/作品名（法律归属，必须保留）
 
 以后改名只动文案层（资源 XML 的 string 值 + Flutter 可见字符串），不要再碰标识符。
+
+## 铁律：同包名必须同签名
+
+**只要 `applicationId` 是 `com.zcstudy.xiaole`，无论出自哪个仓库（纯小乐、单包、任一分支），签名证书必须逐位相同。**
+
+- 唯一合法基线（`C=CN, O=ZCStudy, CN=XiaoLe Release`）：
+  `9d2da8805e784801e13c54a635e8bf528db303a235adb5633745cadceb12a169`
+  （来源：`docs/ci-artifact-6.11.7.md`、`docs/ci-artifact-6.11.9.md`，两份是同一把）
+- 违反后果**不是**"装不上"这么轻：同包名不同签名时，系统只允许**卸载再装**，卸载即删除 `/data/data/com.zcstudy.xiaole`，用户会一次性丢掉：开发者授权状态、已选智能体/角色、本地会话与设置、权限授予记录。远程云端智能体不受影响，但本地入口全空。
+- 在 ColorOS 上的表现：`adb install` 返回 `Failure [-99]`，安装引导弹三连窗；**此时正确做法是人工过三连弹（勾选复选框 → 允许本次安装 → 仍然继续），绝不能先 `adb uninstall` 再装**——卸载才是清数据的直接原因。
+- 验证方法（两个包逐位比对，必须完全相同）：
+
+```bash
+apksigner verify --print-certs 包A.apk | grep "certificate SHA-256"
+apksigner verify --print-certs 包B.apk | grep "certificate SHA-256"
+```
+
+- 防回归：`.github/workflows/build-merged-apk.yml` 的 `Verify both APKs` 步骤已把上述指纹写死为 `XIAOLE_CERT_SHA256`，任一包不匹配直接失败；签名材料只描述方法（仓库内 `android/app/xiaole-release.p12` + alias `xiaole`），**不把 p12 本体与口令写进文档**。
 
 ### 改名盘点（用户可见层）
 
