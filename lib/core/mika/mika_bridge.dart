@@ -55,6 +55,19 @@ class MikaBridge {
       await _channel.invokeMethod<bool>('answer', {'id': id, 'text': text}) ??
       false;
 
+  /// 配置引擎的 OpenAI 兼容模型（等价于 Mika 设置里的「添加服务商」）。
+  static Future<bool> configureProvider({
+    required String baseUrl,
+    required String model,
+    String apiKey = '',
+  }) async =>
+      await _channel.invokeMethod<bool>('configureProvider', {
+        'baseUrl': baseUrl,
+        'model': model,
+        'apiKey': apiKey,
+      }) ??
+      false;
+
   /// 打开 Mika 原有界面（配模型、看任务记录、开无障碍）。
   static Future<bool> openMikaUi() async =>
       await _channel.invokeMethod<bool>('openMikaUi') ?? false;

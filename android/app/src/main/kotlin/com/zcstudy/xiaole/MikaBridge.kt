@@ -4,8 +4,12 @@ import android.content.Context
 import android.content.Intent
 import android.os.Handler
 import android.os.Looper
+import com.wangzan101.mika.core.model.Capabilities
+import com.wangzan101.mika.core.model.ModelRole
 import com.wangzan101.mika.core.remote.RemoteStatus
 import com.wangzan101.mika.core.remote.StartOutcome
+import com.wangzan101.mika.settings.ProviderConfig
+import com.wangzan101.mika.settings.ProviderStore
 import com.wangzan101.mika.task.RemoteTaskHub
 import io.flutter.plugin.common.MethodChannel
 import java.util.UUID
@@ -62,6 +66,40 @@ class MikaBridge(private val context: Context, private val channel: MethodChanne
 
     fun answer(id: String, text: String, result: MethodChannel.Result) {
         worker.execute { reply { result.success(hub.answer(id, text)) } }
+    }
+
+    /**
+     * 直接在引擎里配置一个 OpenAI 兼容模型(等价于 Mika 设置里的「添加服务商」)。
+     * 这样合并包不必暴露 Mika 全部 UI 也能把任务跑起来。
+     */
+    fun configureProvider(
+        baseUrl: String,
+        model: String,
+        apiKey: String,
+        result: MethodChannel.Result,
+    ) {
+        worker.execute {
+            try {
+                val store = ProviderStore.get(context)
+                val provider = store.connect(
+                    name = "xiangmu-llm",
+                    kind = ProviderConfig.Kind.OpenAiCompat,
+                    baseUrl = baseUrl,
+                    apiKey = apiKey.ifBlank { null },
+                    models = emptyList(),
+                    untested = true,
+                )
+                val ok = store.use(
+                    ModelRole.Main,
+                    provider.id,
+                    model,
+                    Capabilities(toolCalls = true, vision = false, contextTokens = 128_000, reasoning = false),
+                )
+                reply { result.success(ok) }
+            } catch (e: Throwable) {
+                reply { result.error("mika_provider_failed", e.message ?: e.toString(), null) }
+            }
+        }
     }
 
     fun openMikaUi(result: MethodChannel.Result) {

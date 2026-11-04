@@ -16,11 +16,16 @@ class MikaTaskPage extends StatefulWidget {
 
 class _MikaTaskPageState extends State<MikaTaskPage> {
   final TextEditingController _goal = TextEditingController();
+  final TextEditingController _baseUrl =
+      TextEditingController(text: 'https://text.pollinations.ai/openai');
+  final TextEditingController _model = TextEditingController(text: 'openai-fast');
+  final TextEditingController _apiKey = TextEditingController();
   final List<String> _events = [];
   Map<String, dynamic>? _info;
   Map<String, dynamic>? _result;
   String? _taskId;
   bool _running = false;
+  bool _saving = false;
 
   @override
   void initState() {
@@ -44,7 +49,25 @@ class _MikaTaskPageState extends State<MikaTaskPage> {
   void dispose() {
     MikaBridge.onTaskState = null;
     _goal.dispose();
+    _baseUrl.dispose();
+    _model.dispose();
+    _apiKey.dispose();
     super.dispose();
+  }
+
+  Future<void> _saveProvider() async {
+    if (_saving) return;
+    setState(() => _saving = true);
+    final ok = await MikaBridge.configureProvider(
+      baseUrl: _baseUrl.text.trim(),
+      model: _model.text.trim(),
+      apiKey: _apiKey.text.trim(),
+    );
+    if (!mounted) return;
+    setState(() => _saving = false);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(ok ? '模型已保存，可以执行任务了' : '保存失败，请检查地址和模型名')),
+    );
   }
 
   Future<void> _run() async {
@@ -90,6 +113,8 @@ class _MikaTaskPageState extends State<MikaTaskPage> {
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
         children: [
           _infoCard(scheme),
+          const SizedBox(height: 8),
+          _providerCard(scheme),
           const SizedBox(height: 16),
           TextField(
             controller: _goal,
@@ -132,6 +157,52 @@ class _MikaTaskPageState extends State<MikaTaskPage> {
           ],
         ],
       ),
+    );
+  }
+
+  Widget _providerCard(ColorScheme scheme) {
+    return ExpansionTile(
+      tilePadding: EdgeInsets.zero,
+      title: Text('模型配置（OpenAI 兼容）',
+          style: Theme.of(context).textTheme.bodySmall),
+      subtitle: const Text('引擎执行任务需要一个支持工具调用的模型',
+          style: TextStyle(fontSize: 11)),
+      children: [
+        TextField(
+          controller: _baseUrl,
+          decoration: const InputDecoration(
+            labelText: 'Base URL',
+            isDense: true,
+            border: OutlineInputBorder(),
+          ),
+        ),
+        const SizedBox(height: 8),
+        TextField(
+          controller: _model,
+          decoration: const InputDecoration(
+            labelText: '模型名',
+            isDense: true,
+            border: OutlineInputBorder(),
+          ),
+        ),
+        const SizedBox(height: 8),
+        TextField(
+          controller: _apiKey,
+          decoration: const InputDecoration(
+            labelText: 'API Key（可留空）',
+            isDense: true,
+            border: OutlineInputBorder(),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Align(
+          alignment: Alignment.centerRight,
+          child: FilledButton.tonal(
+            onPressed: _saving ? null : _saveProvider,
+            child: Text(_saving ? '保存中…' : '保存到引擎'),
+          ),
+        ),
+      ],
     );
   }
 

@@ -23,6 +23,12 @@ class MainActivity : FlutterActivity() {
                     result,
                 )
                 "openMikaUi" -> b.openMikaUi(result)
+                "configureProvider" -> b.configureProvider(
+                    call.argument<String>("baseUrl") ?: "",
+                    call.argument<String>("model") ?: "",
+                    call.argument<String>("apiKey") ?: "",
+                    result,
+                )
                 "engineInfo" -> b.engineInfo(result)
                 else -> result.notImplemented()
             }
