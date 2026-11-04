@@ -86,6 +86,9 @@ dependencies {
     // v6.8.2：配合上面的 isCoreLibraryDesugaringEnabled —— 提供 Java 8+ API 的脱糖实现。
     // AGP 8.9.1 支持 desugar_jdk_libs 2.1.x。
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
-    // 同一个 APK 里的 Mika 引擎(任务执行、手机能力、内置模型调用),不再走 adb forward / PC 网关
+    // 同一个 APK 里的 Mika 引擎(任务执行、手机能力、内置模型调用),不再走 adb forward / PC 网关。
+    // mika-core 也要显式依赖:它对 mika-app 是 implementation,不会传递到本模块的编译类路径,
+    // 而 MikaBridge 直接用到 RemoteTaskHub/RemoteStatus 这些 core 类型。
     implementation(project(":mika-app"))
+    implementation(project(":mika-core"))
 }
