@@ -4,7 +4,7 @@ class AppConfig {
 
   // 应用信息
   static const String appName = '小乐'; // v4.0.0：品牌统一（默认智能体名前缀等）
-  static const String appVersion = '6.11.13'; // v6.11.13：超长文字自动分段（服务端 detect 文本上限实测 33 字）+ 会话标记独立过期定时器（≤60s 必解除并补发保活，早于云端 1005）。详见 CHANGELOG.md
+  static const String appVersion = '6.11.14'; // v6.11.14：中文/emoji 边界实测 + 切段常量按"码点+UTF-8 字节"双口径；新增开发者模式的 adb 文本注入通道（[DEBUGINJECT]）。详见 CHANGELOG.md
 
   /// v4.4.0 尾音保护：AI 播放结束后丢弃麦克风音频的时长（毫秒）
   static const int defaultTailGuardMs = 300;

@@ -202,6 +202,54 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     _syncProactiveService();
     // v6.11.8：心跳实验——开发者中心切换候选后立即重建连接以生效
     AppFeats.wsProbeRevision.addListener(_onWsProbeChanged);
+    // v6.11.14：调试注入通道（仅开发者模式已授权时生效）
+    unawaited(_consumeDebugInjection());
+  }
+
+  /// v6.11.14：中文文本注入通道（仅开发者模式已授权时生效）。
+  /// `adb shell input text` 只支持 ASCII，无法验证中文边界，故开一个 adb 入口：
+  /// ```
+  /// adb shell am force-stop com.zcstudy.xiaole
+  /// adb shell am start -n com.zcstudy.xiaole/.MainActivity \
+  ///   -e debug_send_texts "中文一<换行>中文二"
+  /// ```
+  /// 每条**原样单帧发送**（绕过分段逻辑），用于量服务端真实长度边界；
+  /// 每条之间间隔 12s，日志前缀 `[DEBUGINJECT]`。
+  static const MethodChannel _debugChannel = MethodChannel('xiaole/debug');
+
+  Future<void> _consumeDebugInjection() async {
+    if (!AppFeats.devAuthed) return;
+    try {
+      final raw = await _debugChannel.invokeMethod<String>('takeDebugTexts');
+      if (raw == null || raw.trim().isEmpty) return;
+      final items =
+          raw.split('\n').where((e) => e.trim().isNotEmpty).toList();
+      logger.info('[DEBUGINJECT] 收到 ${items.length} 条注入文本');
+      for (var i = 0; i < items.length; i++) {
+        final t = items[i];
+        logger.info('[DEBUGINJECT] ${i + 1}/${items.length} 码点=${t.runes.length} '
+            'utf8字节=${utf8.encode(t).length} utf16=${t.length} text=$t');
+        _injectRawText(t);
+        if (i < items.length - 1) {
+          await Future.delayed(const Duration(seconds: 12));
+        }
+      }
+    } catch (e) {
+      logger.warning('[DEBUGINJECT] 注入通道不可用: $e');
+    }
+  }
+
+  void _injectRawText(String text) {
+    _wsManager?.markConversationActive('调试注入');
+    if (_isConnected) {
+      _wsManager?.sendTextRequest(text);
+      _setTyping(true);
+      return;
+    }
+    _ensureConnectedThen(() {
+      _wsManager?.sendTextRequest(text);
+      _setTyping(true);
+    }, '调试注入');
   }
 
   /// v6.11.11：把 `AppFeats` 的 keepalive 配置映射为管理器枚举（默认 auto）
