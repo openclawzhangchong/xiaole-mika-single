@@ -93,6 +93,8 @@ class _ChatPageState extends ConsumerState<ChatPage> {
   // v6.11.10：说话前预连接——2s 上限 + 失败提示，避免采音前丢第一句话
   Timer? _preconnectTimer;
   DateTime? _preconnectStartAt;
+  /// 预连接期间缓存的 Opus 帧（上限 40 帧 ≈ 2.4s），连上后按序回灌
+  final List<Uint8List> _preconnectAudio = <Uint8List>[];
   // v3.1.0：视觉识物（vision 接口从 MCP initialize 的 params.capabilities.vision 提取）
   String? _visionUrl;
   String? _visionToken;
@@ -581,7 +583,9 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     _preconnectTimer = Timer(const Duration(seconds: 2), () {
       if (_isConnected) return;
       _pendingAutoAction = null;
-      logger.warning('[PRECONNECT] 2s 内未连上（$label），放弃本次操作并提示稍候');
+      final dropped = _preconnectAudio.length;
+      _preconnectAudio.clear();
+      logger.warning('[PRECONNECT] 2s 内未连上（$label），丢弃缓存 $dropped 帧并提示稍候');
       ToastUtil.show('网络恢复中，请稍候');
     });
     if (_connectionStatus == '正在连接...') {
@@ -590,6 +594,17 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     }
     ToastUtil.show('正在自动连接…连上后自动$label');
     _initializeWebSocket();
+  }
+
+  /// v6.11.10：连上后把预连接期间缓存的音频帧按序回灌（须在 listen start 之后调用）
+  void _flushPreconnectAudio() {
+    if (_preconnectAudio.isEmpty) return;
+    final n = _preconnectAudio.length;
+    for (final frame in _preconnectAudio) {
+      _wsManager?.sendBinaryMessage(frame);
+    }
+    _preconnectAudio.clear();
+    logger.info('[PRECONNECT] 回灌缓存音频 $n 帧');
   }
 
   void _runPendingAutoAction() {
@@ -2285,6 +2300,14 @@ class _ChatPageState extends ConsumerState<ChatPage> {
         _showError('发送音频失败: $e');
       }
     } else {
+      // v6.11.10：说话前预连接——断线瞬间按下麦克风时，先把音频帧缓存（上限 40 帧≈2.4s），
+      // 连上并发出 listen start 后回灌，避免"第一句话录丢"。
+      if (!_isInVoiceCall && _preconnectAudio.length < 40) {
+        _preconnectAudio.add(audioData);
+        if (_preconnectAudio.length == 1) {
+          logger.info('[PRECONNECT] 断线中开始缓存上行音频');
+        }
+      }
       // v3.1.0：想打就打——触发自动连接（连上后继续说话即正常上行）。
       // 通话中由 WS 管理器自身重连兜底，不走全链路重建（避免双连接）。
       if (!_isInVoiceCall && _connectionStatus != '正在连接...') {
@@ -2329,8 +2352,9 @@ class _ChatPageState extends ConsumerState<ChatPage> {
       return;
     }
     if (_wsManager == null || !_isConnected) {
-      // v3.1.0：想打就打——未连接时自动连接（本次 listen start 跳过，连上后重按即可）
-      _ensureConnectedThen(() {}, '开始说话');
+      // v3.1.0：想打就打——未连接时自动连接；
+      // v6.11.10：连上后自动重放本次 listen start，并回灌缓存音频，避免第一句话丢失
+      _ensureConnectedThen(_handleAudioStart, '开始说话');
       return;
     }
 
@@ -2345,6 +2369,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
 
       _wsManager!.sendMessage(jsonEncode(listenStartMessage));
       logger.info('已发送 listen start 消息: ${jsonEncode(listenStartMessage)}');
+      _flushPreconnectAudio(); // v6.11.10：回灌预连接期间缓存的音频帧
     } catch (e) {
       logger.severe('发送 listen start 消息失败: $e');
       _showError('启动录音失败: $e');
