@@ -4,7 +4,7 @@ class AppConfig {
 
   // 应用信息
   static const String appName = '小乐'; // v4.0.0：品牌统一（默认智能体名前缀等）
-  static const String appVersion = '6.11.5'; // v6.11.5：权限引导页「让 App 常驻不杀」补"去设置"跳转（对齐后台保活引导页能力：步骤 1 跳电池优化、2/3 跳应用详情，行尾绿色「去设置」）。详见 CHANGELOG.md
+  static const String appVersion = '6.11.7'; // v6.11.7：断线无感重连——云端按业务空闲回收 1005 时不再弹"已断开"，静默重连并在顶部显示"重连中"，超 4s 才亮状态条。详见 CHANGELOG.md
 
   /// v4.4.0 尾音保护：AI 播放结束后丢弃麦克风音频的时长（毫秒）
   static const int defaultTailGuardMs = 300;

@@ -73,6 +73,13 @@ class _ChatPageState extends ConsumerState<ChatPage> {
   String _connectionStatus = '未连接';
   String? _sessionId;
 
+  // v6.11.7：无感重连——云端按"业务消息空闲"约 60–70s 静默回收（1005），
+  // 协议文档未定义心跳，只能靠重连兜底。断线后 4s 内一般不显示任何"已断开"提示，
+  // 静默重连成功则用户只看到顶部小圆点颜色变化；超过 4s 才亮出重连状态条。
+  static const Duration RECONNECT_UI_GRACE = Duration(seconds: 4);
+  Timer? _reconnectUiTimer;
+  bool _showReconnectBar = false;
+
   // v3.0.0：MCP 设备端（协议见 xiaoleweb.md 第五章；响应器=协议层，执行器=本页注入）
   XiaozhiMcpResponder? _mcpResponder;
   final List<Map<String, dynamic>> _mcpTimers = []; // {id,name,endAt,Timer}
@@ -245,6 +252,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     _aiPlayingTimer?.cancel();
     _voiceCallTimer?.cancel();
     _otaReportTimer?.cancel();
+    _reconnectUiTimer?.cancel();
     _mqttPresence?.stop();
     for (final t in _mcpTimers) {
       (t['timer'] as Timer?)?.cancel();
@@ -284,12 +292,16 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                 shape: BoxShape.circle,
                 color: _isConnected
                     ? AppColors.success
-                    : AppColors.textSecondary,
+                    : (_isAutoReconnecting
+                        ? AppColors.warning
+                        : AppColors.textSecondary),
               ),
             ),
             const SizedBox(width: 4),
             Text(
-              _isConnected ? '已连接' : '未连接',
+              _isConnected
+                  ? '已连接'
+                  : (_isAutoReconnecting ? '重连中' : '未连接'),
               style: AppTextStyles.caption,
             ),
           ],
@@ -306,7 +318,11 @@ class _ChatPageState extends ConsumerState<ChatPage> {
           Column(
             children: [
               // 连接状态栏（仅在非连接状态时显示）
-              if (!_isConnected) _buildConnectionStatusBar(),
+              // v6.11.7：自动重连的前 4s 不亮条，避免每 ~70s 被云端回收时页面抖动一次；
+              // 超时仍未恢复（或身份拒绝/重连上限）才显示。
+              if (!_isConnected &&
+                  (!_isAutoReconnecting || _showReconnectBar))
+                _buildConnectionStatusBar(),
 
               // 通话中最小化提示条
               if (_isInVoiceCall && !_showVoiceCallOverlay)
@@ -370,7 +386,9 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     if (_isConnected) {
       statusColor = AppColors.success;
       statusIcon = Icons.check_circle;
-    } else if (_connectionStatus == '正在连接...' || _connectionStatus == '正在认证...') {
+    } else if (_connectionStatus == '正在连接...' ||
+        _connectionStatus == '正在认证...' ||
+        _isAutoReconnecting) {
       statusColor = AppColors.warning;
       statusIcon = Icons.sync;
     } else {
@@ -763,6 +781,26 @@ class _ChatPageState extends ConsumerState<ChatPage> {
       confirmText: '知道了',
       showCancel: false,
     );
+  }
+
+  /// v6.11.7：是否处于「自动重连中」（云端空闲回收 1005/1006、瞬时网络错误等）。
+  /// 这类断线由 WS 管理器 1–4s 内自动补连，UI 只以琥珀色"重连中"呈现，不报错、不亮红条。
+  bool get _isAutoReconnecting =>
+      !_isConnected &&
+      (_connectionStatus == '重连中…' ||
+          _connectionStatus == '网络异常，正在自动重连…');
+
+  /// v6.11.7：断线后延迟 GRACE 秒再亮状态条——绝大多数回收在 1–4s 内已重连成功，
+  /// 这样用户看不到"已断开/重连"闪现，只在真正长时间断线时才会看到重连条与按钮。
+  void _armReconnectUiTimer() {
+    _reconnectUiTimer?.cancel();
+    _reconnectUiTimer = Timer(RECONNECT_UI_GRACE, () {
+      if (!mounted || _isConnected) return;
+      logger.warning('断线超过 ${RECONNECT_UI_GRACE.inSeconds}s 仍未恢复，显示重连状态条');
+      setState(() {
+        _showReconnectBar = true;
+      });
+    });
   }
 
   /// v6.2.1：判定是否为「瞬时网络层错误」（DNS/连接超时/被拒等）。
@@ -1814,9 +1852,12 @@ class _ChatPageState extends ConsumerState<ChatPage> {
 
     switch (event.type) {
       case XiaozhiEventType.connected:
+        _reconnectUiTimer?.cancel();
+        _reconnectUiTimer = null;
         setState(() {
           _isConnected = true;
           _connectionStatus = '已连接';
+          _showReconnectBar = false;
         });
         logger.info('WebSocket 已连接');
         // v3.1.0：连接即开始周期性设备状态上报（后台「最近活跃」对齐）
@@ -1825,18 +1866,27 @@ class _ChatPageState extends ConsumerState<ChatPage> {
         break;
 
       case XiaozhiEventType.disconnected:
+        final codeInfo = event.data?.toString() ?? '';
+        // 432x = 身份校验失败：重连无效，必须让用户看到真实原因与手动入口
+        final fatalIdentity = codeInfo.startsWith('432');
         setState(() {
           _isConnected = false;
-          // v1.1.6: 显示服务器关闭码，便于真机诊断失联原因
-          final codeInfo = event.data?.toString();
-          _connectionStatus = (codeInfo != null && codeInfo.isNotEmpty)
-              ? '已断开 ($codeInfo)'
-              : '已断开';
+          _showReconnectBar = false;
+          if (fatalIdentity) {
+            // v1.1.6: 显示服务器关闭码，便于真机诊断失联原因
+            _connectionStatus =
+                codeInfo.isEmpty ? '已断开' : '已断开 ($codeInfo)';
+          } else {
+            // v6.11.7：1005/1006 多为云端按业务空闲回收，管理器 1–4s 内自动补连。
+            // 不再显示"已断开"，只显示与"已连接"等宽的"重连中…"（顶部不跳字、不弹条）。
+            _connectionStatus = '重连中…';
+          }
         });
         // v4.3.2 埋点：断开原因（close code）进日志
-        logger.warning('WebSocket 已断开 closeCode=${event.data}');
+        logger.warning('WebSocket 已断开 closeCode=${event.data} fatalIdentity=$fatalIdentity');
         // v3.1.0：断线停止周期上报（重连成功后自动恢复）
         _stopOtaReporting();
+        if (!fatalIdentity) _armReconnectUiTimer();
         //_addConnectionStatusMessage('与服务器断开连接');
         break;
 
@@ -1862,6 +1912,14 @@ class _ChatPageState extends ConsumerState<ChatPage> {
           }
         } else {
           _showError('连接错误: $errText');
+          // v6.11.7：重连上限/身份拒绝等"自愈不了"的错误，停止"重连中"假象，
+          // 交还状态条与手动「重连」按钮，避免用户一直等一个不会来的恢复。
+          if (!_isConnected) {
+            setState(() {
+              _connectionStatus = '连接已断开';
+              _showReconnectBar = true;
+            });
+          }
         }
         break;
     }
