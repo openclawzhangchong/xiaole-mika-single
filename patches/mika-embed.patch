@@ -3874,7 +3874,7 @@ index 00000000..b6714072
 +            return false
 +        }
 +        owner = who
-+        log("acquire holder=$who 成功 持有者=${current ?: "无"}")
++        log("acquire holder=$who 成功 持有者=$who")
 +        return true
 +    }
 +

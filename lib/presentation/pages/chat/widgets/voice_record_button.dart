@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:vibration/vibration.dart';
 import 'package:xiaozhi_client_flutter/core/utils/audio_util.dart';
 import '../../../../app/themes/app_colors.dart';
@@ -154,11 +155,32 @@ class _VoiceRecordButtonState extends State<VoiceRecordButton> {
     );
   }
 
-  void _onLongPressStart(LongPressStartDetails details) {
+  void _onLongPressStart(LongPressStartDetails details) async {
     setState(() {
       _isCancelling = false;
     });
-    _startRecording();
+    // 首次按住说话时才申请麦克风权限：不先过这一关，录音器会静默失败，
+    // 界面却停在"松开发送"，看起来像按了没反应。
+    if (!await _ensureMic()) return;
+    await _startRecording();
+  }
+
+  /// 麦克风权限闸门：未授予先申请；拒过（系统不再弹框）就直接给"去开启"的出口。
+  Future<bool> _ensureMic() async {
+    final status = await Permission.microphone.status;
+    if (status.isGranted) return true;
+    if (status.isPermanentlyDenied) {
+      _showMicGuide();
+      return false;
+    }
+    final result = await Permission.microphone.request();
+    if (result.isGranted) return true;
+    if (result.isPermanentlyDenied) {
+      _showMicGuide();
+    } else {
+      _showError('麦克风权限被拒绝，按住说话无法录音');
+    }
+    return false;
   }
 
   void _onLongPressEnd(LongPressEndDetails details) {
@@ -261,6 +283,7 @@ class _VoiceRecordButtonState extends State<VoiceRecordButton> {
 
   /// 开始持续监听
   Future<void> _startContinuousListening() async {
+    if (!await _ensureMic()) return;
     try {
       setState(() {
         _isContinuousListening = true;
@@ -331,6 +354,17 @@ class _VoiceRecordButtonState extends State<VoiceRecordButton> {
         _isContinuousListening = false;
       });
     }
+  }
+
+  void _showMicGuide() {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text('麦克风权限没开，点这里去开启'),
+        duration: const Duration(seconds: 5),
+        action: SnackBarAction(label: '去开启', onPressed: openAppSettings),
+      ),
+    );
   }
 
   void _showError(String message) {

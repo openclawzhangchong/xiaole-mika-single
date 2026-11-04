@@ -6,6 +6,28 @@
 
 ---
 
+## v6.11.15 · 2026-11-04
+
+**主题：release 包的关键链路日志可直读 + 麦克风权限首次申请有 UI 出口**
+
+### 一、release 日志（`adb logcat -s XiaoLe`）
+- 新增 `lib/core/utils/native_log.dart` + 原生通道 `xiaole/log`：`main.dart` 的日志汇聚点在写环形缓冲之外，把
+  `[KEEPALIVE]` / `[TEXTSPLIT]` / `[RECONNECT]` / `[PRECONNECT]` / `MicGate` 以及 `warning` 以上级别额外交给
+  `Log.i("XiaoLe", ...)`，固定 tag、固定级别，release 也直读（不再依赖会被轮转的 `flutter` tag）。
+- `MainActivity.onCreate` 打一条 `BOOT MainActivity onCreate`，作为装机后"日志通道可用"的锚点。
+- 排查结论：release 包里 `debugPrint` 本身没有开关、`lib` 全量无 `kReleaseMode` 早退；此前 `-s flutter` 为空，
+  与设备 logcat 缓冲轮转（实测一次 dump 只剩最近几分钟）以及四类日志本身是事件驱动（空闲时不产生）有关。
+
+### 二、麦克风权限
+- `VoiceRecordButton` 首次按住说话/开启持续监听前先过权限闸门：未授予则 `Permission.microphone.request()`；
+  已 `permanentlyDenied` 时不再静默失败，弹「麦克风权限没开，点这里去开启」并提供 `去开启` 直达系统设置。
+- 修掉原来"先置 `_isRecording=true` 再启动录音"导致权限被拒时界面停在"松开发送"、实际没有音频的假象。
+
+### 三、MicGate 日志
+- `acquire holder=<who> 成功 持有者=<who>`（原实现误打成上一个持有者，首次获取会显示"无"）。
+
+---
+
 ## v6.11.14 · 2026-11-04
 
 **主题：中文边界实测 —— 33 是 ASCII 的边界，不是中文的；分段上限改为按内容类别取值**

@@ -2,6 +2,7 @@ package com.zcstudy.xiaole
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
@@ -11,6 +12,8 @@ class MainActivity : FlutterActivity() {
 
     companion object {
         private const val CHANNEL = "xiaole/debug"
+        private const val LOG_CHANNEL = "xiaole/log"
+        private const val LOG_TAG = "XiaoLe"
         private const val EXTRA_TEXTS = "debug_send_texts"
         private const val EXTRA_TEXT = "debug_send_text"
         private const val EXTRA_SEG_TEXTS = "debug_send_text_seg"
@@ -24,6 +27,9 @@ class MainActivity : FlutterActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // 固定 tag 的启动锚点：装机后 `adb logcat -s XiaoLe` 第一行就该是它，
+        // 用来说明 release 包确实在输出日志（Flutter 的 flutter tag 会被系统缓冲轮转掉）。
+        Log.i(LOG_TAG, "BOOT MainActivity onCreate")
         readDebugExtra(intent)
     }
 
@@ -73,6 +79,18 @@ class MainActivity : FlutterActivity() {
                 else -> result.notImplemented()
             }
         }
+
+        // release 关键日志通道：固定 tag XiaoLe，供 `adb logcat -s XiaoLe` 直读
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, LOG_CHANNEL)
+            .setMethodCallHandler { call, result ->
+                when (call.method) {
+                    "i" -> {
+                        Log.i(LOG_TAG, call.argument<String>("msg") ?: "")
+                        result.success(null)
+                    }
+                    else -> result.notImplemented()
+                }
+            }
 
         // 开发者模式 adb 注入通道（[DEBUGINJECT]，仅 devAuthed 使用）
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL)

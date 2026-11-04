@@ -9,6 +9,7 @@ import 'core/providers/theme_provider.dart';
 import 'package:logging/logging.dart';
 import 'package:opus_flutter/opus_flutter.dart' as opus_flutter;
 import 'core/utils/log_buffer.dart';
+import 'core/utils/native_log.dart';
 import 'core/utils/audio_util.dart';
 import 'core/proactive/proactive_background.dart';
 
@@ -31,6 +32,10 @@ void main() async {
     // 这里是全项目 package:logging 日志的唯一汇聚点，必须在最前面，
     // 否则 chat_page / cloud_sync 的 logger.info/severe 抓不进缓冲。
     LogBuffer.add(record);
+    // release 验收日志：四类关键链路额外走原生 Log.i("XiaoLe")，见 core/utils/native_log.dart
+    if (NativeLog.isRequired(record.message) || record.level >= Level.WARNING) {
+      NativeLog.write('${record.level.name} ${record.loggerName}: ${record.message}');
+    }
     // 使用 debugPrint 替代 print，避免警告
     debugPrint(
       '${record.level.name}: ${record.time}: ${record.loggerName}: ${record.message}',
