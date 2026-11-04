@@ -73,6 +73,7 @@
 > **改动出错需要回退时，优先按下表找最近的 ✅ 版本**；标 ❌ 者为**构建失败、无 APK**，**勿用**。
 
 | 版本标签 | 内容 | 包名 | 验证状态 | 验证日期 |
+| `v6.11.8`（commit `0450cb8`，未打 tag） | 🔬 **WS 心跳实验（默认关）** —— 新增 `WsProbeMode` 4 候选（① 重发 `hello` / ② `listen{state:"detect"}` / ③ `abort{reason:"heartbeat"}` / ④ 仅 WS ping 对照组），30s 可配探针；开发者中心「调试 → WS 心跳实验」切换即重建连接（避免"候选有效→永远等不到重连"死锁）；日志统一 `[PROBE]` 前缀（候选/间隔/tick/首帧/断开时存活秒数+发送数+收帧数+closeCode）；`全部关闭` 一并归零。用途：真机判定哪条业务消息能续命云端 1005 回收 | `com.zcstudy.xiaole` | ✅ CI 通过（run **41809567015**，8m37s；APK 40,806,486 B，sha256 `f1b23bd35188f5729aab6cfb3f55c60f8e573c98d8db70525a2a1eed37a285e1`）；**按指令未装机**，等设备窗口 | 2026-11-04 |
 | `v6.11.7`（commit `0a713ef`，未打 tag） | 🔌 **断线无感重连** —— 6.11.6 实测 `pingInterval=25s` 仍被云端按业务空闲 ~70s 静默回收（`1005`），且上游文档未定义 WS 心跳 ⇒ 改为 UI 层无感：断线不再显示"已断开"，改为等宽"重连中…"，4s 内不亮状态条（回连成功即无感），超 4s 才亮条 + 手动重连；432x 身份拒绝仍显真实关闭码。仅改 `chat_page.dart` | `com.zcstudy.xiaole` | ✅ CI 通过（run **41807490945**，耗时 9m17s；artifact `xiaole-apk-6.11.7+59-0a713ef`，APK 40,806,378 B，sha256 `2f695d3b711230bc3004b8cd066805a875170ccbfd9dcc9a5711957d759f5990`）；**本版未装机** | 2026-11-04 |
 | `v6.11.6`（commit `93a1eda`，未打 tag） | 🩺 **WS 保活 + 看门狗** —— `pingInterval=25s`、`WATCHDOG_INTERVAL=20s`、重连抽成 `_scheduleReconnect()`（1s→2s→4s…封顶 30s，最多 12 次）。真机实测仍每 ~70s `1005` ⇒ WS 层 ping 不算业务活跃，由 v6.11.7 接续 | `com.zcstudy.xiaole` | ✅ CI 通过（run **41800363754**） | 2026-11-04 |
 | `v6.11.5` | ⚡ **权限引导页「让 App 常驻不杀」补"去设置"跳转** —— 张老师反馈交互退化；核实跳转功能未被删（仍在后台保活引导页），真实问题是两页能力不对齐。本版把 4 条纯文字步骤改为微信规格可点行（序号绿块 + 行尾绿色「去设置」）：步骤 1 跳电池优化、2/3 跳应用详情、4 纯展示；跳转逻辑逐字对齐后台保活引导页。仅改 `privacy_policy_page.dart` | `com.zcstudy.xiaole` | ✅ CI 通过（run **35360076590**，attempt 1 一次通过；APK 40,789,990 B sha1 `767c983f` 已下载桌面 `xiaole-client-v6.11.5.apk`） | 2026-09-18 |
@@ -137,6 +138,13 @@
 | `v1.1.0` | 品牌化：包名 `com.zcstudy.xiaole`、应用名"小乐"、新图标（Le 渐变）、版本 1.1.0+2 | `com.zcstudy.xiaole` | ✅ 通信正常 + UI 正常（真机） | 2026-09-06 |
 | `v1.0.0-wechat2` | 微信风 UI 全页面重绘（主题/导航/列表/聊天气泡/设置页），修复可空类型问题 | `com.xiaozhi.client` | ✅ 通信正常 + UI 正常（真机） | 2026-09-06 |
 | baseline（`d750cc2`） | 上游原版代码，未做任何修改 | `com.xiaozhi.client` | 原版基线（未真机验证） | — |
+
+## 🔬 关键技术点：云端按「业务消息空闲」回收 WebSocket（1005，60–70s）
+
+- 真机实测（realme RMX3161，M5Stack CoreS3 身份，**全程安静不说话**）：6.11.5 无 ping 时 `16:07:53.809 → 16:08:54.071` = **60.26s** 被 `1006` 回收；6.11.6 加 WS `pingInterval=25s` 后仍按 `67.9s / 69.8s` 被 `code=1005` 静默关闭（17:10:12 / 17:11:23 / 17:12:33）⇒ **WS 控制帧 ping 不算"业务活跃"**。
+- 上游协议文档（`docs/websocket_zh.md`、`mcp-protocol_zh.md`）**没有**任何 WebSocket 心跳 / 空闲超时 / keepalive 条款（只有 hello 握手 10s 超时）；唯一有 `Keep Alive` 的是 MQTT/UDP 篇（240s），协议不同不适用。
+- 因此 6.11.7 先做**无感重连**兜底（1s→2s→4s，UI 不再报"已断开"），6.11.8 再用**可开关实验**（`WsProbeMode` 4 候选，默认关）逐个确认哪条业务消息能续命。
+- 证据原文 + 时间序列 + 实验设计与判定阈值：[docs/ws-idle-reclaim-evidence.md](docs/ws-idle-reclaim-evidence.md)
 
 ## ⏪ 回退指南
 
