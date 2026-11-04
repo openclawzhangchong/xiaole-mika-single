@@ -29,8 +29,8 @@ jobs:
     timeout-minutes: 150
 
     env:
-      XIAOLE_KEYSTORE_PASSWORD: 'REDACTED-KEYSTORE-PASSWORD'
-      XIAOLE_KEY_PASSWORD: 'REDACTED-KEYSTORE-PASSWORD'
+      XIAOLE_KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+      XIAOLE_KEY_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
       # 签名基线(纯小乐 xiaole-client-flutter-2027 一致):C=CN, O=ZCStudy, CN=XiaoLe Release
       # 见 docs/ci-artifact-6.11.9.md「签名基线」;只需方法,不写 p12 本体与密码以外的东西
       XIAOLE_CERT_SHA256: '9d2da8805e784801e13c54a635e8bf528db303a235adb5633745cadceb12a169'
@@ -40,6 +40,15 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
+
+      - name: Decode keystore from secret
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+        run: |
+          test -n "$KEYSTORE_BASE64" || { echo "::error::缺少 KEYSTORE_BASE64 secret"; exit 1; }
+          printf '%s' "$KEYSTORE_BASE64" | base64 -d > android/app/xiaole-release.p12
+          test -s android/app/xiaole-release.p12 || { echo "::error::keystore 解码为空"; exit 1; }
+          echo "keystore bytes: $(wc -c < android/app/xiaole-release.p12)"
 
       - name: Setup Java 17
         uses: actions/setup-java@v4
@@ -126,6 +135,8 @@ jobs:
               --ks-pass "pass:$XIAOLE_KEYSTORE_PASSWORD" --key-pass "pass:$XIAOLE_KEY_PASSWORD" \
               --ks-key-alias xiaole "$APK"
           done
+          rm -f android/app/xiaole-release.p12
+          echo "keystore removed from workspace"
           if unzip -l dist/xiaole-6.11.14-mika1-universal.apk | grep -qE 'opus_flutter_(web|windows)'; then
             echo "::error::opus 桌面/Web 资产没排掉"
             exit 1
