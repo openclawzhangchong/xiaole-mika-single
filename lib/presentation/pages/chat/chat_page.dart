@@ -90,6 +90,9 @@ class _ChatPageState extends ConsumerState<ChatPage> {
   // v3.1.0：想打就打——连接成功后自动执行的原操作（见 xiaoleweb.md §2.6）
   Function? _pendingAutoAction;
   String _pendingAutoLabel = '';
+  // v6.11.10：说话前预连接——2s 上限 + 失败提示，避免采音前丢第一句话
+  Timer? _preconnectTimer;
+  DateTime? _preconnectStartAt;
   // v3.1.0：视觉识物（vision 接口从 MCP initialize 的 params.capabilities.vision 提取）
   String? _visionUrl;
   String? _visionToken;
@@ -199,11 +202,17 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     AppFeats.wsProbeRevision.addListener(_onWsProbeChanged);
   }
 
-  /// v6.11.8/6.11.9：把 `AppFeats` 的字符串配置映射为管理器枚举（非法值一律视为关闭）
+  /// v6.11.8/6.11.10：把 `AppFeats` 的字符串配置映射为管理器枚举（非法值一律视为关闭）
   WsProbeMode _wsProbeModeFromConfig() {
     switch (AppFeats.wsProbeMode) {
       case 'detect':
         return WsProbeMode.detect;
+      case 'stop':
+        return WsProbeMode.stop;
+      case 'pair':
+        return WsProbeMode.pair;
+      case 'mcp':
+        return WsProbeMode.mcp;
       default:
         return WsProbeMode.off;
     }
@@ -274,6 +283,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     _voiceCallTimer?.cancel();
     _otaReportTimer?.cancel();
     _reconnectUiTimer?.cancel();
+    _preconnectTimer?.cancel();
     AppFeats.wsProbeRevision.removeListener(_onWsProbeChanged);
     _mqttPresence?.stop();
     for (final t in _mcpTimers) {
@@ -557,6 +567,8 @@ class _ChatPageState extends ConsumerState<ChatPage> {
 
   /// v3.1.0：想打就打（xiaoleweb.md §2.6）——未连接时自动发起连接，
   /// hello ACK（服务器会话确认）后自动执行原操作。
+  /// v6.11.10：加 2s 快速重连上限——连不上就提示"网络恢复中，请稍候"，
+  /// 不启动采音，避免第一句话录丢。
   void _ensureConnectedThen(Function action, String label) {
     if (_isConnected) {
       action();
@@ -564,6 +576,14 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     }
     _pendingAutoAction = action;
     _pendingAutoLabel = label;
+    _preconnectStartAt = DateTime.now();
+    _preconnectTimer?.cancel();
+    _preconnectTimer = Timer(const Duration(seconds: 2), () {
+      if (_isConnected) return;
+      _pendingAutoAction = null;
+      logger.warning('[PRECONNECT] 2s 内未连上（$label），放弃本次操作并提示稍候');
+      ToastUtil.show('网络恢复中，请稍候');
+    });
     if (_connectionStatus == '正在连接...') {
       ToastUtil.show('连接中…连上后自动$label');
       return;
@@ -576,6 +596,13 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     final action = _pendingAutoAction;
     if (action == null) return;
     _pendingAutoAction = null;
+    _preconnectTimer?.cancel();
+    _preconnectTimer = null;
+    final started = _preconnectStartAt;
+    if (started != null) {
+      logger.info('[PRECONNECT] 成功，${DateTime.now().difference(started).inMilliseconds}ms 内连上，自动$_pendingAutoLabel');
+      _preconnectStartAt = null;
+    }
     logger.info('连接就绪，自动$_pendingAutoLabel');
     Future.delayed(const Duration(milliseconds: 300), () => action());
   }

@@ -22,6 +22,15 @@ enum WsProbeMode {
 
   /// 定时发 listen{state:"detect"}（唯一有效保活，但有 TTS 副作用）
   detect,
+
+  /// ⑤ 定时发 listen{state:"stop"}（语义"停止监听"，理论无副作用）
+  stop,
+
+  /// ⑥ 成对发 listen{start,mode:"manual"} + listen{stop}（理论无回复）
+  pair,
+
+  /// ⑥' 定时发 mcp notifications/initialized 空通知（MCP 层心跳）
+  mcp,
 }
 
 /// 小智WebSocket事件
@@ -78,6 +87,14 @@ class XiaozhiWebSocketManager {
   Timer? _watchdogTimer;
   StreamSubscription? _streamSubscription;
   int _reconnectAttempts = 0;
+
+  // ===== v6.11.10：重连频率统计（回答"1 小时 50 次重连是否过频"）=====
+  int _reconnectTotal = 0;        // 累计发起的重连次数
+  int _reconnectSuccess = 0;      // 累计成功次数
+  DateTime? _lastReconnectAt;     // 上次发起重连的时刻
+  DateTime? _lastDisconnectAt;    // 上次断开的时刻（用于算间隔）
+  final List<int> _reconnectGapsSec = <int>[]; // 相邻两次重连的间隔（秒）
+  final List<int> _closeCodes = <int>[];       // 最近收到的关闭码（含 null 记为 -1）
   bool _manualClosed = false;
 
   /// v4.3.3：最近一次收到服务器消息的时间（供上层判断连接是否已僵死）
@@ -253,6 +270,15 @@ class XiaozhiWebSocketManager {
       });
 
       logger.info('已连接到 $uri');
+      // v6.11.10：重连频率统计——成功计数 + 用时（用于评估 70s 回收下的重连压力）
+      if (isReconnect) {
+        _reconnectSuccess++;
+        final started = _lastReconnectAt;
+        final cost = started == null
+            ? '-'
+            : '${DateTime.now().difference(started).inSeconds}s';
+        logger.info('[RECONNECT] 成功 #$_reconnectSuccess/$_reconnectTotal 用时=$cost');
+      }
       // v6.11.6：连接建立即启动看门狗（独立 Dart Timer，不需要生命周期回调）
       _startWatchdog();
       // v6.11.8：按实验配置启动业务保活探针（off/ping 时只打日志，不发业务消息）
@@ -394,12 +420,46 @@ class XiaozhiWebSocketManager {
       _probeSeq++;
       logger.info('[PROBE] tick mode=${mode.name} seq=$_probeSeq '
           'interval=${iv}s t=${_probeElapsedSec}s recv=$_probeRecv');
-      sendMessage(_probePayload());
+      for (final payload in _probePayloads()) {
+        sendMessage(payload);
+      }
     });
   }
 
-  /// detect 保活载荷（v6.11.9 仅保留这一种）
-  String _probePayload() => jsonEncode({"type": "listen", "state": "detect"});
+  /// 各候选的保活载荷（v6.11.10：新增 ⑤ stop、⑥ pair、⑥' mcp）
+  /// detect: 单条 listen detect（已知有效但有 TTS 副作用）
+  /// stop  : 单条 listen stop（"停止监听"，预期不触发回复）
+  /// pair  : listen start(mode=manual) 后立刻 stop（成对，预期不产生会话）
+  /// mcp   : MCP 协议通知 notifications/initialized（MCP 层活跃）
+  List<String> _probePayloads() {
+    switch (_probeMode) {
+      case WsProbeMode.detect:
+        return [jsonEncode({"type": "listen", "state": "detect"})];
+      case WsProbeMode.stop:
+        return [jsonEncode({"type": "listen", "state": "stop"})];
+      case WsProbeMode.pair:
+        return [
+          jsonEncode({
+            "type": "listen",
+            "state": "start",
+            "mode": "manual",
+          }),
+          jsonEncode({"type": "listen", "state": "stop"}),
+        ];
+      case WsProbeMode.mcp:
+        return [
+          jsonEncode({
+            "type": "mcp",
+            "payload": {
+              "jsonrpc": "2.0",
+              "method": "notifications/initialized",
+            },
+          }),
+        ];
+      case WsProbeMode.off:
+        return const [];
+    }
+  }
 
   void _stopProbe(String why) {
     if (_probeTimer != null || _probeStartAt != null) {
@@ -549,6 +609,10 @@ class XiaozhiWebSocketManager {
     final reason = _channel?.closeReason;
     // v6.11.8：先结算本次探针（候选名 / 存活秒数 / 发送数 / 收到帧 / close code）
     _stopProbe('服务器断开 code=${code ?? '-'}');
+    // v6.11.10：记录关闭码与断开时刻，供重连频率评估使用
+    _closeCodes.add(code ?? -1);
+    if (_closeCodes.length > 20) _closeCodes.removeAt(0);
+    _lastDisconnectAt = DateTime.now();
     // v4.3.3：kind=服务器 表示非主动断开（真正的连接丢失）；主动断开见 disconnect() 的 source 日志
     logger.info('连接已断开 code=$code reason=$reason attempts=$_reconnectAttempts '
         'kind=${_manualClosed ? '主动' : '服务器'}');
@@ -609,6 +673,21 @@ class XiaozhiWebSocketManager {
         ? RECONNECT_BASE_MS
         : (RECONNECT_BASE_MS * (1 << (_reconnectAttempts - 1)))
             .clamp(RECONNECT_BASE_MS, RECONNECT_MAX_MS);
+    // v6.11.10：累计重连统计（次数 / 相邻间隔 / 最近关闭码）
+    _reconnectTotal++;
+    final now = DateTime.now();
+    final last = _lastReconnectAt;
+    final gap = last == null ? null : now.difference(last).inSeconds;
+    if (gap != null) {
+      _reconnectGapsSec.add(gap);
+      if (_reconnectGapsSec.length > 100) _reconnectGapsSec.removeAt(0);
+    }
+    _lastReconnectAt = now;
+    logger.info('[RECONNECT] 计划 #$_reconnectTotal（连续第$_reconnectAttempts次） '
+        'delay=${delay / 1000}s gap=${gap ?? '-'}s '
+        'code=${_closeCodes.isEmpty ? '-' : _closeCodes.last} '
+        '距断开=${_lastDisconnectAt == null ? '-' : '${now.difference(_lastDisconnectAt!).inSeconds}s'}');
+    if (_reconnectTotal % 10 == 0) _logReconnectSummary();
     logger.info('网络中断，${delay / 1000}s 后第 $_reconnectAttempts 次自动重连…');
     _reconnectTimer = Timer(Duration(milliseconds: delay), () {
       _isReconnecting = false;
@@ -616,6 +695,27 @@ class XiaozhiWebSocketManager {
         connect(_serverUrl!, _token!, isReconnect: true);
       }
     });
+  }
+
+  /// v6.11.10：每 10 次重连打一条汇总，供"1 小时约 50 次是否过频"评估。
+  /// 采集方式：`adb logcat -s flutter | findstr "[RECONNECT]"`，按小时统计 total/成功/间隔。
+  void _logReconnectSummary() {
+    final gaps = _reconnectGapsSec;
+    final avg = gaps.isEmpty
+        ? '-'
+        : (gaps.reduce((a, b) => a + b) / gaps.length).toStringAsFixed(1);
+    final minGap = gaps.isEmpty ? '-' : gaps.reduce((a, b) => a < b ? a : b);
+    final maxGap = gaps.isEmpty ? '-' : gaps.reduce((a, b) => a > b ? a : b);
+    final codeDist = <int, int>{};
+    for (final c in _closeCodes) {
+      codeDist[c] = (codeDist[c] ?? 0) + 1;
+    }
+    final codes =
+        codeDist.entries.map((e) => '${e.key}:${e.value}').join(',');
+    logger.info('[RECONNECT] 汇总 累计=$_reconnectTotal 成功=$_reconnectSuccess '
+        '失败=${_reconnectTotal - _reconnectSuccess} '
+        '间隔(avg/min/max)=$avg/$minGap/$maxGap s '
+        '近20次closeCode={${codes.isEmpty ? '-' : codes}}');
   }
 
   /// v6.11.6：看门狗。每到 WATCHDOG_INTERVAL 检查一次，专门处理"进程被系统冻结

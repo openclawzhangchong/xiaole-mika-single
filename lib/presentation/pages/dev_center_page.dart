@@ -640,10 +640,13 @@ class _DevCenterPageState extends State<DevCenterPage> {
   // ===== v6.11.8/6.11.9：WS 保活探针选择 =====
 
   Future<void> _pickWsProbe() async {
-    const modes = <String>['off', 'detect'];
+    const modes = <String>['off', 'detect', 'stop', 'pair', 'mcp'];
     const labels = <String>[
       '关闭（生产默认；仅 WS ping + 无感重连）',
-      'detect 每 45s 保活（实测有效，但会触发 TTS）',
+      'detect 保活（实测有效，但会触发 TTS）',
+      '⑤ listen stop（语义"停止监听"，待测）',
+      '⑥ listen start(manual)+stop 成对（待测）',
+      '⑥\' mcp notifications/initialized（待测）',
     ];
     final idx = await showWxActionSheet(
       context,

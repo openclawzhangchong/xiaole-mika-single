@@ -6,6 +6,31 @@
 
 ---
 
+## v6.11.10 · 2026-11-04
+
+**主题：无副作用保活候选（⑤/⑥，默认关）+ 说话前 2s 预连接 + 重连频率统计**
+
+### 新增保活候选（等设备窗口验证，默认全关）
+| 候选 | 每 tick 发送 | 设计意图 | 判定 |
+|---|---|---|---|
+| ⑤ `stop` | `listen{state:"stop"}` | 语义"停止监听"，预期不触发 ASR/回复 | 3 分钟无 1005 **且** 零 stt/tts/音频/`AudioTrack` start |
+| ⑥ `pair` | `listen{start,mode:"manual"}` + `listen{stop}` | 成对发送，预期不产生会话 | 同上 |
+| ⑥' `mcp` | `{"type":"mcp","payload":{"jsonrpc":"2.0","method":"notifications/initialized"}}` | MCP 层活跃通知，不含语音语义 | 同上 |
+
+任一候选只要出现 1 条 `stt` / `tts` / 下行音频 / `AudioTrack` start，即判"有效但有副作用"，与 detect 同罪，不得默认开启。
+`[PROBE]` 已含 tick / 下行 type / 音频帧 / 断开汇总，可直接用于判定。
+
+### 说话前预连接（生产改进，无条件生效）
+- `_ensureConnectedThen()` 增加 **2s 上限**：未连接时先快速重连，连上再执行采音/通话；
+  2s 未连上则**放弃本次操作**并提示「网络恢复中，请稍候」，避免把第一句话录丢。
+- 日志：`[PRECONNECT] 成功，xxx ms 内连上` / `[PRECONNECT] 2s 内未连上（label）…`。
+
+### 重连频率统计
+- `[RECONNECT] 计划 #N（连续第M次） delay=…s gap=…s code=… 距断开=…s`
+- `[RECONNECT] 成功 #成功/累计 用时=…s`
+- 每 10 次：`[RECONNECT] 汇总 累计/成功/失败/间隔(avg/min/max)/近20次 closeCode`
+- 采集：`adb logcat | findstr "[RECONNECT]"`，按小时聚合即可回答"1h≈50 次是否过频"。
+
 ## v6.11.9 · 2026-11-04
 
 **主题：detect 保活收敛——探针只留 off/detect（默认关）、新增会话感知暂停、下行帧取证**

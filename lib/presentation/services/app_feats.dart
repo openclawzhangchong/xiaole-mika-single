@@ -199,6 +199,12 @@ class AppFeats {
     switch (wsProbeMode) {
       case 'detect':
         return 'detect 保活（${wsProbeIntervalSec}s，有 TTS 副作用）';
+      case 'stop':
+        return '⑤ listen stop（${wsProbeIntervalSec}s，待测）';
+      case 'pair':
+        return '⑥ start+stop 成对（${wsProbeIntervalSec}s，待测）';
+      case 'mcp':
+        return '⑥\' mcp 空通知（${wsProbeIntervalSec}s，待测）';
       default:
         return '关闭（生产默认）';
     }
