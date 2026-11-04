@@ -114,7 +114,45 @@ flutter build apk --release
 
 验证：
 - 逻辑层：CI 执行 `:mika-core:test --tests MicGateTest`，覆盖互斥/可重入/越权释放。
-- 运行层（待装机窗口）：小乐通话录音时 `adb logcat | grep MicGate` 应看到 `xiaole` 持有；此窗口引擎按住说话应被拒绝。
+- 运行层：见下节「麦克风互斥运行层验证清单」。
+
+### 麦克风互斥运行层验证清单（装机窗口执行）
+
+> **证据现状（重要）**：本版 `MicGate` / `PcmRecorder` **没有日志**，运行层看不到 holder 值。
+> 因此分成两类证据：①小乐侧 `print`（logcat tag `flutter`）能直接证明"被拒"；②引擎侧只能靠
+> UI 文案 `voice_mic_unavailable`（中文「麦克风用不了，可能正被别的 App 占着」）+ `dumpsys` 的输入轨道数。
+> 若要在 logcat 里直接看到 `holder=xiaole/mika`，需给 `MicGate.tryAcquire/release` 各加一行 `Log.i`（另开补丁，待批）。
+
+**前置**
+
+```bash
+adb -s 36c77fb6 install -r dist/xiaole-6.11.12-mika1.apk      # 禁止 -d；只装 36c77fb6
+adb -s 36c77fb6 shell dumpsys package com.zcstudy.xiaole | grep -E 'versionCode|versionName'
+adb -s 36c77fb6 logcat -c && adb -s 36c77fb6 logcat -b crash -v time > crash.log &   # 全程留证
+```
+
+**用例（每项都要记录时间点 + 对应日志行）**
+
+| # | 操作 | 期望 | 证据 |
+|---|---|---|---|
+| 1 | 小乐实时通话中（麦克风活跃），切到「小乐 · 执行」→ 引擎对话页按住说话 | 引擎**不录音**，输入栏上方出现「麦克风用不了，可能正被别的 App 占着」 | UI 截图；`logcat -s flutter:I \| grep '流式录音启动成功'`；此期间 **无** 新 `AudioRecord` 报错 |
+| 2 | 小乐这轮录音结束（松手/通话结束）后，引擎再按住说话 | 正常录音并转出文字，无 `voice_mic_unavailable` | 转文字结果截图；`AudioUtil: 停止录音` 之后成功 |
+| 3 | 反方向：引擎按住说话不放，小乐点麦克风开始录音 | 小乐跳过本次录音，**不崩、不静音对方**；引擎这轮仍能出结果 | `flutter` 日志：`AudioUtil: 麦克风被引擎占用，跳过本次录音` |
+| 4 | 引擎松手后 5s 内，小乐再录一次 | 能正常进 `流式录音启动成功`（证明 `release` 已归还） | 同一 logcat 连续两行 |
+| 5 | 快速交替 10 次（间隔 <1s，两侧轮流按住） | 每次只有一方在录；无崩溃、无 ANR；结束后两侧都能正常录 | `logcat -b crash` 为空；10 次里记录"拒/允"计数 |
+| 6 | 异常归还：录音中切后台 / 通话被结束 / 引擎任务取消，然后另一侧立刻开麦 | 另一侧能拿到麦，不出现"永久占用" | 同上；`dumpsys` 输入轨道归零后再起 |
+| 7 | 全程 `dumpsys media.audio_flinger` 抽查 3 次 | 输入线程 `ACTIVE` 轨道恒 ≤1；同一时刻不存在两条活跃录音 | 每次抓 `ACTIVE` 段前后 10 行 |
+
+**logcat 关键字速查**
+
+```bash
+adb -s 36c77fb6 logcat -v time | grep -E 'AudioUtil: (流式录音启动成功|停止录音|麦克风被引擎占用|启动录音失败)|麦克风用不了'
+adb -s 36c77fb6 logcat -b crash -v time            # 必须为空
+adb -s 36c77fb6 shell dumpsys media.audio_flinger | grep -n -A12 -i 'Input'   # 看 ACTIVE 轨道/pid
+```
+
+判读原则：**同一时刻 active 输入轨道 ≤1** 且"被拒一侧"有明确痕迹，才算通过；只凭"听起来正常"不算。
+
 
 ## 权限裁剪（合并清单前后）
 
@@ -135,10 +173,38 @@ flutter build apk --release
 
 CI 会 `aapt2 dump permissions` 并在发现上述三条仍在时直接失败。
 
+## 体积构成（6.11.11-mika1+65 实测 74,142,348 B）
+
+按 APK 内条目压缩后字节归组（占 74.0 MB 有效载荷）：
+
+| 组 | 字节 | 占比 | 明细 |
+|---|---:|---:|---|
+| 引擎运行环境 | 31,466,196 | 42.5% | `assets/runtime/rootfs.tar.xz`（已是 xz，无法再靠 zip 压缩） |
+| DEX / Kotlin | ~9,150,000 | 12.4% | `classes.dex` 9,021,764（未压缩存储）+ kotlin 元数据 |
+| Flutter 引擎 | 9,644,197 | 13.0% | `libflutter.so`：arm64 5,184,998 + armv7 4,459,199 |
+| Flutter 业务 AOT | 6,771,745 | 9.1% | `libapp.so`：arm64 3,218,893 + armv7 3,552,852 |
+| MLKit OCR | 9,849,115 | 13.3% | `libmlkit_google_ocr_pipeline.so` 双 ABI 7,918,785 + `assets/mlkit-google-ocr-models` 1,930,330 |
+| Flutter 资源 | ~3,220,000 | 4.3% | `flutter_assets` 2,722,499（其中 `opus_flutter_windows`/`opus_flutter_web` 的 dll/wasm 约 2.6 MB 是桌面/Web 平台的库，Android 用不到） |
+| Android 资源 | 3,605,316 | 4.9% | `resources.arsc` 2,634,508 + `res/` 970,808（单文件 `res/iw.png` 740,892） |
+| 其他原生库 | ~90,000 | 0.1% | `libproot.so` 76,068 + `libmikarun.so` 7,010 + `libproot_loader.so` 987 |
+
+按 ABI 汇总：`arm64-v8a` 13,136,711 + `armeabi-v7a` 11,730,680，**双 ABI 并打包占 15.8%**。
+
+可瘦点（按收益排序，均未实施）：
+
+1. **只出 arm64**（真机 RMX3161 是 arm64）：省 ~11.7 MB → 约 62 MB。代价是不再兼容 32 位设备。
+2. **删掉 `opus_flutter_windows` / `opus_flutter_web` 资源**（pub 依赖把各平台资产一起打进 APK）：省 ~2.6 MB。
+3. **排查 `res/iw.png`**（740 KB 单图）：确认是否仍被引用，不用则删。
+4. **rootfs 31 MB**：可尝试裁剪无用的 busybox 软链/文档、或在 CI 里重打 xz 最高压缩；风险最高（运行环境随时可能缺工具），建议二次开发稳定后再动。
+5. **DEX 9 MB**：可评估 R8 full mode + `shrinkResources`，收益需实测（Compose/MLKit/OkHttp 反射较多，别一次开太狠）。
+6. MLKit OCR 9.8 MB 属功能刚需（屏幕文字识别），暂不动；若后续换端侧小模型可回收 4–5 MB。
+
 ## 尚未解决
 
-- rootfs 30 MB（`assets/runtime/rootfs.tar.xz`）未优化，包体约 74 MB。
+- rootfs 31 MB（`assets/runtime/rootfs.tar.xz`）未优化；体积拆解与可瘦点见上节「体积构成」。
 - 无障碍设备操作（点击/滑动/截屏）在合并包内未实测（真机上该服务原本是关闭状态）。
-- 麦克风互斥的**运行层**验证要等装机窗口；设备当前由另一条线做 MCP 端到端。
+- 麦克风互斥的**运行层**验证要等装机窗口（清单见「麦克风互斥运行层验证清单」）；设备当前由另一条线做 MCP 端到端。
+- `MicGate` 无日志，运行层看不到 holder；要 logcat 直读需另加 3 行 `Log.i`（未做）。
 - `mika/` 每次 CI 重新拉取（未做 Gradle 构建缓存优化）。
 - 日语/韩语等 9 套语言资源未改名。
+- 6.11.13（超长文本分段 + 会话标记独立过期出口）尚未合入；最终版排期 `6.11.13-mika1+68`。
