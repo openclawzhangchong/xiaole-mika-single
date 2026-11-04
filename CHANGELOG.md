@@ -6,6 +6,22 @@
 
 ---
 
+## v6.11.16 · 2026-11-05
+
+**主题：修复 XiaoLe 固定 tag 日志通道（v6.11.15 引入的失效）**
+
+### 修复
+- `MainActivity` 的 `xiaole/log` 通道原先按 `call.argument<String>("msg")` 取值，但 Dart 侧
+  `NativeLog.write` 直接传字符串，导致每次转发都抛 `ClassCastException`（logcat 每 45s 一条
+  `E/MethodChannel#xiaole/log`），`adb logcat -s XiaoLe` 只剩 BOOT 锚点，KEEPALIVE/TEXTSPLIT/
+  RECONNECT/MicGate 等验收关键日志全部丢失。
+- 改为兼容字符串入参（保留 Map 兼容）：`[KEEPALIVE]` 等日志恢复固定 tag 直读。
+
+### 备注
+- 6.11.15+70 装机实测：实时语音（声学回环 STT + TTS）与进程内 Mika 任务均通过；本版仅修日志通道。
+
+---
+
 ## v6.11.15 · 2026-11-04
 
 **主题：release 包的关键链路日志可直读 + 麦克风权限首次申请有 UI 出口**

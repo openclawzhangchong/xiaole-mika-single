@@ -85,7 +85,13 @@ class MainActivity : FlutterActivity() {
             .setMethodCallHandler { call, result ->
                 when (call.method) {
                     "i" -> {
-                        Log.i(LOG_TAG, call.argument<String>("msg") ?: "")
+                        // Dart 侧（NativeLog.write）直接传字符串；同时兼容旧的 Map 写法
+                        val msg = when (val args = call.arguments) {
+                            is String -> args
+                            is Map<*, *> -> args["msg"] as? String ?: ""
+                            else -> ""
+                        }
+                        Log.i(LOG_TAG, msg)
                         result.success(null)
                     }
                     else -> result.notImplemented()
