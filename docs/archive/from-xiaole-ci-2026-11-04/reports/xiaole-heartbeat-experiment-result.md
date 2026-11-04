@@ -20,7 +20,7 @@
 
 **结论**：只有 ② `detect` 打破了 ~68s 的回收节奏，且**撑过 3 分钟阈值**（实际 240s 仍在线、8 次 tick 全部成功）；①③ 与对照同量级（65–68s），说明"重握手"和"打断"都不算业务活跃。
 
-## 二、原始日志（逐字照抄，`C:\Users\Administrator\AppData\Local\Temp\xiaole-apk\`）
+## 二、原始日志（逐字照抄，`<TEMP>\xiaole-apk\`）
 
 **对照（`probe_ping.log`）**
 ```

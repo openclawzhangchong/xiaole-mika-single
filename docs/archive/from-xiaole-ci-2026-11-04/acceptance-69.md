@@ -11,7 +11,7 @@
 adb -s 36c77fb6 shell "dumpsys package com.zcstudy.xiaole | grep -E 'versionCode|firstInstallTime'"
 
 # 0.2 装 69（APK 由单包线产出后放到本地目录）
-adb -s 36c77fb6 install -r "C:\Users\Administrator\AppData\Local\Temp\xiaole-apk\v61115\<69.apk>"
+adb -s 36c77fb6 install -r "<TEMP>\xiaole-apk\v61115\<69.apk>"
 # 若返回 Failure [-99]：不要 uninstall。按三连弹点：
 #   复选框"已知悉该应用存在风险" → "授权本次安装" → 风险弹窗"仍然继续" → 完成页"打开应用"
 
@@ -262,7 +262,7 @@ adb -s 36c77fb6 shell svc wifi enable
 
 ```powershell
 # 关闭保活探针 → 还原 57 → 清 reverse → 回桌面
-adb -s 36c77fb6 install -r -d "C:\Users\Administrator\AppData\Local\Temp\xiaole-apk\xiaole-apk-6.11.5+57-c315bc4\xiaole-6.11.5+57-c315bc4-release.apk"
+adb -s 36c77fb6 install -r -d "<TEMP>\xiaole-apk\xiaole-apk-6.11.5+57-c315bc4\xiaole-6.11.5+57-c315bc4-release.apk"
 adb -s 36c77fb6 reverse --remove-all
 adb -s 36c77fb6 shell input keyevent KEYCODE_HOME
 ```

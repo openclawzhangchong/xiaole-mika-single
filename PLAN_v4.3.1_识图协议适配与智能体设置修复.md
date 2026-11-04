@@ -46,7 +46,7 @@
 
 ## 实施记录（2026-09-09 回填）
 
-- **App（v4.3.1+18）**：远端 commit `33a1e04673b7a60a3bc645ffba41b2dbc6e76d18`（本地 `f381a61`，7 文件 +216/-39），tag `v4.3.1`，CI run `34369933334` **success**；APK `C:\Users\Administrator\Desktop\xiaole-client-v4.3.1.apk`（59,388,666 字节与资产一致，sha1 `7e0a6620c1df05e6`）。改动全在 `lib/presentation/`（chat_page 为主 + settings 顺手清 v4.3.0 遗留 unused_import）；红线校验 `git diff 8a78873 -- lib/core/ lib/data/` 为空 ✅。
+- **App（v4.3.1+18）**：远端 commit `33a1e04673b7a60a3bc645ffba41b2dbc6e76d18`（本地 `f381a61`，7 文件 +216/-39），tag `v4.3.1`，CI run `34369933334` **success**；APK `<DESKTOP>\xiaole-client-v4.3.1.apk`（59,388,666 字节与资产一致，sha1 `7e0a6620c1df05e6`）。改动全在 `lib/presentation/`（chat_page 为主 + settings 顺手清 v4.3.0 遗留 unused_import）；红线校验 `git diff 8a78873 -- lib/core/ lib/data/` 为空 ✅。
 - **网页版（v3.4.1-dev）**：commit `118413f550a3d30727d18426957232672451d393`（app.html 188,985 B + 方案 md，字节校验通过）；CF 部署 `xiaole-web` 项目，线上 `https://xiaole-web-1nx.pages.dev/app.html` 已验证 3.4.1-dev 与新函数生效（HTTP 200）。
 - **质量门**：analyze 0 error；golden 套件首跑 AUDIT5 出现 0.28%（14706px）假 diff（与 v4.3.0 同数字同位置，固有 flaky：固定 pump 下异步值偶发漂移，非本次改动区域），复跑两轮 5/5 全绿。
 - **待真机验收**：①拍照识物——描述文字进 AI 气泡（不再是 JSON 原文）；识图失败只显示中文提示；②三点菜单「智能体设置」→ 打开编辑页，改名返回后聊天页标题同步；③旧协议兼容：若服务器偶发返回 {text} 形态仍直显。

@@ -54,7 +54,7 @@ adb -s 36c77fb6 reverse --list                  # 应为空
 ```
 装机（**禁止 `-d`**，`versionCode=60` 正常覆盖 57）：
 ```powershell
-adb -s 36c77fb6 install -r "C:\Users\Administrator\AppData\Local\Temp\xiaole-apk\v6118\xiaole-apk-6.11.8+60-0450cb8\xiaole-6.11.8+60-0450cb8-release.apk"
+adb -s 36c77fb6 install -r "<TEMP>\xiaole-apk\v6118\xiaole-apk-6.11.8+60-0450cb8\xiaole-6.11.8+60-0450cb8-release.apk"
 ```
 > 若 realme 安全安装器弹窗拦截，按既有流程勾选风险确认/授权安装（后台 install 返回 `Success` 即成功）。
 
@@ -62,7 +62,7 @@ adb -s 36c77fb6 install -r "C:\Users\Administrator\AppData\Local\Temp\xiaole-apk
 ```powershell
 # 1) 清日志 + 开始抓（日志落在本机文件里）
 adb -s 36c77fb6 logcat -c
-adb -s 36c77fb6 logcat -v time | Select-String -Pattern "PROBE|1005|已连接|连接已断开|收到消息" | Tee-Object -FilePath C:\Users\Administrator\AppData\Local\Temp\xiaole-apk\probe_<mode>.log
+adb -s 36c77fb6 logcat -v time | Select-String -Pattern "PROBE|1005|已连接|连接已断开|收到消息" | Tee-Object -FilePath <TEMP>\xiaole-apk\probe_<mode>.log
 # 2) 进聊天页 → 开发者中心「调试 → WS 心跳实验」选候选（密码 zc19901111）
 #    （切换即重建连接；聊天页保持在前台，别锁屏）
 # 3) 静置 5 分钟，不说话、不切后台
@@ -84,7 +84,7 @@ adb -s 36c77fb6 shell am force-stop com.zcstudy.xiaole   # 或手动在开发者
 
 | 类型 | 位置 |
 |---|---|
-| 本报告 | `C:\Users\Administrator\Documents\Trae-CN\temp_20261104_03\xiaole-heartbeat-experiment-plan.md` |
+| 本报告 | `<HOME>\Documents\Trae-CN\temp_20261104_03\xiaole-heartbeat-experiment-plan.md` |
 | 入库证据（时间序列 + 原始日志 + 实验设计/阈值） | 仓库 `docs/ws-idle-reclaim-evidence.md`（README 新增「🔬 关键技术点」一节指向它） |
 | 6.11.7 合并版基线（另一任务读） | 仓库 `docs/ci-artifact-6.11.7.md`（commit `0a713ef`、APK 路径、sha256、签名指纹；未改其它任务目录） |
 | CI 产物 | 本机 `...\xiaole-apk\v6118\xiaole-apk-6.11.8+60-0450cb8\`（APK / SHA256SUMS / analyze.log） |

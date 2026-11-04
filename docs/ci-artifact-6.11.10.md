@@ -18,7 +18,7 @@
 | artifact | `xiaole-apk-6.11.10+62-3d5819f` |
 | APK | `xiaole-6.11.10+62-3d5819f-release.apk`，**40,822,866 B** |
 | SHA-256 | `1a161d2d080df9b50cdecc19015fc3abd530a2a06bb976c4b8d6f2775a360d49` |
-| 本机路径 | `C:\Users\Administrator\AppData\Local\Temp\xiaole-apk\v61110-final\` |
+| 本机路径 | `<TEMP>\xiaole-apk\v61110-final\` |
 | analyze | **0 error** |
 
 ## 3. 装机注意

@@ -1,6 +1,6 @@
 # 可行性报告：小乐 → 网关 → Mika 执行桥
 
-> 打样日期 2026-11-04 · Mika `Z:\github项目\Mika` @ `6661b9e9`（v0.1.35，已从上游快进 28 个提交）· 真机 realme RMX3161 / Android 12
+> 打样日期 2026-11-04 · Mika `<WORKSPACE>\Mika` @ `6661b9e9`（v0.1.35，已从上游快进 28 个提交）· 真机 realme RMX3161 / Android 12
 
 ## 1. 结论
 
@@ -157,7 +157,7 @@
 
 ```powershell
 # 1) 手机连好 USB，打开一次 Mika；.env 里配好 MCP_TOKEN / MIKA_DEVICE / XIAOZHI_SERIAL_NUMBER
-cd Z:\github项目\xiaole-mika-lianhe
+cd <WORKSPACE>\xiaole-mika-lianhe
 python -m gateway --bootstrap --log-file logs\gateway.log
 
 # 2) 另开一个终端跑最小 MCP 客户端

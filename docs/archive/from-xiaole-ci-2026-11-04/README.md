@@ -1,6 +1,6 @@
 # 验收与证据归档（2026-11-04）
 
-**来源**：验收线工作区 `Temp\xiaole-ci`（迁移过一版到 `Z:\github项目\xiaole-client-flutter-2027`，随后按"只留一个仓库"决定删除）。
+**来源**：验收线工作区 `Temp\xiaole-ci`（迁移过一版到 `<WORKSPACE>\xiaole-client-flutter-2027`，随后按"只留一个仓库"决定删除）。
 **放置方式**：由验收线 `Copy-Item` 复制进来，**未做任何 git add/commit**；本仓库唯一写者仍为单包线。
 **不要覆盖 `docs/` 下的同名在线文档**：本目录是历史快照，在线文档以单包线维护的版本为准。
 

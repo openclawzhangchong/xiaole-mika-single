@@ -3,8 +3,8 @@
 **一句话结论：小智生态里 MCP 只有一个业务方向——云端作为 MCP 客户端调用"工具提供方"；因此我们的网关应以「MCP 服务端语义」存在，并主动外连到智能体的 MCP 接入点（wss + token），而不是等前端来调。**
 
 仓库已克隆到（只读、未改动任何仓库）：
-- `C:\Users\Administrator\AppData\Local\Temp\recon-xiaozhi\xiaozhi-esp32`
-- `C:\Users\Administrator\AppData\Local\Temp\recon-xiaozhi\xiaozhi-client-flutter`
+- `<TEMP>\recon-xiaozhi\xiaozhi-esp32`
+- `<TEMP>\recon-xiaozhi\xiaozhi-client-flutter`
 - 另按 docs 指引顺读一层：`xinnan-tech/xiaozhi-esp32-server`、`xinnan-tech/mcp-endpoint-server`（在线文档，未克隆）
 
 ---

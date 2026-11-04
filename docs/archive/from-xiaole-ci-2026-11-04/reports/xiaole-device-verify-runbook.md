@@ -6,7 +6,7 @@
 被测包（固定）：
 
 ```
-APK   C:\Users\Administrator\AppData\Local\Temp\xiaole-apk\v6116\xiaole-apk-6.11.6+58-93a1eda\xiaole-6.11.6+58-93a1eda-release.apk
+APK   <TEMP>\xiaole-apk\v6116\xiaole-apk-6.11.6+58-93a1eda\xiaole-6.11.6+58-93a1eda-release.apk
 SHA256 7b5fecd7f5df7c04686a8e76aaea43694e3cdaee17f14e44bc92d14cde963930
 期望 versionCode=58 / versionName=6.11.6 / minSdk=24
 ```
@@ -36,11 +36,11 @@ adb -s 36c77fb6 shell "dumpsys activity activities | grep mResumedActivity"
 ### A1. 装机并校验（约 40s）
 
 ```powershell
-adb -s 36c77fb6 install -r 'C:\Users\Administrator\AppData\Local\Temp\xiaole-apk\v6116\xiaole-apk-6.11.6+58-93a1eda\xiaole-6.11.6+58-93a1eda-release.apk'
+adb -s 36c77fb6 install -r '<TEMP>\xiaole-apk\v6116\xiaole-apk-6.11.6+58-93a1eda\xiaole-6.11.6+58-93a1eda-release.apk'
 adb -s 36c77fb6 shell dumpsys package com.zcstudy.xiaole | Select-String 'versionCode|versionName|lastUpdateTime'
 $p=(adb -s 36c77fb6 shell "pm path com.zcstudy.xiaole").Trim() -replace 'package:',''
-adb -s 36c77fb6 pull $p 'C:\Users\Administrator\AppData\Local\Temp\xiaole-apk\run_installed.apk'
-(Get-FileHash 'C:\Users\Administrator\AppData\Local\Temp\xiaole-apk\run_installed.apk' -Algorithm SHA256).Hash.ToLower()
+adb -s 36c77fb6 pull $p '<TEMP>\xiaole-apk\run_installed.apk'
+(Get-FileHash '<TEMP>\xiaole-apk\run_installed.apk' -Algorithm SHA256).Hash.ToLower()
 adb -s 36c77fb6 shell "dumpsys deviceidle whitelist" | Select-String 'zcstudy'
 ```
 
@@ -61,21 +61,21 @@ Start-Sleep -Seconds 2
 adb -s 36c77fb6 shell input tap 700 384        # 列表第一行=云端智能体；随后立刻截图确认进的是它
 Start-Sleep -Seconds 4
 adb -s 36c77fb6 shell screencap -p /sdcard/A_start.png
-adb -s 36c77fb6 pull /sdcard/A_start.png 'C:\Users\Administrator\AppData\Local\Temp\xiaole-apk\A_start.png'
+adb -s 36c77fb6 pull /sdcard/A_start.png '<TEMP>\xiaole-apk\A_start.png'
 ```
 
 确认截图标题为 `小乐1793777857804 • 已连接` 后，开始计时采集（**期间不要碰屏幕**）：
 
 ```powershell
-adb -s 36c77fb6 logcat -v time > 'C:\Users\Administrator\AppData\Local\Temp\xiaole-apk\A_3min.log'
+adb -s 36c77fb6 logcat -v time > '<TEMP>\xiaole-apk\A_3min.log'
 ```
 
 180 秒后在新窗口执行（保留采集窗口）：
 
 ```powershell
-Select-String 'C:\Users\Administrator\AppData\Local\Temp\xiaole-apk\A_3min.log' -Pattern 'XiaozhiWebSocketManager: (正在连接|已连接到|连接已断开|看门狗)' | ForEach-Object { $_.Line }
+Select-String '<TEMP>\xiaole-apk\A_3min.log' -Pattern 'XiaozhiWebSocketManager: (正在连接|已连接到|连接已断开|看门狗)' | ForEach-Object { $_.Line }
 adb -s 36c77fb6 shell screencap -p /sdcard/A_end.png
-adb -s 36c77fb6 pull /sdcard/A_end.png 'C:\Users\Administrator\AppData\Local\Temp\xiaole-apk\A_end.png'
+adb -s 36c77fb6 pull /sdcard/A_end.png '<TEMP>\xiaole-apk\A_end.png'
 ```
 
 判定：
@@ -93,7 +93,7 @@ adb -s 36c77fb6 shell input keyevent 3
 Start-Sleep -Seconds 30
 adb -s 36c77fb6 shell am start -n com.zcstudy.xiaole/.MainActivity
 Start-Sleep -Seconds 25
-Select-String 'C:\Users\Administrator\AppData\Local\Temp\xiaole-apk\A_3min.log' -Pattern 'XiaozhiWebSocketManager: (连接已断开|看门狗|正在连接|已连接到)' | Select-Object -Last 10 | ForEach-Object { $_.Line }
+Select-String '<TEMP>\xiaole-apk\A_3min.log' -Pattern 'XiaozhiWebSocketManager: (连接已断开|看门狗|正在连接|已连接到)' | Select-Object -Last 10 | ForEach-Object { $_.Line }
 ```
 
 判定：
@@ -113,9 +113,9 @@ Start-Sleep -Seconds 10
 adb -s 36c77fb6 shell svc wifi enable
 adb -s 36c77fb6 shell svc data enable
 Start-Sleep -Seconds 40
-Select-String 'C:\Users\Administrator\AppData\Local\Temp\xiaole-apk\A_3min.log' -Pattern 'XiaozhiWebSocketManager: (连接已断开|网络中断|正在连接|已连接到)' | Select-Object -Last 12 | ForEach-Object { $_.Line }
+Select-String '<TEMP>\xiaole-apk\A_3min.log' -Pattern 'XiaozhiWebSocketManager: (连接已断开|网络中断|正在连接|已连接到)' | Select-Object -Last 12 | ForEach-Object { $_.Line }
 adb -s 36c77fb6 shell screencap -p /sdcard/C_end.png
-adb -s 36c77fb6 pull /sdcard/C_end.png 'C:\Users\Administrator\AppData\Local\Temp\xiaole-apk\C_end.png'
+adb -s 36c77fb6 pull /sdcard/C_end.png '<TEMP>\xiaole-apk\C_end.png'
 ```
 
 若 `svc wifi disable` 无权限/无效果，改用：
@@ -138,10 +138,10 @@ adb -s 36c77fb6 shell cmd connectivity airplane-mode disable
 
 ```powershell
 $stamp = Get-Date -Format 'yyyyMMdd_HHmmss'
-$out = "C:\Users\Administrator\Documents\Trae-CN\temp_20261104_03\verify_$stamp"
+$out = "<HOME>\Documents\Trae-CN\temp_20261104_03\verify_$stamp"
 New-Item -ItemType Directory -Force -Path $out | Out-Null
-Copy-Item 'C:\Users\Administrator\AppData\Local\Temp\xiaole-apk\A_3min.log' $out
-Copy-Item 'C:\Users\Administrator\AppData\Local\Temp\xiaole-apk\*_start.png','C:\Users\Administrator\AppData\Local\Temp\xiaole-apk\A_end.png','C:\Users\Administrator\AppData\Local\Temp\xiaole-apk\C_end.png' $out -ErrorAction SilentlyContinue
+Copy-Item '<TEMP>\xiaole-apk\A_3min.log' $out
+Copy-Item '<TEMP>\xiaole-apk\*_start.png','<TEMP>\xiaole-apk\A_end.png','<TEMP>\xiaole-apk\C_end.png' $out -ErrorAction SilentlyContinue
 adb -s 36c77fb6 shell dumpsys package com.zcstudy.xiaole | Select-String 'versionCode|lastUpdateTime' | Out-File "$out\package.txt"
 adb -s 36c77fb6 reverse --list | Out-File "$out\reverse.txt"
 Get-ChildItem $out | Select-Object Name,Length

@@ -231,3 +231,1398 @@
 11-04 23:52:40.239 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU6temp: 34.6. prev severity:0. cur severity:0 New severity:0
 11-04 23:52:40.239 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU5temp: 34.3. prev severity:0. cur severity:0 New severity:0
 11-04 23:52:40.239 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU0temp: 34.6. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:40.239 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU4temp: 34.6. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:40.240 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU3temp: 34.9. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:40.240 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU2temp: 34.9. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:40.242 E/horae   ( 4569): specified Tz is empty!
+11-04 23:52:40.244 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:batterytemp: 31.9. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:40.365 D/IHansComunication( 7857): HansComunication::configCheckedUid-- 10253, type = 0
+11-04 23:52:40.365 D/IHansComunication( 7857): HANS sendMessageToKernel: threadId = 477988973744, netLinkSetup = 1, type = FROZEN_TRANS, targetUid = 10253, pkgCmd = PKG_CMD_MAX
+11-04 23:52:40.425 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 32.006. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:40.426 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 35.001. prev severity:3. cur severity:0 New severity:0
+11-04 23:52:40.427 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.814. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:40.427 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.431. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:41.429 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 32.006. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:41.431 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.966. prev severity:3. cur severity:0 New severity:0
+11-04 23:52:41.431 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.814. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:41.431 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.431. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:41.505 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:52:41.534 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:52:41.537 W/OplusSlaPolicy( 2356): isCellUsageExceeded == false.
+11-04 23:52:41.538 D/PhoneInterfaceManager( 3950): [PhoneIntfMgr] QueryTelephonyChecker-getDataNetworkTypeForSubscriber: packageName = android, isGrant = true
+11-04 23:52:42.432 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 32.006. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:42.434 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.942. prev severity:3. cur severity:0 New severity:0
+11-04 23:52:42.434 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.814. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:42.434 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.431. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:42.869 D/OplusBpfNetworkStats( 2356): succ update config 1,10357,5 over
+11-04 23:52:43.399 I/OplusHansManager ( 2356): uid=10268, pkg=com.kuaishou.nebula cannot transition from R to M, importance=widget
+11-04 23:52:43.431 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 32.006. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:43.433 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.936. prev severity:3. cur severity:0 New severity:0
+11-04 23:52:43.433 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.814. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:43.434 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.431. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:43.662 D/OplusAtlasService( 4534): getAttributeByAppName module:oplus-getStreamMaxVolume packageName:com.cat.readall
+11-04 23:52:43.665 D/OplusAtlasService( 4534): checkIsInDaemonlistByUid module:judge-sco-actualy uid:10271
+11-04 23:52:43.675 D/OplusAtlasService( 4534): getAttributeByAppName module:oplus-getStreamMaxVolume packageName:com.cat.readall
+11-04 23:52:44.437 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.98. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:44.438 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.906. prev severity:3. cur severity:0 New severity:0
+11-04 23:52:44.439 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.814. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:44.439 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.431. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:44.441 I/OplusHansManager ( 2356): uid=10351, pkg=com.wangzan101.mika cannot transition from M to F, importance=floatWindow
+11-04 23:52:44.541 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:52:44.572 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:52:44.574 W/OplusSlaPolicy( 2356): isCellUsageExceeded == false.
+11-04 23:52:44.576 D/PhoneInterfaceManager( 3950): [PhoneIntfMgr] QueryTelephonyChecker-getDataNetworkTypeForSubscriber: packageName = android, isGrant = true
+11-04 23:52:45.350 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:batterytemp: 31.9. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:45.350 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.98. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:45.351 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU1temp: 34.3. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:45.352 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.895. prev severity:3. cur severity:0 New severity:0
+11-04 23:52:45.352 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:GPUtemp: 34.9. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:45.353 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU7temp: 34.9. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:45.353 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.814. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:45.353 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.431. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:45.353 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU6temp: 34.3. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:45.354 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU5temp: 34.3. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:45.354 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU0temp: 34.6. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:45.354 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU4temp: 34.6. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:45.354 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU3temp: 34.9. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:45.355 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU2temp: 34.6. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:45.442 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.98. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:45.445 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.906. prev severity:3. cur severity:0 New severity:0
+11-04 23:52:45.445 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.814. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:45.446 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.431. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:45.870 D/OplusBpfNetworkStats( 2356): succ update config 1,0,0 over
+11-04 23:52:46.447 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.98. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:46.448 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.871. prev severity:3. cur severity:0 New severity:0
+11-04 23:52:46.449 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.814. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:46.449 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.431. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:46.789 V/SearchWidgetService(25818): updateDarkWord: 全球伙伴期待同中国携手开拓新机遇
+11-04 23:52:46.798 W/Bundle  (25818): Key versionDate expected String but value was a java.lang.Integer.  The default value <null> was returned.
+11-04 23:52:46.799 W/Bundle  (25818): Attempt to cast generated internal exception:
+11-04 23:52:46.799 W/Bundle  (25818): java.lang.ClassCastException: java.lang.Integer cannot be cast to java.lang.String
+11-04 23:52:46.799 W/Bundle  (25818): 	at android.os.BaseBundle.getString(BaseBundle.java:1199)
+11-04 23:52:46.799 W/Bundle  (25818): 	at com.heytap.browser.search.widget.utils.LauncherWidgetHelper.y(LauncherWidgetHelper.kt:62)
+11-04 23:52:46.799 W/Bundle  (25818): 	at com.heytap.browser.search.widget.utils.LauncherWidgetHelper.E(LauncherWidgetHelper.kt:1)
+11-04 23:52:46.799 W/Bundle  (25818): 	at com.heytap.browser.search.widget.utils.LauncherWidgetHelper.N(LauncherWidgetHelper.kt:27)
+11-04 23:52:46.799 W/Bundle  (25818): 	at com.heytap.browser.search.widget.updater.FirstStyleWidgetUpdater.N(FirstStyleWidgetUpdater.kt:3)
+11-04 23:52:46.799 W/Bundle  (25818): 	at com.heytap.browser.search.widget.updater.b.S(BaseWidgetUpdater.kt:18)
+11-04 23:52:46.799 W/Bundle  (25818): 	at com.heytap.browser.search.widget.updater.WidgetUpdaterRegistry.H(WidgetUpdaterRegistry.kt:26)
+11-04 23:52:46.799 W/Bundle  (25818): 	at com.heytap.browser.search.widget.updater.WidgetUpdaterRegistry.A(WidgetUpdaterRegistry.kt:15)
+11-04 23:52:46.799 W/Bundle  (25818): 	at com.heytap.browser.search.widget.updater.WidgetUpdaterRegistry.h(Unknown Source:0)
+11-04 23:52:46.799 W/Bundle  (25818): 	at com.heytap.browser.search.widget.updater.m.run(Unknown Source:6)
+11-04 23:52:46.799 W/Bundle  (25818): 	at android.os.Handler.handleCallback(Handler.java:938)
+11-04 23:52:46.799 W/Bundle  (25818): 	at android.os.Handler.dispatchMessage(Handler.java:99)
+11-04 23:52:46.799 W/Bundle  (25818): 	at android.os.Looper.loopOnce(Looper.java:233)
+11-04 23:52:46.799 W/Bundle  (25818): 	at android.os.Looper.loop(Looper.java:344)
+11-04 23:52:46.799 W/Bundle  (25818): 	at android.os.HandlerThread.run(HandlerThread.java:67)
+11-04 23:52:47.123 E/OplusNetworkStatsNative( 2356): bpfGetAppPurStatsTotal return 0
+11-04 23:52:47.452 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.98. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:47.454 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.859. prev severity:3. cur severity:0 New severity:0
+11-04 23:52:47.455 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.814. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:47.455 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.431. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:47.581 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:52:47.613 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:52:47.615 W/OplusSlaPolicy( 2356): isCellUsageExceeded == false.
+11-04 23:52:47.617 D/PhoneInterfaceManager( 3950): [PhoneIntfMgr] QueryTelephonyChecker-getDataNetworkTypeForSubscriber: packageName = android, isGrant = true
+11-04 23:52:48.459 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.98. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:48.461 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.853. prev severity:3. cur severity:0 New severity:0
+11-04 23:52:48.461 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.814. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:48.462 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.431. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:49.460 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.98. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:49.462 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.835. prev severity:3. cur severity:0 New severity:0
+11-04 23:52:49.462 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.707. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:49.463 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.338. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:50.236 E/horae   ( 4569): specified Tz is empty!
+11-04 23:52:50.238 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU1temp: 34.3. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:50.238 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU7temp: 34.9. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:50.239 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU6temp: 34.3. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:50.239 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU5temp: 34.3. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:50.239 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU0temp: 34.6. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:50.239 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU4temp: 34.6. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:50.240 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU3temp: 34.6. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:50.240 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU2temp: 34.6. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:50.243 E/horae   ( 4569): specified Tz is empty!
+11-04 23:52:50.244 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:batterytemp: 31.9. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:50.462 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.98. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:50.465 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.829. prev severity:3. cur severity:0 New severity:0
+11-04 23:52:50.465 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.707. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:50.466 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.338. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:50.621 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:52:50.653 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:52:50.655 W/OplusSlaPolicy( 2356): isCellUsageExceeded == false.
+11-04 23:52:50.657 D/PhoneInterfaceManager( 3950): [PhoneIntfMgr] QueryTelephonyChecker-getDataNetworkTypeForSubscriber: packageName = android, isGrant = true
+11-04 23:52:51.423 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:52:51.430 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:52:51.468 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.98. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:51.470 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.811. prev severity:3. cur severity:0 New severity:0
+11-04 23:52:51.471 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.707. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:51.471 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.338. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:52.474 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.98. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:52.476 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.829. prev severity:3. cur severity:0 New severity:0
+11-04 23:52:52.477 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.707. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:52.477 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.338. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:52.514 I/ACOUSTIC_MARK( 7858): RUN 1 END
+11-04 23:52:52.641 E/screencap( 7861): createInstance(64bit) : createExtendedFactory
+11-04 23:52:52.642 E/screencap( 7861): createInstance(64bit) : createExtendedFactory
+11-04 23:52:52.643 E/screencap( 7861): Opened libinputextensionsimpl.so
+11-04 23:52:52.643 E/screencap( 7861): Opened libinputextensionsimpl.so
+11-04 23:52:52.643 D/ExtensionsLoader( 7861): createInstance(64bit) : createExtendedFactory
+11-04 23:52:52.643 D/ExtensionsLoader( 7861): createInstance(64bit) : createExtendedFactory
+11-04 23:52:52.643 D/ExtensionsLoader( 7861): Opened libguiextimpl.so
+11-04 23:52:52.643 D/ExtensionsLoader( 7861): Opened libguiextimpl.so
+11-04 23:52:52.650 D/OplusUtils( 7861): OplusUtils [83]: 
+11-04 23:52:52.653 E/screencap( 7861): createInstance(64bit) : createExtendedFactory
+11-04 23:52:52.653 E/screencap( 7861): createInstance(64bit) : createExtendedFactory
+11-04 23:52:52.653 E/screencap( 7861): Opened libsensorextimpl.so
+11-04 23:52:52.653 E/screencap( 7861): Opened libsensorextimpl.so
+11-04 23:52:52.655 D/ProcessState( 7861): Binder ioctl to enable oneway spam detection failed: Invalid argument
+11-04 23:52:52.665 W/MediaProvider( 5828): isAppCloneUserPair failed. Users: 0 and 0
+11-04 23:52:52.665 W/MediaProvider( 5828): isAppCloneUserPair for user 0: false
+11-04 23:52:52.679 D/hw-ProcessState( 7861): Binder ioctl to enable oneway spam detection failed: Invalid argument
+11-04 23:52:52.996 D/ProcessState( 7867): Binder ioctl to enable oneway spam detection failed: Invalid argument
+11-04 23:52:53.006 W/ProcessStats( 2356): Tracking association SourceState{ad1deb4 system/1000 BTopFgs #515445} whose proc state 2 is better than process ProcessState{5aa2266 com.wangzan101.mika/10351 pkg=com.wangzan101.mika} proc state 3 (2 skipped)
+11-04 23:52:53.025 I/OplusExSystemServiceHelper( 2356): connected :com.android.providers.media.MediaService
+11-04 23:52:53.026 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:52:53.030 I/MediaProvider( 5828): Begin Intent { act=android.intent.action.MEDIA_SCANNER_SCAN_FILE dat=file:///sdcard/shot-1.png flg=0x1400010 cmp=com.android.providers.media.module/com.android.providers.media.MediaService }
+11-04 23:52:53.042 W/PermissionInjector( 5828): applyBatch in invalid type: 2
+11-04 23:52:53.051 I/MediaProvider( 5828): End Intent { act=android.intent.action.MEDIA_SCANNER_SCAN_FILE dat=file:///sdcard/shot-1.png flg=0x1400010 cmp=com.android.providers.media.module/com.android.providers.media.MediaService }
+11-04 23:52:53.053 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:52:53.180 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:52:53.190 E/IHansComunication( 7857): HANS printMessageBody: RCVed message body: type = 1, port = 86870, caller_pid = 6923, caller_uid = 10249, target_pid = 16137, target_uid = 10249, pkg_cmd = -1
+11-04 23:52:53.198 I/OplusHansManager ( 2356): unfreeze uid: 10249 com.tencent.mm pids: [16137, 6923] reason: Broadcast scene: LcdOn
+11-04 23:52:53.199 I/OplusHansManager ( 2356): uid=10249, pkg=com.tencent.mm, transition from Frozen to Middle, reason=Broadcast
+11-04 23:52:53.200 I/OplusHansManager ( 2356): uid=10249, pkg=com.tencent.mm F exit(), reason=Broadcast
+11-04 23:52:53.200 D/OplusProxyWakeLock( 2356): remove uid: 10249 wiht all pids from wakelockUidInfo list
+11-04 23:52:53.200 I/OplusHansManager ( 2356): forceUnfreezeByPid pid= 16137 reason= unfreezeForKernel: SyncBinder
+11-04 23:52:53.206 I/OplusHansManager ( 2356): up_BC uid=10249 pkg=com.tencent.mm
+11-04 23:52:53.207 I/OplusHansManager ( 2356): up_alarm 10249
+11-04 23:52:53.248 I/MediaProvider( 5828): Deleted 0 1 0 0 0 0 0 items on external_primary due to com.android.shell
+11-04 23:52:53.350 I/ACOUSTIC_MARK( 7874): RUN 2 START
+11-04 23:52:53.478 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.98. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:53.480 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.795. prev severity:3. cur severity:0 New severity:0
+11-04 23:52:53.480 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.707. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:53.480 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.338. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:53.485 D/SwtpMonitorThread( 1537): read swtp_status_buf: 0,255,255,255
+11-04 23:52:53.661 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:52:53.675 D/OplusAtlasService( 4534): getAttributeByAppName module:oplus-getStreamMaxVolume packageName:com.cat.readall
+11-04 23:52:53.681 D/OplusAtlasService( 4534): checkIsInDaemonlistByUid module:judge-sco-actualy uid:10271
+11-04 23:52:53.695 D/OplusAtlasService( 4534): getAttributeByAppName module:oplus-getStreamMaxVolume packageName:com.cat.readall
+11-04 23:52:53.699 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:52:53.701 W/OplusSlaPolicy( 2356): isCellUsageExceeded == false.
+11-04 23:52:53.703 D/PhoneInterfaceManager( 3950): [PhoneIntfMgr] QueryTelephonyChecker-getDataNetworkTypeForSubscriber: packageName = android, isGrant = true
+11-04 23:52:54.440 I/OplusHansManager ( 2356): uid=10271, pkg=com.cat.readall cannot transition from R to M, importance=widget
+11-04 23:52:54.443 I/OplusHansManager ( 2356): uid=10351, pkg=com.wangzan101.mika cannot transition from M to F, importance=floatWindow
+11-04 23:52:54.475 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:52:54.481 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.98. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:54.483 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.783. prev severity:3. cur severity:0 New severity:0
+11-04 23:52:54.483 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.707. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:54.483 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.338. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:54.492 E/ModemAciService(11992): CatchException oemModemAci2OplusModemAci():java.lang.IndexOutOfBoundsException: Index: 103, Size: 55
+11-04 23:52:54.493 I/ModemAciService(11992): UMF LO: OplusModemActivityInfo{ date=11-04 23:52:54.491 modemPowermA[]=[8.28,8.28,8.28] sleepTimeMs=143619 idleTimeMs=17944 rxTimeMs=1502 5gRxTimeMs=0 txTimeMs[]=[0, 0, 0, 0, 0] 5gTxTimeMs[]=[0, 0, 0, 0, 0] techTimeMs[]=[0, 0, 0, 0, 1502, 0, 0, 0, 0] rrcConn10sC[]=[0, 0] rrcConn20sC[]=[0, 0] rrcConnMore20sC[]=[0, 0] rrcConnC[]=[0, 0] csChangedC[]=[0, 0] psChangedC[]=[0, 0] iRatC[]=[0, 0] cellUpdateC[]=[0, 0] nwSrchC[]=[0, 0] nwSrchT[]=[0, 0] lteRrcConnT[]=[0, 0] psRegT[]=[0, 0] csRegT[]=[0, 0] psNoRegT[]=[163, 163] csNoRegT[]=[163, 163] sigGrid0T[]=[0, 0] endcActT[]=[0, 0] saActT[]=[0, 0] gpsTimeMs=0 wlanTimeMs=18321 regReqFbC[]=[0, 0] regReqTransAcqDbC[]=[0, 0] saRrcConn10sC[]=[0, 0] saRrcConn20sC[]=[0, 0] saRrcConnMore20sC[]=[0, 0] saRrcConnC[]=[0, 0] lteHoC[]=[0, 0] saHoC[]=[0, 0] saRrcConnT[]=[0, 0] lteBandDurationSim0[]=[0, 0, 0, 0, 0, 0, 0, 0, 0] lteBandDurationSim1[]=[0, 0, 0, 0, 0, 0, 0, 0, 0] nrBandDurationSim0[]=[0, 0, 0, 0, 0, 0] nrBandDurationSim1[]=[0, 0, 0, 0, 0, 0] sensorStationaryC=0 sensorStationaryT=0 modemStationaryC=0 modemStationaryT=0}
+11-04 23:52:54.494 D/TelephonyManager( 2356): requestModemActivityInfo: Sending result to app: ModemActivityInfo{ mTimestamp=1993722857 mSleepTimeMs=1538394755 mIdleTimeMs=401815196 mTxTimeMs[]=[0, 0, 0, 0, 0] mRxTimeMs=53022430}
+11-04 23:52:54.495 I/ModemAciService(11992): UMF CH: OplusModemActivityInfo{ date=11-04 23:52:54.491 modemPowermA[]=[8.28,8.28,8.28] sleepTimeMs=143619 idleTimeMs=17944 rxTimeMs=1502 5gRxTimeMs=0 txTimeMs[]=[0, 0, 0, 0, 0] 5gTxTimeMs[]=[0, 0, 0, 0, 0] techTimeMs[]=[0, 0, 0, 0, 1502, 0, 0, 0, 0] rrcConn10sC[]=[0, 0] rrcConn20sC[]=[0, 0] rrcConnMore20sC[]=[0, 0] rrcConnC[]=[0, 0] csChangedC[]=[0, 0] psChangedC[]=[0, 0] iRatC[]=[0, 0] cellUpdateC[]=[0, 0] nwSrchC[]=[0, 0] nwSrchT[]=[0, 0] lteRrcConnT[]=[0, 0] psRegT[]=[0, 0] csRegT[]=[0, 0] psNoRegT[]=[163, 163] csNoRegT[]=[163, 163] sigGrid0T[]=[0, 0] endcActT[]=[0, 0] saActT[]=[0, 0] gpsTimeMs=0 wlanTimeMs=18321 regReqFbC[]=[0, 0] regReqTransAcqDbC[]=[0, 0] saRrcConn10sC[]=[0, 0] saRrcConn20sC[]=[0, 0] saRrcConnMore20sC[]=[0, 0] saRrcConnC[]=[0, 0] lteHoC[]=[0, 0] saHoC[]=[0, 0] saRrcConnT[]=[0, 0] lteBandDurationSim0[]=[0, 0, 0, 0, 0, 0, 0, 0, 0] lteBandDurationSim1[]=[0, 0, 0, 0, 0, 0, 0, 0, 0] nrBandDurationSim0[]=[0, 0, 0, 0, 0, 0] nrBandDurationSim1[]=[0, 0, 0, 0, 0, 0] sensorStationaryC=0 sensorStationaryT=0 modemStationaryC=0 modemStationaryT=0}
+11-04 23:52:54.496 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:52:54.496 I/ModemAciService(11992): UMF LS: OplusModemActivityInfo{ date=11-04 23:52:54.491 modemPowermA[]=[8.28,8.28,8.28] sleepTimeMs=143619 idleTimeMs=17944 rxTimeMs=1502 5gRxTimeMs=0 txTimeMs[]=[0, 0, 0, 0, 0] 5gTxTimeMs[]=[0, 0, 0, 0, 0] techTimeMs[]=[0, 0, 0, 0, 1502, 0, 0, 0, 0] rrcConn10sC[]=[0, 0] rrcConn20sC[]=[0, 0] rrcConnMore20sC[]=[0, 0] rrcConnC[]=[0, 0] csChangedC[]=[0, 0] psChangedC[]=[0, 0] iRatC[]=[0, 0] cellUpdateC[]=[0, 0] nwSrchC[]=[0, 0] nwSrchT[]=[0, 0] lteRrcConnT[]=[0, 0] psRegT[]=[0, 0] csRegT[]=[0, 0] psNoRegT[]=[163, 163] csNoRegT[]=[163, 163] sigGrid0T[]=[0, 0] endcActT[]=[0, 0] saActT[]=[0, 0] gpsTimeMs=0 wlanTimeMs=18321 regReqFbC[]=[0, 0] regReqTransAcqDbC[]=[0, 0] saRrcConn10sC[]=[0, 0] saRrcConn20sC[]=[0, 0] saRrcConnMore20sC[]=[0, 0] saRrcConnC[]=[0, 0] lteHoC[]=[0, 0] saHoC[]=[0, 0] saRrcConnT[]=[0, 0] lteBandDurationSim0[]=[0, 0, 0, 0, 0, 0, 0, 0, 0] lteBandDurationSim1[]=[0, 0, 0, 0, 0, 0, 0, 0, 0] nrBandDurationSim0[]=[0, 0, 0, 0, 0, 0] nrBandDurationSim1[]=[0, 0, 0, 0, 0, 0] sensorStationaryC=0 sensorStationaryT=0 modemStationaryC=0 modemStationaryT=0}
+11-04 23:52:54.541 E/KernelCpuUidActiveTimeReader( 2356): Negative delta from active time for uid: 10179, delta: -6
+11-04 23:52:54.542 E/KernelCpuUidActiveTimeReader( 2356): Negative delta from active time for uid: 50141, delta: -145
+11-04 23:52:54.542 E/KernelCpuUidActiveTimeReader( 2356): Negative delta from active time for uid: 50005, delta: -1
+11-04 23:52:54.542 E/KernelCpuUidActiveTimeReader( 2356): Negative delta from active time for uid: 50301, delta: -246
+11-04 23:52:54.542 E/KernelCpuUidActiveTimeReader( 2356): Negative delta from active time for uid: 50267, delta: -332
+11-04 23:52:54.542 E/KernelCpuUidActiveTimeReader( 2356): Negative delta from active time for uid: 10219, delta: -27
+11-04 23:52:54.542 E/KernelCpuUidActiveTimeReader( 2356): Negative delta from active time for uid: 10049, delta: -7
+11-04 23:52:54.542 E/KernelCpuUidActiveTimeReader( 2356): Negative delta from active time for uid: 50304, delta: -459
+11-04 23:52:54.542 E/KernelCpuUidActiveTimeReader( 2356): Negative delta from active time for uid: 10146, delta: -13
+11-04 23:52:54.542 E/KernelCpuUidActiveTimeReader( 2356): Negative delta from active time for uid: 50346, delta: -1266
+11-04 23:52:54.542 E/KernelCpuUidActiveTimeReader( 2356): Negative delta from active time for uid: 10141, delta: -141
+11-04 23:52:54.542 E/KernelCpuUidActiveTimeReader( 2356): Negative delta from active time for uid: 10196, delta: -21
+11-04 23:52:54.542 E/KernelCpuUidActiveTimeReader( 2356): Negative delta from active time for uid: 10068, delta: -15
+11-04 23:52:54.542 E/KernelCpuUidActiveTimeReader( 2356): Negative delta from active time for uid: 10110, delta: -5
+11-04 23:52:54.542 E/KernelCpuUidActiveTimeReader( 2356): Negative delta from active time for uid: 10220, delta: -16
+11-04 23:52:54.542 E/KernelCpuUidActiveTimeReader( 2356): Negative delta from active time for uid: 10118, delta: -5
+11-04 23:52:54.543 E/KernelCpuUidActiveTimeReader( 2356): Negative delta from active time for uid: 10100, delta: -9
+11-04 23:52:54.543 E/KernelCpuUidActiveTimeReader( 2356): Negative delta from active time for uid: 10205, delta: -10
+11-04 23:52:54.544 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 10179, delta: -11
+11-04 23:52:54.544 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 50214, delta: -6
+11-04 23:52:54.544 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 50235, delta: -2
+11-04 23:52:54.544 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 50175, delta: -2
+11-04 23:52:54.544 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 50141, delta: -173
+11-04 23:52:54.544 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 50238, delta: -1
+11-04 23:52:54.544 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 50005, delta: -1
+11-04 23:52:54.544 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 50225, delta: -5
+11-04 23:52:54.544 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 50301, delta: -293
+11-04 23:52:54.544 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 50212, delta: -1
+11-04 23:52:54.544 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 50267, delta: -443
+11-04 23:52:54.544 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 10219, delta: -29
+11-04 23:52:54.544 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 50076, delta: -2
+11-04 23:52:54.544 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 50186, delta: -2
+11-04 23:52:54.544 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 50262, delta: -3
+11-04 23:52:54.544 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 10049, delta: -6
+11-04 23:52:54.545 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 50304, delta: -487
+11-04 23:52:54.545 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 10146, delta: -9
+11-04 23:52:54.545 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 50346, delta: -1344
+11-04 23:52:54.545 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 50223, delta: -1
+11-04 23:52:54.545 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 50210, delta: -1
+11-04 23:52:54.545 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 10141, delta: -202
+11-04 23:52:54.545 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 50032, delta: -1
+11-04 23:52:54.545 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 10196, delta: -35
+11-04 23:52:54.545 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 50087, delta: -1
+11-04 23:52:54.545 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 50095, delta: -1
+11-04 23:52:54.545 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 10068, delta: -10
+11-04 23:52:54.545 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 50179, delta: -1
+11-04 23:52:54.545 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 10110, delta: -4
+11-04 23:52:54.545 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 10220, delta: -16
+11-04 23:52:54.545 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 10118, delta: -5
+11-04 23:52:54.545 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 50009, delta: -1
+11-04 23:52:54.545 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 50229, delta: -1
+11-04 23:52:54.545 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 50250, delta: -2
+11-04 23:52:54.545 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 50059, delta: -1
+11-04 23:52:54.545 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 50169, delta: -3
+11-04 23:52:54.545 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 10100, delta: -15
+11-04 23:52:54.545 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 50135, delta: -1
+11-04 23:52:54.545 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 50245, delta: -2
+11-04 23:52:54.545 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 10218, delta: -4
+11-04 23:52:54.545 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 50253, delta: -5
+11-04 23:52:54.546 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 10205, delta: -11
+11-04 23:52:54.546 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 50185, delta: -2
+11-04 23:52:54.546 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 50206, delta: -3
+11-04 23:52:54.546 E/KernelCpuUidClusterTimeReader( 2356): Negative delta from cluster time for uid: 50261, delta: -3
+11-04 23:52:54.572 E/android.system.suspend@1.0-service(  710): Error opening kernel wakelock stats for: wakeup26: Permission denied
+11-04 23:52:54.583 E/android.system.suspend@1.0-service(  710): Error opening kernel wakelock stats for: wakeup24: Permission denied
+11-04 23:52:54.610 E/android.system.suspend@1.0-service(  710): Error opening kernel wakelock stats for: wakeup15: Permission denied
+11-04 23:52:54.682 W/System  ( 6923): A resource failed to call close. 
+11-04 23:52:54.916 D/SystemUi--( 3231): getDebugState, e = android.provider.Settings$SettingNotFoundException: systemui_internal_debug
+11-04 23:52:54.970 I/OplusPerfParmCount( 1298): The num of client composition of  in last 76367 ms is: 55
+11-04 23:52:54.970 I/OplusPerfParmCount( 1298): The num of blur fliter in last 76367 ms is: 98
+11-04 23:52:54.970 I/OplusPerfParmCount( 1298): The num of round corner in last 76367 ms is: 34
+11-04 23:52:54.970 I/OplusPerfParmCount( 1298): The num of frame in last 76367 ms is: 359, jank frame is 36, DisplayHAL is 0, SurfaceFlingerCpuDeadlineMissed is 33, SurfaceFlingerGpuDeadlineMissed is 2, AppDeadlineMissed is 0, PredictionError is 1, SurfaceFlingerScheduling is 0, BufferStuffing is 0, Unknown is 0, SurfaceFlingerStuffing is 0
+11-04 23:52:54.970 I/OplusPerfParmCount( 1298): The layer number in last 76367ms is: 9 layer, 2 time, 10 layer, 6 time, 11 layer, 2 time, 8 layer, 325 time, 7 layer, 50 time, 
+11-04 23:52:55.081 E/SDM     ( 1194): CompManager::PrepareStrategyConstraints: PrepareStrategyConstraints,idle_fallback=1, thermal_fallback_=0
+11-04 23:52:55.349 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:batterytemp: 31.9. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:55.349 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.98. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:55.349 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU1temp: 34.6. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:55.350 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.811. prev severity:3. cur severity:0 New severity:0
+11-04 23:52:55.351 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:GPUtemp: 35.2. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:55.351 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU7temp: 34.9. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:55.351 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.707. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:55.351 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.338. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:55.351 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU6temp: 34.6. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:55.352 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU5temp: 34.9. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:55.352 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU0temp: 35.2. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:55.352 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU4temp: 35.6. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:55.352 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU3temp: 36.2. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:55.352 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU2temp: 35.6. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:55.483 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.98. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:55.486 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.806. prev severity:3. cur severity:0 New severity:0
+11-04 23:52:55.486 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.707. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:55.486 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.338. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:56.486 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.98. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:56.488 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.795. prev severity:3. cur severity:0 New severity:0
+11-04 23:52:56.488 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.707. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:56.488 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.338. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:56.707 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:52:56.738 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:52:56.740 W/OplusSlaPolicy( 2356): isCellUsageExceeded == false.
+11-04 23:52:56.741 D/PhoneInterfaceManager( 3950): [PhoneIntfMgr] QueryTelephonyChecker-getDataNetworkTypeForSubscriber: packageName = android, isGrant = true
+11-04 23:52:56.795 V/SearchWidgetService(25818): updateDarkWord: “还是沈阳”5天秋假迎客6.8万人次
+11-04 23:52:56.806 W/Bundle  (25818): Key versionDate expected String but value was a java.lang.Integer.  The default value <null> was returned.
+11-04 23:52:56.807 W/Bundle  (25818): Attempt to cast generated internal exception:
+11-04 23:52:56.807 W/Bundle  (25818): java.lang.ClassCastException: java.lang.Integer cannot be cast to java.lang.String
+11-04 23:52:56.807 W/Bundle  (25818): 	at android.os.BaseBundle.getString(BaseBundle.java:1199)
+11-04 23:52:56.807 W/Bundle  (25818): 	at com.heytap.browser.search.widget.utils.LauncherWidgetHelper.y(LauncherWidgetHelper.kt:62)
+11-04 23:52:56.807 W/Bundle  (25818): 	at com.heytap.browser.search.widget.utils.LauncherWidgetHelper.E(LauncherWidgetHelper.kt:1)
+11-04 23:52:56.807 W/Bundle  (25818): 	at com.heytap.browser.search.widget.utils.LauncherWidgetHelper.N(LauncherWidgetHelper.kt:27)
+11-04 23:52:56.807 W/Bundle  (25818): 	at com.heytap.browser.search.widget.updater.FirstStyleWidgetUpdater.N(FirstStyleWidgetUpdater.kt:3)
+11-04 23:52:56.807 W/Bundle  (25818): 	at com.heytap.browser.search.widget.updater.b.S(BaseWidgetUpdater.kt:18)
+11-04 23:52:56.807 W/Bundle  (25818): 	at com.heytap.browser.search.widget.updater.WidgetUpdaterRegistry.H(WidgetUpdaterRegistry.kt:26)
+11-04 23:52:56.807 W/Bundle  (25818): 	at com.heytap.browser.search.widget.updater.WidgetUpdaterRegistry.A(WidgetUpdaterRegistry.kt:15)
+11-04 23:52:56.807 W/Bundle  (25818): 	at com.heytap.browser.search.widget.updater.WidgetUpdaterRegistry.h(Unknown Source:0)
+11-04 23:52:56.807 W/Bundle  (25818): 	at com.heytap.browser.search.widget.updater.m.run(Unknown Source:6)
+11-04 23:52:56.807 W/Bundle  (25818): 	at android.os.Handler.handleCallback(Handler.java:938)
+11-04 23:52:56.807 W/Bundle  (25818): 	at android.os.Handler.dispatchMessage(Handler.java:99)
+11-04 23:52:56.807 W/Bundle  (25818): 	at android.os.Looper.loopOnce(Looper.java:233)
+11-04 23:52:56.807 W/Bundle  (25818): 	at android.os.Looper.loop(Looper.java:344)
+11-04 23:52:56.807 W/Bundle  (25818): 	at android.os.HandlerThread.run(HandlerThread.java:67)
+11-04 23:52:57.129 E/OplusNetworkStatsNative( 2356): bpfGetAppPurStatsTotal return 0
+11-04 23:52:57.493 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.98. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:57.495 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.783. prev severity:3. cur severity:0 New severity:0
+11-04 23:52:57.495 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.707. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:57.496 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.338. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:57.669 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:52:57.707 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:52:58.498 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.98. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:58.500 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.777. prev severity:3. cur severity:0 New severity:0
+11-04 23:52:58.500 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.707. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:58.501 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.338. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:59.503 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.784. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:59.505 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.772. prev severity:3. cur severity:0 New severity:0
+11-04 23:52:59.506 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.52. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:59.506 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.227. prev severity:0. cur severity:0 New severity:0
+11-04 23:52:59.743 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:52:59.780 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:52:59.783 W/OplusSlaPolicy( 2356): isCellUsageExceeded == false.
+11-04 23:52:59.786 D/PhoneInterfaceManager( 3950): [PhoneIntfMgr] QueryTelephonyChecker-getDataNetworkTypeForSubscriber: packageName = android, isGrant = true
+11-04 23:53:00.003 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:53:00.008 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:53:00.016 D/SingleClockView( 3231): updateTime,  24hfmt=true, h=23, m=53
+11-04 23:53:00.029 E/OplusCustomizeRestrictionManagerService( 2356): isBiometricDisabled start
+11-04 23:53:00.029 I/Biometrics/Fingerprint/OplusFingerprintServiceExtImpl( 2356): isBiometricDisabled is false
+11-04 23:53:00.034 E/OplusCustomizeRestrictionManagerService( 2356): isBiometricDisabled start
+11-04 23:53:00.034 I/Biometrics/Fingerprint/OplusFingerprintServiceExtImpl( 2356): isBiometricDisabled is false
+11-04 23:53:00.171 E/SDM     ( 1194): CompManager::PrepareStrategyConstraints: PrepareStrategyConstraints,idle_fallback=1, thermal_fallback_=0
+11-04 23:53:00.236 E/horae   ( 4569): specified Tz is empty!
+11-04 23:53:00.239 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU1temp: 34.3. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:00.240 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU7temp: 34.6. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:00.240 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU6temp: 34.3. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:00.241 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU5temp: 34.3. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:00.241 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU0temp: 34.6. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:00.241 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU4temp: 34.9. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:00.241 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU3temp: 34.6. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:00.241 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU2temp: 34.6. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:00.245 E/horae   ( 4569): specified Tz is empty!
+11-04 23:53:00.247 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:batterytemp: 31.9. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:00.510 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.784. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:00.512 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.761. prev severity:3. cur severity:0 New severity:0
+11-04 23:53:00.513 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.52. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:00.513 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.227. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:01.515 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.784. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:01.517 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.744. prev severity:3. cur severity:0 New severity:0
+11-04 23:53:01.517 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.52. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:01.517 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.227. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:02.519 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.784. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:02.521 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.738. prev severity:3. cur severity:0 New severity:0
+11-04 23:53:02.521 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.52. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:02.521 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.227. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:02.791 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:53:02.819 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:53:02.821 W/OplusSlaPolicy( 2356): isCellUsageExceeded == false.
+11-04 23:53:02.823 D/PhoneInterfaceManager( 3950): [PhoneIntfMgr] QueryTelephonyChecker-getDataNetworkTypeForSubscriber: packageName = android, isGrant = true
+11-04 23:53:03.204 I/OplusHansManager ( 2356): uid=10249, pkg=com.tencent.mm can transition from M to F
+11-04 23:53:03.204 I/OplusHansManager ( 2356): uid=10249, pkg=com.tencent.mm F enter()
+11-04 23:53:03.224 I/OplusHansManager ( 2356): freeze uid: 10249 com.tencent.mm pids: [16137, 6923] scene: LcdOn
+11-04 23:53:03.227 I/OplusHansManager ( 2356): p_BC uid=10249 pkg=com.tencent.mm
+11-04 23:53:03.227 D/IHansComunication( 7857): HansComunication::addUid-- 10249
+11-04 23:53:03.227 D/IHansComunication( 7857): HANS sendMessageToKernel: threadId = 477988973744, netLinkSetup = 1, type = PKG, targetUid = 10249, pkgCmd = ADD_ONE_UID
+11-04 23:53:03.402 I/OplusHansManager ( 2356): uid=10268, pkg=com.kuaishou.nebula cannot transition from R to M, importance=widget
+11-04 23:53:03.524 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.784. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:03.526 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.744. prev severity:3. cur severity:0 New severity:0
+11-04 23:53:03.526 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.52. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:03.527 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.227. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:03.679 D/OplusAtlasService( 4534): getAttributeByAppName module:oplus-getStreamMaxVolume packageName:com.cat.readall
+11-04 23:53:03.683 D/OplusAtlasService( 4534): checkIsInDaemonlistByUid module:judge-sco-actualy uid:10271
+11-04 23:53:03.696 D/OplusAtlasService( 4534): getAttributeByAppName module:oplus-getStreamMaxVolume packageName:com.cat.readall
+11-04 23:53:04.148 E/SDM     ( 1194): CompManager::PrepareStrategyConstraints: PrepareStrategyConstraints,idle_fallback=1, thermal_fallback_=0
+11-04 23:53:04.446 I/OplusHansManager ( 2356): uid=10351, pkg=com.wangzan101.mika cannot transition from M to F, importance=floatWindow
+11-04 23:53:04.530 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.915. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:04.532 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.744. prev severity:3. cur severity:0 New severity:0
+11-04 23:53:04.532 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.775. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:04.533 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.332. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:05.229 D/IHansComunication( 7857): HansComunication::configCheckedUid-- 10249, type = 0
+11-04 23:53:05.230 D/IHansComunication( 7857): HANS sendMessageToKernel: threadId = 477988973744, netLinkSetup = 1, type = FROZEN_TRANS, targetUid = 10249, pkgCmd = PKG_CMD_MAX
+11-04 23:53:05.349 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:batterytemp: 31.9. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:05.350 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.915. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:05.350 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU1temp: 34.3. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:05.353 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.732. prev severity:3. cur severity:0 New severity:0
+11-04 23:53:05.353 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:GPUtemp: 34.9. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:05.354 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU7temp: 34.3. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:05.354 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.775. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:05.354 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.332. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:05.354 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU6temp: 34.3. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:05.355 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU5temp: 34.3. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:05.355 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU0temp: 34.6. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:05.355 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU4temp: 34.9. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:05.355 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU3temp: 34.6. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:05.356 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU2temp: 34.6. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:05.513 D/OplusPrivacyDotViewController( 3231): scheduleUpdate: 
+11-04 23:53:05.514 D/OplusPrivacyDotViewController( 3231): processNextViewState: 
+11-04 23:53:05.515 D/OplusPrivacyDotViewController( 3231): resolveState ViewState(systemPrivacyEventIsActive=false, shadeExpanded=false, qsExpanded=false, rtl=false, rotation=0, height=12, x=51, y=63, cornerIndex=1, designatedCorner=android.widget.FrameLayout{affc829 G.E...... ......ID 0,0-12,12 #7f0b03f6 app:id/icons_container}, contentDescription=null, chipAnimationStart=false, preDraw=false) shouldShowDot false
+11-04 23:53:05.515 D/OplusPrivacyDotViewController( 3231): updatePosition:51:63
+11-04 23:53:05.516 D/OplusPrivacyDotViewController( 3231): updatePosition:51:63
+11-04 23:53:05.536 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.915. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:05.539 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.721. prev severity:3. cur severity:0 New severity:0
+11-04 23:53:05.539 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.775. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:05.540 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.332. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:05.570 D/OplusMovieIdle( 1298): updateLayerStacks,mOmiSupport is not supoort
+11-04 23:53:05.825 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:53:05.857 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:53:05.870 W/OplusSlaPolicy( 2356): isCellUsageExceeded == false.
+11-04 23:53:05.874 D/PhoneInterfaceManager( 3950): [PhoneIntfMgr] QueryTelephonyChecker-getDataNetworkTypeForSubscriber: packageName = android, isGrant = true
+11-04 23:53:05.981 I/system_server( 2356): Background young concurrent copying GC freed 348819(17MB) AllocSpace objects, 64(2252KB) LOS objects, 21% free, 71MB/90MB, paused 1.751ms,201us total 124.818ms
+11-04 23:53:06.011 W/System  ( 2356): A resource failed to call release. 
+11-04 23:53:06.390 E/CmtpSdkLoader( 3456): [CmtpSdkLoader] SO not ready
+11-04 23:53:06.539 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.915. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:06.541 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.726. prev severity:3. cur severity:0 New severity:0
+11-04 23:53:06.541 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.775. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:06.541 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.332. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:06.801 V/SearchWidgetService(25818): updateDarkWord: 这不是追星是犯罪
+11-04 23:53:06.811 W/Bundle  (25818): Key versionDate expected String but value was a java.lang.Integer.  The default value <null> was returned.
+11-04 23:53:06.813 W/Bundle  (25818): Attempt to cast generated internal exception:
+11-04 23:53:06.813 W/Bundle  (25818): java.lang.ClassCastException: java.lang.Integer cannot be cast to java.lang.String
+11-04 23:53:06.813 W/Bundle  (25818): 	at android.os.BaseBundle.getString(BaseBundle.java:1199)
+11-04 23:53:06.813 W/Bundle  (25818): 	at com.heytap.browser.search.widget.utils.LauncherWidgetHelper.y(LauncherWidgetHelper.kt:62)
+11-04 23:53:06.813 W/Bundle  (25818): 	at com.heytap.browser.search.widget.utils.LauncherWidgetHelper.E(LauncherWidgetHelper.kt:1)
+11-04 23:53:06.813 W/Bundle  (25818): 	at com.heytap.browser.search.widget.utils.LauncherWidgetHelper.N(LauncherWidgetHelper.kt:27)
+11-04 23:53:06.813 W/Bundle  (25818): 	at com.heytap.browser.search.widget.updater.FirstStyleWidgetUpdater.N(FirstStyleWidgetUpdater.kt:3)
+11-04 23:53:06.813 W/Bundle  (25818): 	at com.heytap.browser.search.widget.updater.b.S(BaseWidgetUpdater.kt:18)
+11-04 23:53:06.813 W/Bundle  (25818): 	at com.heytap.browser.search.widget.updater.WidgetUpdaterRegistry.H(WidgetUpdaterRegistry.kt:26)
+11-04 23:53:06.813 W/Bundle  (25818): 	at com.heytap.browser.search.widget.updater.WidgetUpdaterRegistry.A(WidgetUpdaterRegistry.kt:15)
+11-04 23:53:06.813 W/Bundle  (25818): 	at com.heytap.browser.search.widget.updater.WidgetUpdaterRegistry.h(Unknown Source:0)
+11-04 23:53:06.813 W/Bundle  (25818): 	at com.heytap.browser.search.widget.updater.m.run(Unknown Source:6)
+11-04 23:53:06.813 W/Bundle  (25818): 	at android.os.Handler.handleCallback(Handler.java:938)
+11-04 23:53:06.813 W/Bundle  (25818): 	at android.os.Handler.dispatchMessage(Handler.java:99)
+11-04 23:53:06.813 W/Bundle  (25818): 	at android.os.Looper.loopOnce(Looper.java:233)
+11-04 23:53:06.813 W/Bundle  (25818): 	at android.os.Looper.loop(Looper.java:344)
+11-04 23:53:06.813 W/Bundle  (25818): 	at android.os.HandlerThread.run(HandlerThread.java:67)
+11-04 23:53:07.134 E/OplusNetworkStatsNative( 2356): bpfGetAppPurStatsTotal return 0
+11-04 23:53:07.541 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.915. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:07.543 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.738. prev severity:3. cur severity:0 New severity:0
+11-04 23:53:07.543 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.775. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:07.544 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.332. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:08.486 D/SwtpMonitorThread( 1537): read swtp_status_buf: 0,255,255,255
+11-04 23:53:08.548 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.915. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:08.550 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.726. prev severity:3. cur severity:0 New severity:0
+11-04 23:53:08.550 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.775. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:08.550 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.332. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:08.879 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:53:08.910 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:53:08.914 W/OplusSlaPolicy( 2356): isCellUsageExceeded == false.
+11-04 23:53:08.916 D/PhoneInterfaceManager( 3950): [PhoneIntfMgr] QueryTelephonyChecker-getDataNetworkTypeForSubscriber: packageName = android, isGrant = true
+11-04 23:53:09.549 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.852. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:09.551 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.732. prev severity:3. cur severity:0 New severity:0
+11-04 23:53:09.551 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.676. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:09.551 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.276. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:10.237 E/horae   ( 4569): specified Tz is empty!
+11-04 23:53:10.239 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU1temp: 33.9. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:10.239 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU7temp: 34.6. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:10.240 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU6temp: 34.3. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:10.241 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU5temp: 34.3. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:10.241 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU0temp: 34.6. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:10.241 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU4temp: 34.6. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:10.242 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU3temp: 34.6. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:10.242 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU2temp: 34.6. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:10.244 E/horae   ( 4569): specified Tz is empty!
+11-04 23:53:10.246 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:batterytemp: 31.9. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:10.555 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.852. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:10.556 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.715. prev severity:3. cur severity:0 New severity:0
+11-04 23:53:10.557 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.676. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:10.557 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.276. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:11.426 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:53:11.433 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:53:11.561 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.852. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:11.563 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.71. prev severity:3. cur severity:0 New severity:0
+11-04 23:53:11.563 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.676. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:11.563 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.276. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:11.920 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:53:11.951 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:53:11.953 W/OplusSlaPolicy( 2356): isCellUsageExceeded == false.
+11-04 23:53:11.955 D/PhoneInterfaceManager( 3950): [PhoneIntfMgr] QueryTelephonyChecker-getDataNetworkTypeForSubscriber: packageName = android, isGrant = true
+11-04 23:53:12.029 D/OplusNetKit( 2356): interface name from LP: [wlan0]
+11-04 23:53:12.029 D/OplusNetKit( 2356): in getLpByInterface name from LP: [wlan0]
+11-04 23:53:12.029 D/OplusNetKit( 2356): in getLpByInterface name from LP: [wlan0]
+11-04 23:53:12.029 D/OplusNetKit( 2356): Route is ipv4 on wlan0 found, break
+11-04 23:53:12.088 D/OplusArpPeer_euclid_psw( 2356): arp from self , ignore it
+11-04 23:53:12.567 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.852. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:12.569 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.704. prev severity:3. cur severity:0 New severity:0
+11-04 23:53:12.569 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.676. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:12.569 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.276. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:13.055 I/ACOUSTIC_MARK( 7894): RUN 2 END
+11-04 23:53:13.101 E/OplusArpPeer_euclid_psw( 2356): ARP read failure: android.system.ErrnoException: read failed: EAGAIN (Try again)
+11-04 23:53:13.104 E/OplusArpPeer_euclid_psw( 2356):  OplusArpPeer close
+11-04 23:53:13.180 E/screencap( 7897): createInstance(64bit) : createExtendedFactory
+11-04 23:53:13.181 E/screencap( 7897): createInstance(64bit) : createExtendedFactory
+11-04 23:53:13.181 E/screencap( 7897): Opened libinputextensionsimpl.so
+11-04 23:53:13.181 E/screencap( 7897): Opened libinputextensionsimpl.so
+11-04 23:53:13.182 D/ExtensionsLoader( 7897): createInstance(64bit) : createExtendedFactory
+11-04 23:53:13.182 D/ExtensionsLoader( 7897): createInstance(64bit) : createExtendedFactory
+11-04 23:53:13.182 D/ExtensionsLoader( 7897): Opened libguiextimpl.so
+11-04 23:53:13.182 D/ExtensionsLoader( 7897): Opened libguiextimpl.so
+11-04 23:53:13.189 D/OplusUtils( 7897): OplusUtils [83]: 
+11-04 23:53:13.191 E/screencap( 7897): createInstance(64bit) : createExtendedFactory
+11-04 23:53:13.191 E/screencap( 7897): createInstance(64bit) : createExtendedFactory
+11-04 23:53:13.191 E/screencap( 7897): Opened libsensorextimpl.so
+11-04 23:53:13.191 E/screencap( 7897): Opened libsensorextimpl.so
+11-04 23:53:13.192 D/ProcessState( 7897): Binder ioctl to enable oneway spam detection failed: Invalid argument
+11-04 23:53:13.201 W/MediaProvider( 5828): isAppCloneUserPair failed. Users: 0 and 0
+11-04 23:53:13.201 W/MediaProvider( 5828): isAppCloneUserPair for user 0: false
+11-04 23:53:13.210 D/hw-ProcessState( 7897): Binder ioctl to enable oneway spam detection failed: Invalid argument
+11-04 23:53:13.471 D/ProcessState( 7901): Binder ioctl to enable oneway spam detection failed: Invalid argument
+11-04 23:53:13.481 W/ProcessStats( 2356): Tracking association SourceState{ad1deb4 system/1000 BTopFgs #515458} whose proc state 2 is better than process ProcessState{5aa2266 com.wangzan101.mika/10351 pkg=com.wangzan101.mika} proc state 3 (3 skipped)
+11-04 23:53:13.498 I/OplusExSystemServiceHelper( 2356): connected :com.android.providers.media.MediaService
+11-04 23:53:13.499 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:53:13.508 I/MediaProvider( 5828): Begin Intent { act=android.intent.action.MEDIA_SCANNER_SCAN_FILE dat=file:///sdcard/shot-2.png flg=0x1400010 cmp=com.android.providers.media.module/com.android.providers.media.MediaService }
+11-04 23:53:13.519 W/PermissionInjector( 5828): applyBatch in invalid type: 2
+11-04 23:53:13.528 I/MediaProvider( 5828): End Intent { act=android.intent.action.MEDIA_SCANNER_SCAN_FILE dat=file:///sdcard/shot-2.png flg=0x1400010 cmp=com.android.providers.media.module/com.android.providers.media.MediaService }
+11-04 23:53:13.529 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:53:13.572 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.852. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:13.574 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.704. prev severity:3. cur severity:0 New severity:0
+11-04 23:53:13.574 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.721. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:13.574 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.276. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:13.618 I/MediaProvider( 5828): Deleted 0 1 0 0 0 0 0 items on external_primary due to com.android.shell
+11-04 23:53:13.675 I/ACOUSTIC_MARK( 7908): RUN 3 START
+11-04 23:53:13.681 D/OplusAtlasService( 4534): getAttributeByAppName module:oplus-getStreamMaxVolume packageName:com.cat.readall
+11-04 23:53:13.683 D/OplusAtlasService( 4534): checkIsInDaemonlistByUid module:judge-sco-actualy uid:10271
+11-04 23:53:13.687 D/OplusAtlasService( 4534): getAttributeByAppName module:oplus-getStreamMaxVolume packageName:com.cat.readall
+11-04 23:53:14.446 I/OplusHansManager ( 2356): uid=10271, pkg=com.cat.readall cannot transition from R to M, importance=widget
+11-04 23:53:14.447 I/OplusHansManager ( 2356): uid=10351, pkg=com.wangzan101.mika cannot transition from M to F, importance=floatWindow
+11-04 23:53:14.578 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.852. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:14.579 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.71. prev severity:3. cur severity:0 New severity:0
+11-04 23:53:14.579 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.721. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:14.579 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.276. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:14.959 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:53:14.995 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:53:14.999 W/OplusSlaPolicy( 2356): isCellUsageExceeded == false.
+11-04 23:53:15.001 D/PhoneInterfaceManager( 3950): [PhoneIntfMgr] QueryTelephonyChecker-getDataNetworkTypeForSubscriber: packageName = android, isGrant = true
+11-04 23:53:15.351 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:batterytemp: 31.9. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:15.351 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.852. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:15.351 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU1temp: 34.6. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:15.353 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.721. prev severity:3. cur severity:0 New severity:0
+11-04 23:53:15.353 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:GPUtemp: 35.6. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:15.354 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU7temp: 35.2. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:15.354 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.721. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:15.354 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.276. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:15.355 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU6temp: 34.6. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:15.355 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU5temp: 34.9. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:15.355 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU0temp: 34.9. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:15.355 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU4temp: 35.2. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:15.356 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU3temp: 35.2. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:15.356 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU2temp: 35.2. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:15.584 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.852. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:15.586 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.721. prev severity:3. cur severity:0 New severity:0
+11-04 23:53:15.586 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.721. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:15.586 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.276. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:16.583 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.852. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:16.585 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.732. prev severity:3. cur severity:0 New severity:0
+11-04 23:53:16.585 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.721. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:16.585 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.276. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:16.802 V/SearchWidgetService(25818): updateDarkWord: “这是一起罕见的无罪判决”
+11-04 23:53:16.808 W/Bundle  (25818): Key versionDate expected String but value was a java.lang.Integer.  The default value <null> was returned.
+11-04 23:53:16.809 W/Bundle  (25818): Attempt to cast generated internal exception:
+11-04 23:53:16.809 W/Bundle  (25818): java.lang.ClassCastException: java.lang.Integer cannot be cast to java.lang.String
+11-04 23:53:16.809 W/Bundle  (25818): 	at android.os.BaseBundle.getString(BaseBundle.java:1199)
+11-04 23:53:16.809 W/Bundle  (25818): 	at com.heytap.browser.search.widget.utils.LauncherWidgetHelper.y(LauncherWidgetHelper.kt:62)
+11-04 23:53:16.809 W/Bundle  (25818): 	at com.heytap.browser.search.widget.utils.LauncherWidgetHelper.E(LauncherWidgetHelper.kt:1)
+11-04 23:53:16.809 W/Bundle  (25818): 	at com.heytap.browser.search.widget.utils.LauncherWidgetHelper.N(LauncherWidgetHelper.kt:27)
+11-04 23:53:16.809 W/Bundle  (25818): 	at com.heytap.browser.search.widget.updater.FirstStyleWidgetUpdater.N(FirstStyleWidgetUpdater.kt:3)
+11-04 23:53:16.809 W/Bundle  (25818): 	at com.heytap.browser.search.widget.updater.b.S(BaseWidgetUpdater.kt:18)
+11-04 23:53:16.809 W/Bundle  (25818): 	at com.heytap.browser.search.widget.updater.WidgetUpdaterRegistry.H(WidgetUpdaterRegistry.kt:26)
+11-04 23:53:16.809 W/Bundle  (25818): 	at com.heytap.browser.search.widget.updater.WidgetUpdaterRegistry.A(WidgetUpdaterRegistry.kt:15)
+11-04 23:53:16.809 W/Bundle  (25818): 	at com.heytap.browser.search.widget.updater.WidgetUpdaterRegistry.h(Unknown Source:0)
+11-04 23:53:16.809 W/Bundle  (25818): 	at com.heytap.browser.search.widget.updater.m.run(Unknown Source:6)
+11-04 23:53:16.809 W/Bundle  (25818): 	at android.os.Handler.handleCallback(Handler.java:938)
+11-04 23:53:16.809 W/Bundle  (25818): 	at android.os.Handler.dispatchMessage(Handler.java:99)
+11-04 23:53:16.809 W/Bundle  (25818): 	at android.os.Looper.loopOnce(Looper.java:233)
+11-04 23:53:16.809 W/Bundle  (25818): 	at android.os.Looper.loop(Looper.java:344)
+11-04 23:53:16.809 W/Bundle  (25818): 	at android.os.HandlerThread.run(HandlerThread.java:67)
+11-04 23:53:17.138 E/OplusNetworkStatsNative( 2356): bpfGetAppPurStatsTotal return 0
+11-04 23:53:17.589 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.852. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:17.591 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.738. prev severity:3. cur severity:0 New severity:0
+11-04 23:53:17.592 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.721. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:17.592 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.276. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:17.737 W/com.cat.readal(18632): Profile data size exceeds 500000 bytes. It has 1256392 bytes.
+11-04 23:53:17.760 D/UsageStatsService( 2356): User[0] type=0 b=1793807474134 e=1793807597759 cb=1793806309180 ce=1793807548395 disk=0 all=4
+11-04 23:53:18.004 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:53:18.035 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:53:18.037 W/OplusSlaPolicy( 2356): isCellUsageExceeded == false.
+11-04 23:53:18.038 D/PhoneInterfaceManager( 3950): [PhoneIntfMgr] QueryTelephonyChecker-getDataNetworkTypeForSubscriber: packageName = android, isGrant = true
+11-04 23:53:18.598 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.852. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:18.601 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.761. prev severity:3. cur severity:0 New severity:0
+11-04 23:53:18.602 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.665. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:18.602 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.276. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:19.022 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:53:19.054 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:53:19.604 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.852. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:19.606 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.783. prev severity:3. cur severity:0 New severity:0
+11-04 23:53:19.606 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.665. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:19.607 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.276. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:20.236 E/horae   ( 4569): specified Tz is empty!
+11-04 23:53:20.239 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU1temp: 34.3. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:20.239 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU7temp: 34.9. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:20.239 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU6temp: 34.6. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:20.239 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU5temp: 34.6. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:20.240 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU0temp: 34.9. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:20.240 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU4temp: 34.9. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:20.240 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU3temp: 34.9. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:20.241 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU2temp: 34.9. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:20.243 E/horae   ( 4569): specified Tz is empty!
+11-04 23:53:20.245 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:batterytemp: 31.9. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:20.610 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.852. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:20.612 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.761. prev severity:3. cur severity:0 New severity:0
+11-04 23:53:20.613 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.665. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:20.613 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.276. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:21.043 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:53:21.074 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:53:21.077 W/OplusSlaPolicy( 2356): isCellUsageExceeded == false.
+11-04 23:53:21.078 D/PhoneInterfaceManager( 3950): [PhoneIntfMgr] QueryTelephonyChecker-getDataNetworkTypeForSubscriber: packageName = android, isGrant = true
+11-04 23:53:21.617 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.852. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:21.619 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.772. prev severity:3. cur severity:0 New severity:0
+11-04 23:53:21.619 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.665. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:21.619 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.276. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:22.303 E/SDM     ( 1194): CompManager::PrepareStrategyConstraints: PrepareStrategyConstraints,idle_fallback=1, thermal_fallback_=0
+11-04 23:53:22.623 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.852. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:22.626 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.755. prev severity:3. cur severity:0 New severity:0
+11-04 23:53:22.626 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.665. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:22.626 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.276. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:23.414 I/OplusHansManager ( 2356): uid=10268, pkg=com.kuaishou.nebula cannot transition from R to M, importance=widget
+11-04 23:53:23.487 D/SwtpMonitorThread( 1537): read swtp_status_buf: 0,255,255,255
+11-04 23:53:23.630 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.852. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:23.631 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.755. prev severity:3. cur severity:0 New severity:0
+11-04 23:53:23.632 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.665. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:23.632 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.276. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:23.693 D/OplusAtlasService( 4534): getAttributeByAppName module:oplus-getStreamMaxVolume packageName:com.cat.readall
+11-04 23:53:23.693 W/oid.documentsu(19827): Reducing the number of considered missed Gc histogram windows from 344 to 100
+11-04 23:53:23.694 D/OplusAtlasService( 4534): checkIsInDaemonlistByUid module:judge-sco-actualy uid:10271
+11-04 23:53:23.699 D/OplusAtlasService( 4534): getAttributeByAppName module:oplus-getStreamMaxVolume packageName:com.cat.readall
+11-04 23:53:24.082 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:53:24.115 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:53:24.118 W/OplusSlaPolicy( 2356): isCellUsageExceeded == false.
+11-04 23:53:24.119 D/PhoneInterfaceManager( 3950): [PhoneIntfMgr] QueryTelephonyChecker-getDataNetworkTypeForSubscriber: packageName = android, isGrant = true
+11-04 23:53:24.450 I/OplusHansManager ( 2356): uid=10351, pkg=com.wangzan101.mika cannot transition from M to F, importance=floatWindow
+11-04 23:53:24.630 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.852. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:24.632 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.738. prev severity:3. cur severity:0 New severity:0
+11-04 23:53:24.633 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.665. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:24.633 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.276. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:25.349 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:batterytemp: 31.9. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:25.350 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.852. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:25.350 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU1temp: 34.3. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:25.352 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.732. prev severity:3. cur severity:0 New severity:0
+11-04 23:53:25.352 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:GPUtemp: 34.9. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:25.353 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU7temp: 34.6. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:25.353 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.665. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:25.353 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.276. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:25.354 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU6temp: 34.3. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:25.354 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU5temp: 34.3. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:25.354 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU0temp: 34.9. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:25.355 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU4temp: 34.6. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:25.355 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU3temp: 34.6. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:25.355 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU2temp: 34.9. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:25.635 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.852. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:25.637 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.726. prev severity:3. cur severity:0 New severity:0
+11-04 23:53:25.637 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.665. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:25.638 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.276. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:26.640 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.852. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:26.641 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.732. prev severity:3. cur severity:0 New severity:0
+11-04 23:53:26.641 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.665. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:26.641 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.276. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:26.809 V/SearchWidgetService(25818): updateDarkWord: 男孩帮干活整张脸被粘蝇板粘住
+11-04 23:53:26.820 W/Bundle  (25818): Key versionDate expected String but value was a java.lang.Integer.  The default value <null> was returned.
+11-04 23:53:26.821 W/Bundle  (25818): Attempt to cast generated internal exception:
+11-04 23:53:26.821 W/Bundle  (25818): java.lang.ClassCastException: java.lang.Integer cannot be cast to java.lang.String
+11-04 23:53:26.821 W/Bundle  (25818): 	at android.os.BaseBundle.getString(BaseBundle.java:1199)
+11-04 23:53:26.821 W/Bundle  (25818): 	at com.heytap.browser.search.widget.utils.LauncherWidgetHelper.y(LauncherWidgetHelper.kt:62)
+11-04 23:53:26.821 W/Bundle  (25818): 	at com.heytap.browser.search.widget.utils.LauncherWidgetHelper.E(LauncherWidgetHelper.kt:1)
+11-04 23:53:26.821 W/Bundle  (25818): 	at com.heytap.browser.search.widget.utils.LauncherWidgetHelper.N(LauncherWidgetHelper.kt:27)
+11-04 23:53:26.821 W/Bundle  (25818): 	at com.heytap.browser.search.widget.updater.FirstStyleWidgetUpdater.N(FirstStyleWidgetUpdater.kt:3)
+11-04 23:53:26.821 W/Bundle  (25818): 	at com.heytap.browser.search.widget.updater.b.S(BaseWidgetUpdater.kt:18)
+11-04 23:53:26.821 W/Bundle  (25818): 	at com.heytap.browser.search.widget.updater.WidgetUpdaterRegistry.H(WidgetUpdaterRegistry.kt:26)
+11-04 23:53:26.821 W/Bundle  (25818): 	at com.heytap.browser.search.widget.updater.WidgetUpdaterRegistry.A(WidgetUpdaterRegistry.kt:15)
+11-04 23:53:26.821 W/Bundle  (25818): 	at com.heytap.browser.search.widget.updater.WidgetUpdaterRegistry.h(Unknown Source:0)
+11-04 23:53:26.821 W/Bundle  (25818): 	at com.heytap.browser.search.widget.updater.m.run(Unknown Source:6)
+11-04 23:53:26.821 W/Bundle  (25818): 	at android.os.Handler.handleCallback(Handler.java:938)
+11-04 23:53:26.821 W/Bundle  (25818): 	at android.os.Handler.dispatchMessage(Handler.java:99)
+11-04 23:53:26.821 W/Bundle  (25818): 	at android.os.Looper.loopOnce(Looper.java:233)
+11-04 23:53:26.821 W/Bundle  (25818): 	at android.os.Looper.loop(Looper.java:344)
+11-04 23:53:26.821 W/Bundle  (25818): 	at android.os.HandlerThread.run(HandlerThread.java:67)
+11-04 23:53:27.124 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:53:27.142 E/OplusNetworkStatsNative( 2356): bpfGetAppPurStatsTotal return 0
+11-04 23:53:27.157 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:53:27.159 W/OplusSlaPolicy( 2356): isCellUsageExceeded == false.
+11-04 23:53:27.160 D/PhoneInterfaceManager( 3950): [PhoneIntfMgr] QueryTelephonyChecker-getDataNetworkTypeForSubscriber: packageName = android, isGrant = true
+11-04 23:53:27.643 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.852. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:27.645 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.71. prev severity:3. cur severity:0 New severity:0
+11-04 23:53:27.645 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.665. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:27.645 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.276. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:28.370 E/SDM     ( 1194): CompManager::PrepareStrategyConstraints: PrepareStrategyConstraints,idle_fallback=1, thermal_fallback_=0
+11-04 23:53:28.649 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.903. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:28.651 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.698. prev severity:3. cur severity:0 New severity:0
+11-04 23:53:28.651 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.771. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:28.651 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.309. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:29.654 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.903. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:29.656 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.71. prev severity:3. cur severity:0 New severity:0
+11-04 23:53:29.657 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.771. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:29.657 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.309. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:30.165 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:53:30.195 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:53:30.198 W/OplusSlaPolicy( 2356): isCellUsageExceeded == false.
+11-04 23:53:30.199 D/PhoneInterfaceManager( 3950): [PhoneIntfMgr] QueryTelephonyChecker-getDataNetworkTypeForSubscriber: packageName = android, isGrant = true
+11-04 23:53:30.236 E/horae   ( 4569): specified Tz is empty!
+11-04 23:53:30.238 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU1temp: 34.3. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:30.239 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU7temp: 34.6. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:30.239 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU6temp: 33.9. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:30.239 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU5temp: 34.3. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:30.239 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU0temp: 34.6. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:30.239 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU4temp: 34.6. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:30.240 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU3temp: 34.9. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:30.240 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU2temp: 34.6. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:30.242 E/horae   ( 4569): specified Tz is empty!
+11-04 23:53:30.243 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:batterytemp: 31.9. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:30.503 I/TeaLog  (25818): s worked:true 60000
+11-04 23:53:30.503 D/xgc_apm (25818): set:true
+11-04 23:53:30.657 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.903. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:30.659 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.71. prev severity:3. cur severity:0 New severity:0
+11-04 23:53:30.659 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.771. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:30.659 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.309. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:31.430 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:53:31.440 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:53:31.657 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.903. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:31.659 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.675. prev severity:3. cur severity:0 New severity:0
+11-04 23:53:31.660 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.771. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:31.660 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.309. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:32.664 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.903. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:32.666 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.681. prev severity:3. cur severity:0 New severity:0
+11-04 23:53:32.666 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.771. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:32.666 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.309. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:33.177 E/sensors-hal( 1187): ssc_conn_event_cb:659, event[0] msg_id=1025, ts=38280444667645 sensor_type = pedometer_minute  Wakeup
+11-04 23:53:33.178 E/sensors-hal( 1187): handle_sns_client_event:83, pedometer_minute: report_ts=33187,counter=1791.000000 move_status =[SNS_CMC_STATIONARY] time_gap = 0 run_counter=0.000000 walk_counter=1455.000000
+11-04 23:53:33.185 I/StepApp_StepDataPreHandler( 3662): (main)onSensorChanged raw data: step=1791.0 state=3.0 minuteDelta=0.0 timestamp=1993761539310140 steprun=0.0 stepwalk=1455.0 formatted data: step=1791 state=3 timestamp=1993761539310140 time=1793807613175 steprun=0 stepwalk=1455
+11-04 23:53:33.203 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:53:33.220 I/tcconf  ( 3456): [TCConfManager::StartFileWatcher] Config file reloading...
+11-04 23:53:33.221 I/tcconf  ( 3456): [TCConfManager::ResumeConfigFromDisk] start
+11-04 23:53:33.222 D/tcconf  ( 3456): [FileLock::OpenLockFile] Opened lock file /data/user/0/com.kuaishou.nebula/files/.tcconf/.snow_config.lock with fd 284
+11-04 23:53:33.222 D/tcconf  ( 3456): [FileLock::Lock] Successfully acquired lock type 1 for /data/user/0/com.kuaishou.nebula/files/.tcconf/.snow_config.lock
+11-04 23:53:33.231 I/tcconf  ( 3456): [TCConfManager::ResumeConfigFromDisk] Configuration restored successfully with shared lock, decrypted: {
+11-04 23:53:33.231 I/tcconf  ( 3456): 	"cdn_domain_group":	{
+11-04 23:53:33.231 I/tcconf  ( 3456): 		"version":	"6dfb37db5a790292b2622494a844c100",
+11-04 23:53:33.231 I/tcconf  ( 3456): 		"info":	"[{\n\t\t\"domain_list\":\t[\"w1-pro.kskwai.com\", \"w2-pro.kskwai.com\", \"w3-pro.kskwai.com\", \"w4-pro.kskwai.com\", \"w5-pro.kskwai.com\", \"w23-pro.kskwai.com\"],\n\t\t\"effective_domains\":\t[{\n\t\t\t\t\"domain\":\t\"w2-pro.kskwai.com\"\n\t\t\t}, {\n\t\t\t\t\"domain\":\t\"w4-pro.kskwai.com\"\n\t\t\t}],\n\t\t\"group\":\t\"ActivityFrontendService\",\n\t\t\"mode\":\t\"fallback\"\n\t}, {\n\t\t\"domain_list\":\t[\"w1-pro.gskwai.com\", \"w2-pro.gskwai.com\", \"w3-pro.gskwai.com\", \"w4-pro.gskwai.com\", \"w5-pro.gskwai.com\", \"w23-pro.gskwai.com\"],\n\t\t\"effective_domains\":\t[{\n\t\t\t\t\"domain\":\t\"w2-pro.gskwai.com\"\n\t\t\t}, {\n\t\t\t\t\"domain\":\t\"w4-pro.gskwai.com\"\n\t\t\t}],\n\t\t\"group\":\t\"ActivityFrontendServicebak\",\n\t\t\"mode\":\t\"fallback\"\n\t}, {\n\t\t\"domain_list\":\t[\"d1-pro.a.kwimgs.com\", 
+11-04 23:53:33.233 D/tcconf  ( 3456): [FileLock::Unlock] Successfully released lock for /data/user/0/com.kuaishou.nebula/files/.tcconf/.snow_config.lock
+11-04 23:53:33.233 D/tcconf  ( 3456): [FileLock::CloseLockFile] Closed lock file /data/user/0/com.kuaishou.nebula/files/.tcconf/.snow_config.lock
+11-04 23:53:33.235 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:53:33.237 W/OplusSlaPolicy( 2356): isCellUsageExceeded == false.
+11-04 23:53:33.239 D/PhoneInterfaceManager( 3950): [PhoneIntfMgr] QueryTelephonyChecker-getDataNetworkTypeForSubscriber: packageName = android, isGrant = true
+11-04 23:53:33.242 I/tcconf  ( 3456): [TCConfManager::UpdateSelfConfig] json : {
+11-04 23:53:33.242 I/tcconf  ( 3456): 	"fallback_ip":	[],
+11-04 23:53:33.242 I/tcconf  ( 3456): 	"freeze_step_min":	21,
+11-04 23:53:33.242 I/tcconf  ( 3456): 	"host":	["https://config-proxy.kwd.inkuai.com/v1/config", "https://config-proxy-bak.kwd.inkuai.com/v1/config"],
+11-04 23:53:33.242 I/tcconf  ( 3456): 	"interval_min":	15,
+11-04 23:53:33.242 I/tcconf  ( 3456): 	"max_freeze_time_min":	100
+11-04 23:53:33.242 I/tcconf  ( 3456): }
+11-04 23:53:33.243 I/tcconf  ( 3456): [TCConfConfig::ParseConfigJson] url: https://config-proxy.kwd.inkuai.com/v1/config
+11-04 23:53:33.244 I/tcconf  ( 3456): [TCConfConfig::ParseConfigJson] url: https://config-proxy-bak.kwd.inkuai.com/v1/config
+11-04 23:53:33.244 I/tcconf  ( 3456): [TCConfManager::StartFileWatcher] Config file reload over
+11-04 23:53:33.453 I/ACOUSTIC_MARK( 7937): RUN 3 END
+11-04 23:53:33.581 E/screencap( 7939): createInstance(64bit) : createExtendedFactory
+11-04 23:53:33.582 E/screencap( 7939): createInstance(64bit) : createExtendedFactory
+11-04 23:53:33.583 E/screencap( 7939): Opened libinputextensionsimpl.so
+11-04 23:53:33.583 E/screencap( 7939): Opened libinputextensionsimpl.so
+11-04 23:53:33.583 D/ExtensionsLoader( 7939): createInstance(64bit) : createExtendedFactory
+11-04 23:53:33.583 D/ExtensionsLoader( 7939): createInstance(64bit) : createExtendedFactory
+11-04 23:53:33.583 D/ExtensionsLoader( 7939): Opened libguiextimpl.so
+11-04 23:53:33.583 D/ExtensionsLoader( 7939): Opened libguiextimpl.so
+11-04 23:53:33.590 D/OplusUtils( 7939): OplusUtils [83]: 
+11-04 23:53:33.593 E/screencap( 7939): createInstance(64bit) : createExtendedFactory
+11-04 23:53:33.593 E/screencap( 7939): createInstance(64bit) : createExtendedFactory
+11-04 23:53:33.593 E/screencap( 7939): Opened libsensorextimpl.so
+11-04 23:53:33.593 E/screencap( 7939): Opened libsensorextimpl.so
+11-04 23:53:33.594 D/ProcessState( 7939): Binder ioctl to enable oneway spam detection failed: Invalid argument
+11-04 23:53:33.604 W/MediaProvider( 5828): isAppCloneUserPair failed. Users: 0 and 0
+11-04 23:53:33.604 W/MediaProvider( 5828): isAppCloneUserPair for user 0: false
+11-04 23:53:33.618 D/hw-ProcessState( 7939): Binder ioctl to enable oneway spam detection failed: Invalid argument
+11-04 23:53:33.665 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.823. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:33.667 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.67. prev severity:3. cur severity:0 New severity:0
+11-04 23:53:33.667 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.683. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:33.667 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.246. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:33.703 D/OplusAtlasService( 4534): getAttributeByAppName module:oplus-getStreamMaxVolume packageName:com.cat.readall
+11-04 23:53:33.707 D/OplusAtlasService( 4534): checkIsInDaemonlistByUid module:judge-sco-actualy uid:10271
+11-04 23:53:33.716 D/OplusAtlasService( 4534): getAttributeByAppName module:oplus-getStreamMaxVolume packageName:com.cat.readall
+11-04 23:53:33.937 D/ProcessState( 7943): Binder ioctl to enable oneway spam detection failed: Invalid argument
+11-04 23:53:33.945 W/ProcessStats( 2356): Tracking association SourceState{ad1deb4 system/1000 BTopFgs #515471} whose proc state 2 is better than process ProcessState{5aa2266 com.wangzan101.mika/10351 pkg=com.wangzan101.mika} proc state 3 (3 skipped)
+11-04 23:53:33.963 I/OplusExSystemServiceHelper( 2356): connected :com.android.providers.media.MediaService
+11-04 23:53:33.965 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:53:33.970 I/MediaProvider( 5828): Begin Intent { act=android.intent.action.MEDIA_SCANNER_SCAN_FILE dat=file:///sdcard/shot-3.png flg=0x1400010 cmp=com.android.providers.media.module/com.android.providers.media.MediaService }
+11-04 23:53:33.983 W/PermissionInjector( 5828): applyBatch in invalid type: 2
+11-04 23:53:33.996 I/MediaProvider( 5828): End Intent { act=android.intent.action.MEDIA_SCANNER_SCAN_FILE dat=file:///sdcard/shot-3.png flg=0x1400010 cmp=com.android.providers.media.module/com.android.providers.media.MediaService }
+11-04 23:53:33.998 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:53:34.156 I/MediaProvider( 5828): Deleted 0 1 0 0 0 0 0 items on external_primary due to com.android.shell
+11-04 23:53:34.231 I/ACOUSTIC_MARK( 7950): RUN 4 START
+11-04 23:53:34.392 E/SDM     ( 1194): CompManager::PrepareStrategyConstraints: PrepareStrategyConstraints,idle_fallback=1, thermal_fallback_=0
+11-04 23:53:34.452 I/OplusHansManager ( 2356): uid=10271, pkg=com.cat.readall cannot transition from R to M, importance=widget
+11-04 23:53:34.453 I/OplusHansManager ( 2356): uid=10351, pkg=com.wangzan101.mika cannot transition from M to F, importance=floatWindow
+11-04 23:53:34.671 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.823. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:34.673 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.67. prev severity:3. cur severity:0 New severity:0
+11-04 23:53:34.674 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.683. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:34.675 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.246. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:35.350 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:batterytemp: 31.9. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:35.350 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.823. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:35.350 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU1temp: 34.3. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:35.352 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.664. prev severity:3. cur severity:0 New severity:0
+11-04 23:53:35.352 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:GPUtemp: 34.9. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:35.353 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU7temp: 34.9. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:35.354 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.683. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:35.354 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.246. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:35.354 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU6temp: 34.3. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:35.355 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU5temp: 34.6. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:35.355 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU0temp: 34.6. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:35.355 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU4temp: 34.9. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:35.355 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU3temp: 34.6. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:35.356 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU2temp: 34.9. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:35.677 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.823. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:35.680 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.67. prev severity:3. cur severity:0 New severity:0
+11-04 23:53:35.680 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.683. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:35.680 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.246. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:36.242 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:53:36.276 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:53:36.278 W/OplusSlaPolicy( 2356): isCellUsageExceeded == false.
+11-04 23:53:36.281 D/PhoneInterfaceManager( 3950): [PhoneIntfMgr] QueryTelephonyChecker-getDataNetworkTypeForSubscriber: packageName = android, isGrant = true
+11-04 23:53:36.682 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.823. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:36.684 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.675. prev severity:3. cur severity:0 New severity:0
+11-04 23:53:36.684 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.683. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:36.685 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.246. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:36.811 V/SearchWidgetService(25818): updateDarkWord: 哈电集团原纪委书记杨宏勇被提起公诉
+11-04 23:53:36.821 W/Bundle  (25818): Key versionDate expected String but value was a java.lang.Integer.  The default value <null> was returned.
+11-04 23:53:36.822 W/Bundle  (25818): Attempt to cast generated internal exception:
+11-04 23:53:36.822 W/Bundle  (25818): java.lang.ClassCastException: java.lang.Integer cannot be cast to java.lang.String
+11-04 23:53:36.822 W/Bundle  (25818): 	at android.os.BaseBundle.getString(BaseBundle.java:1199)
+11-04 23:53:36.822 W/Bundle  (25818): 	at com.heytap.browser.search.widget.utils.LauncherWidgetHelper.y(LauncherWidgetHelper.kt:62)
+11-04 23:53:36.822 W/Bundle  (25818): 	at com.heytap.browser.search.widget.utils.LauncherWidgetHelper.E(LauncherWidgetHelper.kt:1)
+11-04 23:53:36.822 W/Bundle  (25818): 	at com.heytap.browser.search.widget.utils.LauncherWidgetHelper.N(LauncherWidgetHelper.kt:27)
+11-04 23:53:36.822 W/Bundle  (25818): 	at com.heytap.browser.search.widget.updater.FirstStyleWidgetUpdater.N(FirstStyleWidgetUpdater.kt:3)
+11-04 23:53:36.822 W/Bundle  (25818): 	at com.heytap.browser.search.widget.updater.b.S(BaseWidgetUpdater.kt:18)
+11-04 23:53:36.822 W/Bundle  (25818): 	at com.heytap.browser.search.widget.updater.WidgetUpdaterRegistry.H(WidgetUpdaterRegistry.kt:26)
+11-04 23:53:36.822 W/Bundle  (25818): 	at com.heytap.browser.search.widget.updater.WidgetUpdaterRegistry.A(WidgetUpdaterRegistry.kt:15)
+11-04 23:53:36.822 W/Bundle  (25818): 	at com.heytap.browser.search.widget.updater.WidgetUpdaterRegistry.h(Unknown Source:0)
+11-04 23:53:36.822 W/Bundle  (25818): 	at com.heytap.browser.search.widget.updater.m.run(Unknown Source:6)
+11-04 23:53:36.822 W/Bundle  (25818): 	at android.os.Handler.handleCallback(Handler.java:938)
+11-04 23:53:36.822 W/Bundle  (25818): 	at android.os.Handler.dispatchMessage(Handler.java:99)
+11-04 23:53:36.822 W/Bundle  (25818): 	at android.os.Looper.loopOnce(Looper.java:233)
+11-04 23:53:36.822 W/Bundle  (25818): 	at android.os.Looper.loop(Looper.java:344)
+11-04 23:53:36.822 W/Bundle  (25818): 	at android.os.HandlerThread.run(HandlerThread.java:67)
+11-04 23:53:37.143 E/OplusNetworkStatsNative( 2356): bpfGetAppPurStatsTotal return 0
+11-04 23:53:37.191 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:53:37.203 I/OplusHansManager ( 2356): unfreeze uid: 10249 com.tencent.mm pids: [16137, 6923] reason: Broadcast scene: LcdOn
+11-04 23:53:37.205 I/OplusHansManager ( 2356): uid=10249, pkg=com.tencent.mm, transition from Frozen to Middle, reason=Broadcast
+11-04 23:53:37.205 I/OplusHansManager ( 2356): uid=10249, pkg=com.tencent.mm F exit(), reason=Broadcast
+11-04 23:53:37.205 D/OplusProxyWakeLock( 2356): remove uid: 10249 wiht all pids from wakelockUidInfo list
+11-04 23:53:37.213 I/OplusHansManager ( 2356): up_BC uid=10249 pkg=com.tencent.mm
+11-04 23:53:37.213 I/OplusHansManager ( 2356): up_alarm 10249
+11-04 23:53:37.216 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:53:37.230 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:53:37.686 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.823. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:37.688 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.675. prev severity:3. cur severity:0 New severity:0
+11-04 23:53:37.688 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.683. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:37.688 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.246. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:38.488 D/SwtpMonitorThread( 1537): read swtp_status_buf: 0,255,255,255
+11-04 23:53:38.690 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.823. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:38.692 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.67. prev severity:3. cur severity:0 New severity:0
+11-04 23:53:38.692 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.742. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:38.693 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.246. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:39.286 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:53:39.318 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:53:39.321 W/OplusSlaPolicy( 2356): isCellUsageExceeded == false.
+11-04 23:53:39.322 D/PhoneInterfaceManager( 3950): [PhoneIntfMgr] QueryTelephonyChecker-getDataNetworkTypeForSubscriber: packageName = android, isGrant = true
+11-04 23:53:39.696 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.823. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:39.698 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.658. prev severity:3. cur severity:0 New severity:0
+11-04 23:53:39.698 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.742. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:39.698 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.246. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:40.236 E/horae   ( 4569): specified Tz is empty!
+11-04 23:53:40.238 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU1temp: 33.9. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:40.239 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU7temp: 34.3. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:40.239 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU6temp: 34.3. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:40.239 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU5temp: 34.3. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:40.239 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU0temp: 34.6. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:40.240 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU4temp: 34.6. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:40.240 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU3temp: 34.3. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:40.240 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU2temp: 34.3. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:40.242 E/horae   ( 4569): specified Tz is empty!
+11-04 23:53:40.244 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:batterytemp: 31.8. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:40.437 E/SDM     ( 1194): CompManager::PrepareStrategyConstraints: PrepareStrategyConstraints,idle_fallback=1, thermal_fallback_=0
+11-04 23:53:40.701 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.823. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:40.703 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.641. prev severity:3. cur severity:0 New severity:0
+11-04 23:53:40.703 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.742. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:40.703 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.246. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:41.702 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.823. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:41.704 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.647. prev severity:3. cur severity:0 New severity:0
+11-04 23:53:41.705 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.742. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:41.705 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.246. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:42.325 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:53:42.348 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:53:42.351 W/OplusSlaPolicy( 2356): isCellUsageExceeded == false.
+11-04 23:53:42.352 D/PhoneInterfaceManager( 3950): [PhoneIntfMgr] QueryTelephonyChecker-getDataNetworkTypeForSubscriber: packageName = android, isGrant = true
+11-04 23:53:42.703 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.823. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:42.705 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.63. prev severity:3. cur severity:0 New severity:0
+11-04 23:53:42.706 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.742. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:42.706 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.246. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:43.420 I/OplusHansManager ( 2356): uid=10268, pkg=com.kuaishou.nebula cannot transition from R to M, importance=widget
+11-04 23:53:43.459 E/SDM     ( 1194): CompManager::PrepareStrategyConstraints: PrepareStrategyConstraints,idle_fallback=1, thermal_fallback_=0
+11-04 23:53:43.709 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.823. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:43.711 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.624. prev severity:3. cur severity:0 New severity:0
+11-04 23:53:43.712 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.635. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:43.712 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.246. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:43.720 D/OplusAtlasService( 4534): getAttributeByAppName module:oplus-getStreamMaxVolume packageName:com.cat.readall
+11-04 23:53:43.725 D/OplusAtlasService( 4534): checkIsInDaemonlistByUid module:judge-sco-actualy uid:10271
+11-04 23:53:43.737 D/OplusAtlasService( 4534): getAttributeByAppName module:oplus-getStreamMaxVolume packageName:com.cat.readall
+11-04 23:53:44.455 I/OplusHansManager ( 2356): uid=10351, pkg=com.wangzan101.mika cannot transition from M to F, importance=floatWindow
+11-04 23:53:44.714 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.823. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:44.716 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.607. prev severity:3. cur severity:0 New severity:0
+11-04 23:53:44.717 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.635. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:44.717 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.246. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:45.350 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:batterytemp: 31.8. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:45.350 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.823. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:45.350 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU1temp: 33.9. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:45.352 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.618. prev severity:3. cur severity:0 New severity:0
+11-04 23:53:45.353 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:GPUtemp: 34.9. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:45.353 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU7temp: 34.6. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:45.353 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.635. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:45.353 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.246. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:45.354 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU6temp: 34.3. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:45.354 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU5temp: 34.3. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:45.354 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU0temp: 34.6. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:45.355 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU4temp: 34.6. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:45.355 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU3temp: 34.6. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:45.355 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU2temp: 34.6. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:45.357 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:53:45.394 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:53:45.397 W/OplusSlaPolicy( 2356): isCellUsageExceeded == false.
+11-04 23:53:45.398 D/PhoneInterfaceManager( 3950): [PhoneIntfMgr] QueryTelephonyChecker-getDataNetworkTypeForSubscriber: packageName = android, isGrant = true
+11-04 23:53:45.720 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.823. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:45.722 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.607. prev severity:3. cur severity:0 New severity:0
+11-04 23:53:45.723 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.635. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:45.723 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.246. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:46.481 E/SDM     ( 1194): CompManager::PrepareStrategyConstraints: PrepareStrategyConstraints,idle_fallback=1, thermal_fallback_=0
+11-04 23:53:46.726 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.823. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:46.728 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.613. prev severity:3. cur severity:0 New severity:0
+11-04 23:53:46.728 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.635. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:46.728 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.246. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:46.814 V/SearchWidgetService(25818): updateDarkWord: 男子回应60升热水器清出50斤水垢
+11-04 23:53:46.823 W/Bundle  (25818): Key versionDate expected String but value was a java.lang.Integer.  The default value <null> was returned.
+11-04 23:53:46.824 W/Bundle  (25818): Attempt to cast generated internal exception:
+11-04 23:53:46.824 W/Bundle  (25818): java.lang.ClassCastException: java.lang.Integer cannot be cast to java.lang.String
+11-04 23:53:46.824 W/Bundle  (25818): 	at android.os.BaseBundle.getString(BaseBundle.java:1199)
+11-04 23:53:46.824 W/Bundle  (25818): 	at com.heytap.browser.search.widget.utils.LauncherWidgetHelper.y(LauncherWidgetHelper.kt:62)
+11-04 23:53:46.824 W/Bundle  (25818): 	at com.heytap.browser.search.widget.utils.LauncherWidgetHelper.E(LauncherWidgetHelper.kt:1)
+11-04 23:53:46.824 W/Bundle  (25818): 	at com.heytap.browser.search.widget.utils.LauncherWidgetHelper.N(LauncherWidgetHelper.kt:27)
+11-04 23:53:46.824 W/Bundle  (25818): 	at com.heytap.browser.search.widget.updater.FirstStyleWidgetUpdater.N(FirstStyleWidgetUpdater.kt:3)
+11-04 23:53:46.824 W/Bundle  (25818): 	at com.heytap.browser.search.widget.updater.b.S(BaseWidgetUpdater.kt:18)
+11-04 23:53:46.824 W/Bundle  (25818): 	at com.heytap.browser.search.widget.updater.WidgetUpdaterRegistry.H(WidgetUpdaterRegistry.kt:26)
+11-04 23:53:46.824 W/Bundle  (25818): 	at com.heytap.browser.search.widget.updater.WidgetUpdaterRegistry.A(WidgetUpdaterRegistry.kt:15)
+11-04 23:53:46.824 W/Bundle  (25818): 	at com.heytap.browser.search.widget.updater.WidgetUpdaterRegistry.h(Unknown Source:0)
+11-04 23:53:46.824 W/Bundle  (25818): 	at com.heytap.browser.search.widget.updater.m.run(Unknown Source:6)
+11-04 23:53:46.824 W/Bundle  (25818): 	at android.os.Handler.handleCallback(Handler.java:938)
+11-04 23:53:46.824 W/Bundle  (25818): 	at android.os.Handler.dispatchMessage(Handler.java:99)
+11-04 23:53:46.824 W/Bundle  (25818): 	at android.os.Looper.loopOnce(Looper.java:233)
+11-04 23:53:46.824 W/Bundle  (25818): 	at android.os.Looper.loop(Looper.java:344)
+11-04 23:53:46.824 W/Bundle  (25818): 	at android.os.HandlerThread.run(HandlerThread.java:67)
+11-04 23:53:46.834 D/PerformanceService( 1247): memmonitor is exist
+11-04 23:53:47.146 E/OplusNetworkStatsNative( 2356): bpfGetAppPurStatsTotal return 0
+11-04 23:53:47.209 I/OplusHansManager ( 2356): uid=10249, pkg=com.tencent.mm can transition from M to F
+11-04 23:53:47.210 I/OplusHansManager ( 2356): uid=10249, pkg=com.tencent.mm F enter()
+11-04 23:53:47.229 I/OplusHansManager ( 2356): freeze uid: 10249 com.tencent.mm pids: [16137, 6923] scene: LcdOn
+11-04 23:53:47.232 D/IHansComunication( 7857): HansComunication::addUid-- 10249
+11-04 23:53:47.232 D/IHansComunication( 7857): HANS sendMessageToKernel: threadId = 477988973744, netLinkSetup = 1, type = PKG, targetUid = 10249, pkgCmd = ADD_ONE_UID
+11-04 23:53:47.233 I/OplusHansManager ( 2356): p_BC uid=10249 pkg=com.tencent.mm
+11-04 23:53:47.733 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.823. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:47.735 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.607. prev severity:3. cur severity:0 New severity:0
+11-04 23:53:47.735 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.635. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:47.735 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.246. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:48.402 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:53:48.435 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:53:48.439 W/OplusSlaPolicy( 2356): isCellUsageExceeded == false.
+11-04 23:53:48.441 D/PhoneInterfaceManager( 3950): [PhoneIntfMgr] QueryTelephonyChecker-getDataNetworkTypeForSubscriber: packageName = android, isGrant = true
+11-04 23:53:48.729 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.764. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:48.731 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.624. prev severity:3. cur severity:0 New severity:0
+11-04 23:53:48.731 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.547. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:48.732 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.171. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:49.236 D/IHansComunication( 7857): HansComunication::configCheckedUid-- 10249, type = 0
+11-04 23:53:49.236 D/IHansComunication( 7857): HANS sendMessageToKernel: threadId = 477988973744, netLinkSetup = 1, type = FROZEN_TRANS, targetUid = 10249, pkgCmd = PKG_CMD_MAX
+11-04 23:53:49.735 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.764. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:49.737 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.613. prev severity:3. cur severity:0 New severity:0
+11-04 23:53:49.737 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.547. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:49.737 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.171. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:50.237 E/horae   ( 4569): specified Tz is empty!
+11-04 23:53:50.239 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU1temp: 33.9. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:50.239 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU7temp: 34.3. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:50.239 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU6temp: 34.3. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:50.240 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU5temp: 34.3. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:50.240 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU0temp: 34.6. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:50.240 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU4temp: 34.6. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:50.240 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU3temp: 34.3. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:50.241 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU2temp: 34.6. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:50.243 E/horae   ( 4569): specified Tz is empty!
+11-04 23:53:50.245 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:batterytemp: 31.8. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:50.741 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.764. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:50.743 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.613. prev severity:3. cur severity:0 New severity:0
+11-04 23:53:50.743 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.547. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:50.743 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.171. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:51.037 D/ConnectivityService( 2356): requestNetwork for uid/pid:10268/3161 activeRequest: null callbackRequest: 11599 [NetworkRequest [ REQUEST id=11600, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED Uid: 10268 RequestorUid: 10268 RequestorPkg: com.kuaishou.nebula UnderlyingNetworks: Null] ]] callback flags: 0 order: 2147483647
+11-04 23:53:51.046 D/WifiNetworkFactory( 2356): got request NetworkRequest [ REQUEST id=11600, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED Uid: 10268 RequestorUid: 10268 RequestorPkg: com.kuaishou.nebula UnderlyingNetworks: Null] ]
+11-04 23:53:51.047 D/UntrustedWifiNetworkFactory( 2356): got request NetworkRequest [ REQUEST id=11600, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED Uid: 10268 RequestorUid: 10268 RequestorPkg: com.kuaishou.nebula UnderlyingNetworks: Null] ]
+11-04 23:53:51.047 D/OemPaidWifiNetworkFactory( 2356): got request NetworkRequest [ REQUEST id=11600, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED Uid: 10268 RequestorUid: 10268 RequestorPkg: com.kuaishou.nebula UnderlyingNetworks: Null] ]
+11-04 23:53:51.053 D/ConnectivityService( 2356): NetReassign [11600 : null → 148] [c 1] [a 2] [i 11]
+11-04 23:53:51.437 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:53:51.443 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:53:51.445 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:53:51.475 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:53:51.477 W/OplusSlaPolicy( 2356): isCellUsageExceeded == false.
+11-04 23:53:51.479 D/PhoneInterfaceManager( 3950): [PhoneIntfMgr] QueryTelephonyChecker-getDataNetworkTypeForSubscriber: packageName = android, isGrant = true
+11-04 23:53:51.747 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.764. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:51.749 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.607. prev severity:3. cur severity:0 New severity:0
+11-04 23:53:51.749 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.547. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:51.749 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.171. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:52.754 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.764. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:52.756 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.613. prev severity:3. cur severity:0 New severity:0
+11-04 23:53:52.757 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.547. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:52.757 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.171. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:53.490 D/SwtpMonitorThread( 1537): read swtp_status_buf: 0,255,255,255
+11-04 23:53:53.731 D/OplusAtlasService( 4534): getAttributeByAppName module:oplus-getStreamMaxVolume packageName:com.cat.readall
+11-04 23:53:53.735 D/OplusAtlasService( 4534): checkIsInDaemonlistByUid module:judge-sco-actualy uid:10271
+11-04 23:53:53.748 D/OplusAtlasService( 4534): getAttributeByAppName module:oplus-getStreamMaxVolume packageName:com.cat.readall
+11-04 23:53:53.758 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.764. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:53.760 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.601. prev severity:3. cur severity:0 New severity:0
+11-04 23:53:53.760 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.547. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:53.761 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.171. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:54.073 I/ACOUSTIC_MARK( 7972): RUN 4 END
+11-04 23:53:54.198 E/screencap( 7974): createInstance(64bit) : createExtendedFactory
+11-04 23:53:54.199 E/screencap( 7974): createInstance(64bit) : createExtendedFactory
+11-04 23:53:54.199 E/screencap( 7974): Opened libinputextensionsimpl.so
+11-04 23:53:54.199 E/screencap( 7974): Opened libinputextensionsimpl.so
+11-04 23:53:54.200 D/ExtensionsLoader( 7974): createInstance(64bit) : createExtendedFactory
+11-04 23:53:54.200 D/ExtensionsLoader( 7974): createInstance(64bit) : createExtendedFactory
+11-04 23:53:54.200 D/ExtensionsLoader( 7974): Opened libguiextimpl.so
+11-04 23:53:54.200 D/ExtensionsLoader( 7974): Opened libguiextimpl.so
+11-04 23:53:54.206 D/OplusUtils( 7974): OplusUtils [83]: 
+11-04 23:53:54.209 E/screencap( 7974): createInstance(64bit) : createExtendedFactory
+11-04 23:53:54.209 E/screencap( 7974): createInstance(64bit) : createExtendedFactory
+11-04 23:53:54.209 E/screencap( 7974): Opened libsensorextimpl.so
+11-04 23:53:54.209 E/screencap( 7974): Opened libsensorextimpl.so
+11-04 23:53:54.210 D/ProcessState( 7974): Binder ioctl to enable oneway spam detection failed: Invalid argument
+11-04 23:53:54.219 W/MediaProvider( 5828): isAppCloneUserPair failed. Users: 0 and 0
+11-04 23:53:54.219 W/MediaProvider( 5828): isAppCloneUserPair for user 0: false
+11-04 23:53:54.248 D/hw-ProcessState( 7974): Binder ioctl to enable oneway spam detection failed: Invalid argument
+11-04 23:53:54.461 I/OplusHansManager ( 2356): uid=10271, pkg=com.cat.readall cannot transition from R to M, importance=widget
+11-04 23:53:54.462 I/OplusHansManager ( 2356): uid=10351, pkg=com.wangzan101.mika cannot transition from M to F, importance=floatWindow
+11-04 23:53:54.482 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:53:54.514 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:53:54.517 W/OplusSlaPolicy( 2356): isCellUsageExceeded == false.
+11-04 23:53:54.519 D/PhoneInterfaceManager( 3950): [PhoneIntfMgr] QueryTelephonyChecker-getDataNetworkTypeForSubscriber: packageName = android, isGrant = true
+11-04 23:53:54.547 D/ProcessState( 7978): Binder ioctl to enable oneway spam detection failed: Invalid argument
+11-04 23:53:54.555 W/ProcessStats( 2356): Tracking association SourceState{ad1deb4 system/1000 BTopFgs #515484} whose proc state 2 is better than process ProcessState{5aa2266 com.wangzan101.mika/10351 pkg=com.wangzan101.mika} proc state 3 (3 skipped)
+11-04 23:53:54.571 I/OplusExSystemServiceHelper( 2356): connected :com.android.providers.media.MediaService
+11-04 23:53:54.571 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:53:54.574 I/MediaProvider( 5828): Begin Intent { act=android.intent.action.MEDIA_SCANNER_SCAN_FILE dat=file:///sdcard/shot-4.png flg=0x1400010 cmp=com.android.providers.media.module/com.android.providers.media.MediaService }
+11-04 23:53:54.586 W/PermissionInjector( 5828): applyBatch in invalid type: 2
+11-04 23:53:54.598 I/MediaProvider( 5828): End Intent { act=android.intent.action.MEDIA_SCANNER_SCAN_FILE dat=file:///sdcard/shot-4.png flg=0x1400010 cmp=com.android.providers.media.module/com.android.providers.media.MediaService }
+11-04 23:53:54.600 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:53:54.717 I/MediaProvider( 5828): Deleted 0 1 0 0 0 0 0 items on external_primary due to com.android.shell
+11-04 23:53:54.761 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.764. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:54.763 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.584. prev severity:3. cur severity:0 New severity:0
+11-04 23:53:54.763 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.547. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:54.763 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.171. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:54.790 I/ACOUSTIC_MARK( 7985): RUN 5 START
+11-04 23:53:55.350 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:batterytemp: 31.8. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:55.351 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.764. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:55.351 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU1temp: 34.3. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:55.353 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.595. prev severity:3. cur severity:0 New severity:0
+11-04 23:53:55.353 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:GPUtemp: 35.2. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:55.353 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU7temp: 34.9. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:55.353 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.547. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:55.354 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.171. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:55.354 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU6temp: 34.6. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:55.355 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU5temp: 34.6. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:55.355 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU0temp: 34.9. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:55.356 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU4temp: 34.9. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:55.356 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU3temp: 34.9. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:55.357 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU2temp: 35.2. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:55.767 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.764. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:55.769 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.601. prev severity:3. cur severity:0 New severity:0
+11-04 23:53:55.769 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.547. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:55.769 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.171. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:56.769 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.764. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:56.770 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.618. prev severity:3. cur severity:0 New severity:0
+11-04 23:53:56.770 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.547. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:56.771 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.171. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:56.818 V/SearchWidgetService(25818): updateDarkWord: 这5个辐射谣言千万别信
+11-04 23:53:56.825 W/Bundle  (25818): Key versionDate expected String but value was a java.lang.Integer.  The default value <null> was returned.
+11-04 23:53:56.826 W/Bundle  (25818): Attempt to cast generated internal exception:
+11-04 23:53:56.826 W/Bundle  (25818): java.lang.ClassCastException: java.lang.Integer cannot be cast to java.lang.String
+11-04 23:53:56.826 W/Bundle  (25818): 	at android.os.BaseBundle.getString(BaseBundle.java:1199)
+11-04 23:53:56.826 W/Bundle  (25818): 	at com.heytap.browser.search.widget.utils.LauncherWidgetHelper.y(LauncherWidgetHelper.kt:62)
+11-04 23:53:56.826 W/Bundle  (25818): 	at com.heytap.browser.search.widget.utils.LauncherWidgetHelper.E(LauncherWidgetHelper.kt:1)
+11-04 23:53:56.826 W/Bundle  (25818): 	at com.heytap.browser.search.widget.utils.LauncherWidgetHelper.N(LauncherWidgetHelper.kt:27)
+11-04 23:53:56.826 W/Bundle  (25818): 	at com.heytap.browser.search.widget.updater.FirstStyleWidgetUpdater.N(FirstStyleWidgetUpdater.kt:3)
+11-04 23:53:56.826 W/Bundle  (25818): 	at com.heytap.browser.search.widget.updater.b.S(BaseWidgetUpdater.kt:18)
+11-04 23:53:56.826 W/Bundle  (25818): 	at com.heytap.browser.search.widget.updater.WidgetUpdaterRegistry.H(WidgetUpdaterRegistry.kt:26)
+11-04 23:53:56.826 W/Bundle  (25818): 	at com.heytap.browser.search.widget.updater.WidgetUpdaterRegistry.A(WidgetUpdaterRegistry.kt:15)
+11-04 23:53:56.826 W/Bundle  (25818): 	at com.heytap.browser.search.widget.updater.WidgetUpdaterRegistry.h(Unknown Source:0)
+11-04 23:53:56.826 W/Bundle  (25818): 	at com.heytap.browser.search.widget.updater.m.run(Unknown Source:6)
+11-04 23:53:56.826 W/Bundle  (25818): 	at android.os.Handler.handleCallback(Handler.java:938)
+11-04 23:53:56.826 W/Bundle  (25818): 	at android.os.Handler.dispatchMessage(Handler.java:99)
+11-04 23:53:56.826 W/Bundle  (25818): 	at android.os.Looper.loopOnce(Looper.java:233)
+11-04 23:53:56.826 W/Bundle  (25818): 	at android.os.Looper.loop(Looper.java:344)
+11-04 23:53:56.826 W/Bundle  (25818): 	at android.os.HandlerThread.run(HandlerThread.java:67)
+11-04 23:53:57.151 E/OplusNetworkStatsNative( 2356): bpfGetAppPurStatsTotal return 0
+11-04 23:53:57.523 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:53:57.558 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:53:57.560 W/OplusSlaPolicy( 2356): isCellUsageExceeded == false.
+11-04 23:53:57.562 D/PhoneInterfaceManager( 3950): [PhoneIntfMgr] QueryTelephonyChecker-getDataNetworkTypeForSubscriber: packageName = android, isGrant = true
+11-04 23:53:57.776 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.764. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:57.778 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.624. prev severity:3. cur severity:0 New severity:0
+11-04 23:53:57.779 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.547. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:57.779 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.171. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:58.443 D/SystemUi--( 3231): getDebugState, e = android.provider.Settings$SettingNotFoundException: systemui_internal_debug
+11-04 23:53:58.485 I/OplusPerfParmCount( 1298): The num of client composition of  in last 63407 ms is: 12
+11-04 23:53:58.486 I/OplusPerfParmCount( 1298): The num of blur fliter in last 63407 ms is: 35
+11-04 23:53:58.486 I/OplusPerfParmCount( 1298): The num of frame in last 63407 ms is: 20, jank frame is 9, DisplayHAL is 8, SurfaceFlingerCpuDeadlineMissed is 0, SurfaceFlingerGpuDeadlineMissed is 1, AppDeadlineMissed is 0, PredictionError is 0, SurfaceFlingerScheduling is 0, BufferStuffing is 0, Unknown is 0, SurfaceFlingerStuffing is 0
+11-04 23:53:58.486 I/OplusPerfParmCount( 1298): The layer number in last 63407ms is: 8 layer, 32 time, 
+11-04 23:53:58.592 E/SDM     ( 1194): CompManager::PrepareStrategyConstraints: PrepareStrategyConstraints,idle_fallback=1, thermal_fallback_=0
+11-04 23:53:58.783 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.764. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:58.784 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.618. prev severity:3. cur severity:0 New severity:0
+11-04 23:53:58.785 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.547. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:58.785 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.171. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:59.226 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:53:59.244 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:53:59.247 I/OplusHansManager ( 2356): unfreeze uid: 10249 com.tencent.mm pids: [16137, 6923] reason: Broadcast scene: LcdOn
+11-04 23:53:59.249 I/OplusHansManager ( 2356): uid=10249, pkg=com.tencent.mm, transition from Frozen to Middle, reason=Broadcast
+11-04 23:53:59.249 I/OplusHansManager ( 2356): uid=10249, pkg=com.tencent.mm F exit(), reason=Broadcast
+11-04 23:53:59.251 D/OplusProxyWakeLock( 2356): remove uid: 10249 wiht all pids from wakelockUidInfo list
+11-04 23:53:59.259 I/OplusHansManager ( 2356): up_BC uid=10249 pkg=com.tencent.mm
+11-04 23:53:59.259 I/OplusHansManager ( 2356): up_alarm 10249
+11-04 23:53:59.273 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:53:59.787 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.764. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:59.788 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.613. prev severity:3. cur severity:0 New severity:0
+11-04 23:53:59.789 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.547. prev severity:0. cur severity:0 New severity:0
+11-04 23:53:59.789 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.171. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:00.010 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:54:00.014 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:54:00.015 D/SingleClockView( 3231): updateTime,  24hfmt=true, h=23, m=54
+11-04 23:54:00.029 E/OplusCustomizeRestrictionManagerService( 2356): isBiometricDisabled start
+11-04 23:54:00.029 I/Biometrics/Fingerprint/OplusFingerprintServiceExtImpl( 2356): isBiometricDisabled is false
+11-04 23:54:00.032 E/OplusCustomizeRestrictionManagerService( 2356): isBiometricDisabled start
+11-04 23:54:00.033 I/Biometrics/Fingerprint/OplusFingerprintServiceExtImpl( 2356): isBiometricDisabled is false
+11-04 23:54:00.192 E/SDM     ( 1194): CompManager::PrepareStrategyConstraints: PrepareStrategyConstraints,idle_fallback=1, thermal_fallback_=0
+11-04 23:54:00.236 E/horae   ( 4569): specified Tz is empty!
+11-04 23:54:00.239 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU1temp: 33.9. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:00.239 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU7temp: 34.6. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:00.239 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU6temp: 34.3. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:00.240 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU5temp: 34.3. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:00.240 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU0temp: 34.6. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:00.240 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU4temp: 34.6. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:00.240 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU3temp: 34.6. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:00.241 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU2temp: 34.6. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:00.243 E/horae   ( 4569): specified Tz is empty!
+11-04 23:54:00.245 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:batterytemp: 31.8. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:00.565 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:54:00.595 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:54:00.597 W/OplusSlaPolicy( 2356): isCellUsageExceeded == false.
+11-04 23:54:00.599 D/PhoneInterfaceManager( 3950): [PhoneIntfMgr] QueryTelephonyChecker-getDataNetworkTypeForSubscriber: packageName = android, isGrant = true
+11-04 23:54:00.793 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.764. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:00.794 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.595. prev severity:3. cur severity:0 New severity:0
+11-04 23:54:00.794 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.547. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:00.794 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.171. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:01.794 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.764. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:01.797 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.578. prev severity:3. cur severity:0 New severity:0
+11-04 23:54:01.797 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.547. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:01.798 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.171. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:02.192 I/DRS_LOG_ChinaTimeWindowPolicy[DRS-Scheduler-1](19848): [MATCH] time=23:54, window=NIGHT_VALLEY, base=5m, scale=0.75, result=3m45s
+11-04 23:54:02.193 I/DRS_LOG_ThreadTimer[DRS-Scheduler-1](19848): PSEUDO triggered, next=3m45s, base=5m, config:5min, policy=ChinaTimeWindow(22:00-24:00 0.75x), scale=0.75x
+11-04 23:54:02.194 I/DRS_LOG_UploadPipelineV2[DRS-Scheduler-1](19848): triggerPseudo() called, gate=UploadGateFacade{
+11-04 23:54:02.194 I/DRS_LOG_UploadPipelineV2[DRS-Scheduler-1](19848):   BusinessRuleGate{mode=STANDALONE, enableNetRequest=true}
+11-04 23:54:02.194 I/DRS_LOG_UploadPipelineV2[DRS-Scheduler-1](19848):   NetworkGate{networkReady=true, isWifi=true}
+11-04 23:54:02.194 I/DRS_LOG_UploadPipelineV2[DRS-Scheduler-1](19848):   PerformanceGate{skipped(STANDALONE)}
+11-04 23:54:02.194 I/DRS_LOG_UploadPipelineV2[DRS-Scheduler-1](19848):   EnvRecoveryDetector: EnvRecoveryDetector{standalone=true, state=IDLE, snapshot=EnvSnapshot{net=true, normalOk=true, rtOk=true}, lastNormalOk=true, lastRtOk=true}
+11-04 23:54:02.194 I/DRS_LOG_UploadPipelineV2[DRS-Scheduler-1](19848):   envRecoveryListeners: 2
+11-04 23:54:02.194 I/DRS_LOG_UploadPipelineV2[DRS-Scheduler-1](19848): }
+11-04 23:54:02.197 I/DRS_LOG_GateStateManager[DRS-Scheduler-1](19848): resetCompensationBudget[Pseudo]: budget=2
+11-04 23:54:02.197 I/DRS_LOG_ChannelTaskRunner[DRS-Scheduler-1](19848): [PSEUDO] upload_trigger request=ChannelTaskRequest{channelType=Pseudo, triggerReason=PSEUDO_PERIODIC, requestTimeMs=1793807642197, skipGateCheck=false, scheduledRun=false}
+11-04 23:54:02.197 I/DRS_LOG_ThreadTimer[DRS-Scheduler-1](19848): PSEUDO thread scheduled, reason=loop, delay=3m45s
+11-04 23:54:02.198 I/DRS_LOG_ChannelTaskRunner[DRS-Upload-Nr-1](19848): [PSEUDO] task_start submitMode=NEW_TASK request=ChannelTaskRequest{channelType=Pseudo, triggerReason=PSEUDO_PERIODIC, requestTimeMs=1793807642197, skipGateCheck=false, scheduledRun=false}
+11-04 23:54:02.204 I/DRS_LOG_UploadBatchAssembler[DRS-Upload-Nr-1](19848): [PSEUDO] initial_snapshot round=1 appIdCount=0 appIds=[] wifi=true allowDcs=true
+11-04 23:54:02.206 I/DRS_LOG_UploadBatchAssembler[DRS-Upload-Nr-1](19848): [PSEUDO] final_supplement previousRound=1 knownAppIds=0 supplementedAppIds=[]
+11-04 23:54:02.206 I/DRS_LOG_ChannelTaskRunner[DRS-Upload-Nr-1](19848): [PSEUDO] prepare_empty hadSuccess=false loop=1
+11-04 23:54:02.207 I/DRS_LOG_ChannelTaskRunner[DRS-Upload-Nr-1](19848): [PSEUDO] task_finish completed=true stopReason=TASK_COMPLETED successApps=0 skippedBatches=0 appErrors=0 envScenario=null allUploaded=false newDataDuringTask=false
+11-04 23:54:02.800 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.764. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:02.802 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.59. prev severity:3. cur severity:0 New severity:0
+11-04 23:54:02.802 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.547. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:02.802 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.171. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:03.426 I/OplusHansManager ( 2356): uid=10268, pkg=com.kuaishou.nebula cannot transition from R to M, importance=widget
+11-04 23:54:03.604 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:54:03.638 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:54:03.643 W/OplusSlaPolicy( 2356): isCellUsageExceeded == false.
+11-04 23:54:03.646 D/PhoneInterfaceManager( 3950): [PhoneIntfMgr] QueryTelephonyChecker-getDataNetworkTypeForSubscriber: packageName = android, isGrant = true
+11-04 23:54:03.740 D/OplusAtlasService( 4534): getAttributeByAppName module:oplus-getStreamMaxVolume packageName:com.cat.readall
+11-04 23:54:03.744 D/OplusAtlasService( 4534): checkIsInDaemonlistByUid module:judge-sco-actualy uid:10271
+11-04 23:54:03.755 D/OplusAtlasService( 4534): getAttributeByAppName module:oplus-getStreamMaxVolume packageName:com.cat.readall
+11-04 23:54:03.805 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.69. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:03.807 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.573. prev severity:3. cur severity:0 New severity:0
+11-04 23:54:03.807 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.452. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:03.807 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.171. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:03.947 W/RuntimeEnvironment(19495): process name:com.finshell.wallet start check
+11-04 23:54:03.950 W/RuntimeEnvironment(19495): process name:com.finshell.wallet releaseSession
+11-04 23:54:04.465 I/OplusHansManager ( 2356): uid=10351, pkg=com.wangzan101.mika cannot transition from M to F, importance=floatWindow
+11-04 23:54:04.811 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.69. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:04.813 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.567. prev severity:3. cur severity:0 New severity:0
+11-04 23:54:04.813 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.452. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:04.813 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.171. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:05.350 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:batterytemp: 31.8. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:05.350 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.69. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:05.350 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU1temp: 33.9. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:05.352 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.555. prev severity:3. cur severity:0 New severity:0
+11-04 23:54:05.353 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:GPUtemp: 34.6. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:05.353 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU7temp: 34.6. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:05.354 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.452. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:05.355 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.171. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:05.355 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU6temp: 33.9. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:05.357 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU5temp: 34.3. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:05.358 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU0temp: 34.3. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:05.359 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU4temp: 34.6. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:05.361 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU3temp: 34.6. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:05.361 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU2temp: 34.3. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:05.526 D/OplusPrivacyDotViewController( 3231): scheduleUpdate: 
+11-04 23:54:05.527 D/OplusPrivacyDotViewController( 3231): processNextViewState: 
+11-04 23:54:05.527 D/OplusPrivacyDotViewController( 3231): resolveState ViewState(systemPrivacyEventIsActive=false, shadeExpanded=false, qsExpanded=false, rtl=false, rotation=0, height=12, x=50, y=63, cornerIndex=1, designatedCorner=android.widget.FrameLayout{affc829 G.E...... ......ID 0,0-12,12 #7f0b03f6 app:id/icons_container}, contentDescription=null, chipAnimationStart=false, preDraw=false) shouldShowDot false
+11-04 23:54:05.527 D/OplusPrivacyDotViewController( 3231): updatePosition:50:63
+11-04 23:54:05.529 D/OplusPrivacyDotViewController( 3231): updatePosition:50:63
+11-04 23:54:05.572 D/OplusMovieIdle( 1298): updateLayerStacks,mOmiSupport is not supoort
+11-04 23:54:05.593 D/OplusMovieIdle( 1298): updateLayerStacks,mOmiSupport is not supoort
+11-04 23:54:05.814 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.69. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:05.815 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.555. prev severity:3. cur severity:0 New severity:0
+11-04 23:54:05.815 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.452. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:05.816 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.171. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:06.651 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:54:06.684 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:54:06.688 W/OplusSlaPolicy( 2356): isCellUsageExceeded == false.
+11-04 23:54:06.690 D/PhoneInterfaceManager( 3950): [PhoneIntfMgr] QueryTelephonyChecker-getDataNetworkTypeForSubscriber: packageName = android, isGrant = true
+11-04 23:54:06.821 V/SearchWidgetService(25818): updateDarkWord: 这轮AI行情给所有人上了一课
+11-04 23:54:06.821 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.69. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:06.823 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.555. prev severity:3. cur severity:0 New severity:0
+11-04 23:54:06.823 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.452. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:06.824 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.171. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:06.833 W/Bundle  (25818): Key versionDate expected String but value was a java.lang.Integer.  The default value <null> was returned.
+11-04 23:54:06.834 W/Bundle  (25818): Attempt to cast generated internal exception:
+11-04 23:54:06.834 W/Bundle  (25818): java.lang.ClassCastException: java.lang.Integer cannot be cast to java.lang.String
+11-04 23:54:06.834 W/Bundle  (25818): 	at android.os.BaseBundle.getString(BaseBundle.java:1199)
+11-04 23:54:06.834 W/Bundle  (25818): 	at com.heytap.browser.search.widget.utils.LauncherWidgetHelper.y(LauncherWidgetHelper.kt:62)
+11-04 23:54:06.834 W/Bundle  (25818): 	at com.heytap.browser.search.widget.utils.LauncherWidgetHelper.E(LauncherWidgetHelper.kt:1)
+11-04 23:54:06.834 W/Bundle  (25818): 	at com.heytap.browser.search.widget.utils.LauncherWidgetHelper.N(LauncherWidgetHelper.kt:27)
+11-04 23:54:06.834 W/Bundle  (25818): 	at com.heytap.browser.search.widget.updater.FirstStyleWidgetUpdater.N(FirstStyleWidgetUpdater.kt:3)
+11-04 23:54:06.834 W/Bundle  (25818): 	at com.heytap.browser.search.widget.updater.b.S(BaseWidgetUpdater.kt:18)
+11-04 23:54:06.834 W/Bundle  (25818): 	at com.heytap.browser.search.widget.updater.WidgetUpdaterRegistry.H(WidgetUpdaterRegistry.kt:26)
+11-04 23:54:06.834 W/Bundle  (25818): 	at com.heytap.browser.search.widget.updater.WidgetUpdaterRegistry.A(WidgetUpdaterRegistry.kt:15)
+11-04 23:54:06.834 W/Bundle  (25818): 	at com.heytap.browser.search.widget.updater.WidgetUpdaterRegistry.h(Unknown Source:0)
+11-04 23:54:06.834 W/Bundle  (25818): 	at com.heytap.browser.search.widget.updater.m.run(Unknown Source:6)
+11-04 23:54:06.834 W/Bundle  (25818): 	at android.os.Handler.handleCallback(Handler.java:938)
+11-04 23:54:06.834 W/Bundle  (25818): 	at android.os.Handler.dispatchMessage(Handler.java:99)
+11-04 23:54:06.834 W/Bundle  (25818): 	at android.os.Looper.loopOnce(Looper.java:233)
+11-04 23:54:06.834 W/Bundle  (25818): 	at android.os.Looper.loop(Looper.java:344)
+11-04 23:54:06.834 W/Bundle  (25818): 	at android.os.HandlerThread.run(HandlerThread.java:67)
+11-04 23:54:07.155 E/OplusNetworkStatsNative( 2356): bpfGetAppPurStatsTotal return 0
+11-04 23:54:07.825 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.69. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:07.827 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.55. prev severity:3. cur severity:0 New severity:0
+11-04 23:54:07.828 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.452. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:07.828 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.171. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:08.491 D/SwtpMonitorThread( 1537): read swtp_status_buf: 0,255,255,255
+11-04 23:54:08.830 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.795. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:08.832 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.544. prev severity:3. cur severity:0 New severity:0
+11-04 23:54:08.832 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.698. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:08.833 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.2. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:09.253 I/OplusHansManager ( 2356): uid=10249, pkg=com.tencent.mm can transition from M to F
+11-04 23:54:09.253 I/OplusHansManager ( 2356): uid=10249, pkg=com.tencent.mm F enter()
+11-04 23:54:09.272 I/OplusHansManager ( 2356): freeze uid: 10249 com.tencent.mm pids: [16137, 6923] scene: LcdOn
+11-04 23:54:09.274 I/OplusHansManager ( 2356): p_BC uid=10249 pkg=com.tencent.mm
+11-04 23:54:09.274 D/IHansComunication( 7857): HansComunication::addUid-- 10249
+11-04 23:54:09.274 D/IHansComunication( 7857): HANS sendMessageToKernel: threadId = 477988973744, netLinkSetup = 1, type = PKG, targetUid = 10249, pkgCmd = ADD_ONE_UID
+11-04 23:54:09.694 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:54:09.728 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:54:09.733 W/OplusSlaPolicy( 2356): isCellUsageExceeded == false.
+11-04 23:54:09.734 D/PhoneInterfaceManager( 3950): [PhoneIntfMgr] QueryTelephonyChecker-getDataNetworkTypeForSubscriber: packageName = android, isGrant = true
+11-04 23:54:09.834 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.795. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:09.836 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.55. prev severity:3. cur severity:0 New severity:0
+11-04 23:54:09.836 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.698. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:09.837 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.2. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:10.236 E/horae   ( 4569): specified Tz is empty!
+11-04 23:54:10.238 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU1temp: 34.3. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:10.238 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU7temp: 34.9. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:10.238 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU6temp: 33.9. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:10.238 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU5temp: 34.3. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:10.238 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU0temp: 34.6. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:10.238 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU4temp: 34.9. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:10.239 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU3temp: 34.6. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:10.239 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU2temp: 35.2. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:10.240 E/horae   ( 4569): specified Tz is empty!
+11-04 23:54:10.241 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:batterytemp: 31.8. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:10.703 E/SDM     ( 1194): CompManager::PrepareStrategyConstraints: PrepareStrategyConstraints,idle_fallback=1, thermal_fallback_=0
+11-04 23:54:10.837 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.795. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:10.841 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.55. prev severity:3. cur severity:0 New severity:0
+11-04 23:54:10.841 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.698. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:10.841 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.2. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:11.277 D/IHansComunication( 7857): HansComunication::configCheckedUid-- 10249, type = 0
+11-04 23:54:11.277 D/IHansComunication( 7857): HANS sendMessageToKernel: threadId = 477988973744, netLinkSetup = 1, type = FROZEN_TRANS, targetUid = 10249, pkgCmd = PKG_CMD_MAX
+11-04 23:54:11.439 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:54:11.444 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:54:11.841 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.795. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:11.842 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.544. prev severity:3. cur severity:0 New severity:0
+11-04 23:54:11.842 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.698. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:11.842 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.2. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:12.739 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:54:12.774 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:54:12.776 W/OplusSlaPolicy( 2356): isCellUsageExceeded == false.
+11-04 23:54:12.778 D/PhoneInterfaceManager( 3950): [PhoneIntfMgr] QueryTelephonyChecker-getDataNetworkTypeForSubscriber: packageName = android, isGrant = true
+11-04 23:54:12.845 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.795. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:12.847 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.555. prev severity:3. cur severity:0 New severity:0
+11-04 23:54:12.848 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.698. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:12.848 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.2. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:13.113 D/OplusNetKit( 2356): interface name from LP: [wlan0]
+11-04 23:54:13.113 D/OplusNetKit( 2356): in getLpByInterface name from LP: [wlan0]
+11-04 23:54:13.114 D/OplusNetKit( 2356): in getLpByInterface name from LP: [wlan0]
+11-04 23:54:13.114 D/OplusNetKit( 2356): Route is ipv4 on wlan0 found, break
+11-04 23:54:13.172 D/OplusArpPeer_euclid_psw( 2356): arp from self , ignore it
+11-04 23:54:13.747 D/OplusAtlasService( 4534): getAttributeByAppName module:oplus-getStreamMaxVolume packageName:com.cat.readall
+11-04 23:54:13.751 D/OplusAtlasService( 4534): checkIsInDaemonlistByUid module:judge-sco-actualy uid:10271
+11-04 23:54:13.762 D/OplusAtlasService( 4534): getAttributeByAppName module:oplus-getStreamMaxVolume packageName:com.cat.readall
+11-04 23:54:13.850 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.795. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:13.852 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.573. prev severity:3. cur severity:0 New severity:0
+11-04 23:54:13.853 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.698. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:13.853 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.159. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:14.157 E/OplusArpPeer_euclid_psw( 2356): ARP read failure: android.system.ErrnoException: read failed: EAGAIN (Try again)
+11-04 23:54:14.160 E/OplusArpPeer_euclid_psw( 2356):  OplusArpPeer close
+11-04 23:54:14.465 I/OplusHansManager ( 2356): uid=10271, pkg=com.cat.readall cannot transition from R to M, importance=widget
+11-04 23:54:14.466 I/OplusHansManager ( 2356): uid=10351, pkg=com.wangzan101.mika cannot transition from M to F, importance=floatWindow
+11-04 23:54:14.475 I/ACOUSTIC_MARK( 8008): RUN 5 END
+11-04 23:54:14.601 E/screencap( 8010): createInstance(64bit) : createExtendedFactory
+11-04 23:54:14.602 E/screencap( 8010): createInstance(64bit) : createExtendedFactory
+11-04 23:54:14.602 E/screencap( 8010): Opened libinputextensionsimpl.so
+11-04 23:54:14.602 E/screencap( 8010): Opened libinputextensionsimpl.so
+11-04 23:54:14.603 D/ExtensionsLoader( 8010): createInstance(64bit) : createExtendedFactory
+11-04 23:54:14.603 D/ExtensionsLoader( 8010): createInstance(64bit) : createExtendedFactory
+11-04 23:54:14.603 D/ExtensionsLoader( 8010): Opened libguiextimpl.so
+11-04 23:54:14.603 D/ExtensionsLoader( 8010): Opened libguiextimpl.so
+11-04 23:54:14.610 D/OplusUtils( 8010): OplusUtils [83]: 
+11-04 23:54:14.613 E/screencap( 8010): createInstance(64bit) : createExtendedFactory
+11-04 23:54:14.613 E/screencap( 8010): createInstance(64bit) : createExtendedFactory
+11-04 23:54:14.613 E/screencap( 8010): Opened libsensorextimpl.so
+11-04 23:54:14.613 E/screencap( 8010): Opened libsensorextimpl.so
+11-04 23:54:14.614 D/ProcessState( 8010): Binder ioctl to enable oneway spam detection failed: Invalid argument
+11-04 23:54:14.624 W/MediaProvider( 5828): isAppCloneUserPair failed. Users: 0 and 0
+11-04 23:54:14.624 W/MediaProvider( 5828): isAppCloneUserPair for user 0: false
+11-04 23:54:14.637 D/hw-ProcessState( 8010): Binder ioctl to enable oneway spam detection failed: Invalid argument
+11-04 23:54:14.851 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.795. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:14.855 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.555. prev severity:3. cur severity:0 New severity:0
+11-04 23:54:14.855 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.698. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:14.855 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.159. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:14.959 D/ProcessState( 8014): Binder ioctl to enable oneway spam detection failed: Invalid argument
+11-04 23:54:14.968 W/ProcessStats( 2356): Tracking association SourceState{ad1deb4 system/1000 BTopFgs #515497} whose proc state 2 is better than process ProcessState{5aa2266 com.wangzan101.mika/10351 pkg=com.wangzan101.mika} proc state 3 (3 skipped)
+11-04 23:54:14.988 I/OplusExSystemServiceHelper( 2356): connected :com.android.providers.media.MediaService
+11-04 23:54:14.989 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:54:14.993 I/MediaProvider( 5828): Begin Intent { act=android.intent.action.MEDIA_SCANNER_SCAN_FILE dat=file:///sdcard/shot-5.png flg=0x1400010 cmp=com.android.providers.media.module/com.android.providers.media.MediaService }
+11-04 23:54:15.004 W/PermissionInjector( 5828): applyBatch in invalid type: 2
+11-04 23:54:15.014 I/MediaProvider( 5828): End Intent { act=android.intent.action.MEDIA_SCANNER_SCAN_FILE dat=file:///sdcard/shot-5.png flg=0x1400010 cmp=com.android.providers.media.module/com.android.providers.media.MediaService }
+11-04 23:54:15.015 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:54:15.354 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:batterytemp: 31.8. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:15.354 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.795. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:15.354 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU1temp: 34.9. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:15.356 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.59. prev severity:3. cur severity:0 New severity:0
+11-04 23:54:15.356 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:GPUtemp: 35.2. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:15.357 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU7temp: 35.2. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:15.357 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.698. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:15.357 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.159. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:15.357 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU6temp: 34.9. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:15.357 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU5temp: 35.2. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:15.357 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU0temp: 35.6. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:15.357 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU4temp: 35.6. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:15.358 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU3temp: 35.6. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:15.358 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:CPU2temp: 35.6. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:15.394 I/MediaProvider( 5828): Deleted 0 1 0 0 0 0 0 items on external_primary due to com.android.shell
+11-04 23:54:15.464 I/ACOUSTIC_MARK( 8020): SESSION END
+11-04 23:54:15.783 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:54:15.814 D/OplusFeatureAOD( 2356): shouldGoDoze = false
+11-04 23:54:15.817 W/OplusSlaPolicy( 2356): isCellUsageExceeded == false.
+11-04 23:54:15.818 D/PhoneInterfaceManager( 3950): [PhoneIntfMgr] QueryTelephonyChecker-getDataNetworkTypeForSubscriber: packageName = android, isGrant = true
+11-04 23:54:15.857 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_frametemp: 31.795. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:15.859 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:skintemp: 34.578. prev severity:3. cur severity:0 New severity:0
+11-04 23:54:15.860 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_fronttemp: 32.698. prev severity:0. cur severity:0 New severity:0
+11-04 23:54:15.860 I/android.hardware.thermal@2.0-service.qti( 1188): Sensor Name:shell_backtemp: 32.159. prev severity:0. cur severity:0 New severity:0

@@ -31,7 +31,7 @@
 | APK 文件名 | `xiaole-6.11.9+61-de7ede8-release.apk` |
 | 大小 | **40,806,486 B** |
 | SHA-256 | `783f5963d742e5b2fbda09ef003abc1f0e29c36d018fd3c535f61b1610acf6ac` |
-| 本机落地路径 | `C:\Users\Administrator\AppData\Local\Temp\xiaole-apk\v6119\`（含 APK / `SHA256SUMS.txt` / `analyze.log`） |
+| 本机落地路径 | `<TEMP>\xiaole-apk\v6119\`（含 APK / `SHA256SUMS.txt` / `analyze.log`） |
 | analyze | **0 error**（93 条均为既有 info/warning：常量命名、`print`、依赖声明等） |
 | GitHub 下载 | `gh run download 41816712171 --repo openclawzhangchong/xiaole-client-flutter-2027 -D <dir>` |
 

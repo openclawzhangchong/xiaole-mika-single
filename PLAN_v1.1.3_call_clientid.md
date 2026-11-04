@@ -104,7 +104,7 @@ String _randomClientId() {
 ### 3.4 推送与交付（沿用已验证通道）
 1. **强制红线校验**：`git diff 3e067af -- lib/core/ lib/data/` 必须**仅含**既往已批准的设备身份改动（`xiaozhi_device_info_util.dart`），本次不新增任何红线改动 → 否则中止。
 2. GitHub API 直推（绕过代理 502 四步法：blob→tree→commit→ref），打 `v1.1.3` 标签触发 CI。
-3. CI 通过后用两段式签名 URL 下载 APK 到桌面：`C:\Users\Administrator\Desktop\xiaole-client-v1.1.3.apk`。
+3. CI 通过后用两段式签名 URL 下载 APK 到桌面：`<DESKTOP>\xiaole-client-v1.1.3.apk`。
 4. README 版本档案追加 `v1.1.3` 一行（内容 / 包名 / 验证状态 / 日期）。
 
 ---

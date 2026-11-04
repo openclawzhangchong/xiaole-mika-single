@@ -144,7 +144,7 @@ widgets/profile_header.dart / agent_avatar.dart / activation_dialog.dart / typin
 - [ ] 聊天页：时间戳居中、系统消息居中、气泡宽度自适应、**无错版不对齐**
 - [ ] 深色模式跟随系统，无写死颜色残留
 - [ ] 功能回归：文字收发、按住说话、红色持续监听、📞 双向语音、激活弹窗全部与 v1.1.3 一致（纯换皮零功能改动）
-- [ ] 红线 diff 为空；CI 通过；APK `xiaole-client-v1.1.4.apk` 落桌面 C:\Users\Administrator\Desktop\buddy
+- [ ] 红线 diff 为空；CI 通过；APK `xiaole-client-v1.1.4.apk` 落桌面 <DESKTOP>\buddy
 
 ---
 

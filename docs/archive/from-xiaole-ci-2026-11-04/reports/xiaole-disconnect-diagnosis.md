@@ -12,7 +12,7 @@
 
 | 文件 | 时间窗 | 内容 |
 |---|---|---|
-| `C:\Users\Administrator\AppData\Local\Temp\xiaole-apk\agent1.log` | 16:03:32–16:03:58 | 我们的 CI 包 + 云端智能体，连接全程正常 |
+| `<TEMP>\xiaole-apk\agent1.log` | 16:03:32–16:03:58 | 我们的 CI 包 + 云端智能体，连接全程正常 |
 | `...\stability3m.log` | 16:07:53–16:10:57 | 云端智能体，60.26s 后 1006，之后进程被冻结、未再重连 |
 | `...\stability3m_b.log` | 16:12:24–16:15:48 | 云端智能体正常 → 切到 8899 智能体后进入无限 1006 循环 |
 | `...\diag_clean200s.log` | 16:20:30–16:23:23 | 200s 前台不触碰，8899 智能体，连续 9 次 1006 |
@@ -45,7 +45,7 @@
 
 200s 干净测试（不触碰屏幕）里这个循环跑了 9 次：`16:20:30 / 16:20:37 / 16:20:48 / 16:21:01 / 16:21:20 / 16:21:47 / 16:22:19 / 16:22:51 / 16:23:23`，全是 `code=1006 reason= attempts=N kind=服务器`。
 
-假服务端源码（`C:\Users\Administrator\Documents\Trae-CN\temp_20261104_04\fake_xiaozhi_mcp_server.py`，另一个 session 起的，PC 进程 PID 5608 仍在跑）里对 `mika.submit_goal` 结果做判定后 `break` 退出循环，`break` 即关闭 WS —— 与日志中"每次 1006 都紧跟一次 tools/call 返回"完全对齐。`adb reverse --list` 里 `tcp:8899 tcp:8899` 仍在映射。
+假服务端源码（`<HOME>\Documents\Trae-CN\temp_20261104_04\fake_xiaozhi_mcp_server.py`，另一个 session 起的，PC 进程 PID 5608 仍在跑）里对 `mika.submit_goal` 结果做判定后 `break` 退出循环，`break` 即关闭 WS —— 与日志中"每次 1006 都紧跟一次 tools/call 返回"完全对齐。`adb reverse --list` 里 `tcp:8899 tcp:8899` 仍在映射。
 
 ### 1.3 云端智能体 60 秒后被断（第二类，独立问题）
 

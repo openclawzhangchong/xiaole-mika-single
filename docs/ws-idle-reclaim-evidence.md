@@ -1,7 +1,7 @@
 ﻿# 证据：云端按「业务消息空闲」回收 WS（1005 / ~60–70s）与 pingInterval 无效
 
 > 入库证据说明。原始日志均来自真机（realme RMX3161，`7f:f1:b7:5e:ef:aa`，M5Stack CoreS3 身份），
-> 日志文件：`C:\Users\Administrator\AppData\Local\Temp\xiaole-apk\A_3min.log`（下称 A 日志）。
+> 日志文件：`<TEMP>\xiaole-apk\A_3min.log`（下称 A 日志）。
 
 ## 1. 结论（可入库一句话）
 

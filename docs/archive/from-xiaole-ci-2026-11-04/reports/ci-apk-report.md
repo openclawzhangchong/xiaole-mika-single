@@ -33,7 +33,7 @@
 
 | 项 | 值 |
 |---|---|
-| 本地路径 | `C:\Users\Administrator\AppData\Local\Temp\xiaole-apk\xiaole-apk-6.11.5+57-c315bc4\xiaole-6.11.5+57-c315bc4-release.apk` |
+| 本地路径 | `<TEMP>\xiaole-apk\xiaole-apk-6.11.5+57-c315bc4\xiaole-6.11.5+57-c315bc4-release.apk` |
 | 大小 | 40,806,374 B（约 38.9 MB） |
 | SHA-256 | `3f59ea41b9ca13dbc11e249a040449f3f745862c5a0605cb1f9a4421e97ece23` |
 | 包名 | `com.zcstudy.xiaole` |

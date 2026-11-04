@@ -1,6 +1,6 @@
 ﻿$ErrorActionPreference = 'Continue'
 $dev = '36c77fb6'
-$out = 'C:\Users\Administrator\AppData\Local\Temp\zh-boundary'
+$out = '<TEMP>\zh-boundary'
 $cjk = '春江潮水连海平海上明月共潮生滟滟随波千万里何处春江无月明'
 
 $cases = @(

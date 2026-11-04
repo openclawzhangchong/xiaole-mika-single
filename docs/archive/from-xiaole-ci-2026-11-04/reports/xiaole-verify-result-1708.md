@@ -85,8 +85,8 @@ dumpsys deviceidle whitelist → user,com.zcstudy.xiaole,10352   ← 已生效
 
 | 文件 | 内容 |
 |---|---|
-| `C:\Users\Administrator\AppData\Local\Temp\xiaole-apk\A_3min.log` | 17:09–17:15:23，含 A 的 3 次 1005 |
-| `C:\Users\Administrator\AppData\Local\Temp\xiaole-apk\BC.log` | 17:16–17:18，v57 的 60.0s 1006 与 dispose |
+| `<TEMP>\xiaole-apk\A_3min.log` | 17:09–17:15:23，含 A 的 3 次 1005 |
+| `<TEMP>\xiaole-apk\BC.log` | 17:16–17:18，v57 的 60.0s 1006 与 dispose |
 | `...\A_start.png` | 17:09 聊天页「已连接」（v58） |
 | `...\A_end.png` / `...\A_open.png` | 列表页（A 结束时已被切走） |
 | `...\B1.png` / `...\B2.png` / `...\B3.png` | B 阶段截图（v57） |

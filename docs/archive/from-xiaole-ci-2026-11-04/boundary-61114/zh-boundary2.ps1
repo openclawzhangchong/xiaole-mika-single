@@ -1,6 +1,6 @@
 ﻿$ErrorActionPreference = 'Continue'
 $dev = '36c77fb6'
-$out = 'C:\Users\Administrator\AppData\Local\Temp\zh-boundary'
+$out = '<TEMP>\zh-boundary'
 $cjkBase = '春江潮水连海平海上明月共潮生滟滟随波千万里何处春江无月明江流宛转绕芳甸月照花林皆似霰空里流霜不觉飞汀上白沙看不见'
 $emojiArr = @('😀','😃','😄','😁','😆','😅','🤣','😂','🙂','🙃','😉','😊','😇','🥰','😍','🤩','😘','😗','😚','😙')
 $mixBase = '中A文B混C排D测E试F字G符H长I度J边K界L点M文N本O混P排Q测R试S字T符U混V排W测X试Y字Z符'

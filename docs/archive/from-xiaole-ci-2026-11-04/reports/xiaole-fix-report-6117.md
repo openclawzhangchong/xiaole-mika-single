@@ -21,7 +21,7 @@ installerPackageName=pc
 
 ### 1.2 logcat 关键行（原始证据）
 
-来源：`C:\Users\Administrator\AppData\Local\Temp\xiaole-apk\A_3min.log`（同一事件在 `verify_v2.log` 里重复出现）
+来源：`<TEMP>\xiaole-apk\A_3min.log`（同一事件在 `verify_v2.log` 里重复出现）
 
 ```
 11-04 17:13:41.443 D/OplusInstallAccelerateManager(2356): installerPackageName = pc
@@ -55,7 +55,7 @@ installerPackageName=pc
 
 ## 二、心跳规则：文档怎么说（第 2 步，只读原文）
 
-仓库：`C:\Users\Administrator\AppData\Local\Temp\recon-xiaozhi\xiaozhi-esp32\docs\`
+仓库：`<TEMP>\recon-xiaozhi\xiaozhi-esp32\docs\`
 
 ### 2.1 `websocket_zh.md`（全文 503 行已通读）
 
@@ -129,7 +129,7 @@ installerPackageName=pc
 |---|---|
 | commit | `0a713ef`（`fix(v6.11.7): 断线改为无感重连…`），随后 `569daaa` 仅改文档 |
 | run | **41807490945** ✅ success（`Build Release APK`，push master，耗时 **9m17s**） |
-| artifact | `xiaole-apk-6.11.7+59-0a713ef`（已下载到 `C:\Users\Administrator\AppData\Local\Temp\xiaole-apk\v6117\`） |
+| artifact | `xiaole-apk-6.11.7+59-0a713ef`（已下载到 `<TEMP>\xiaole-apk\v6117\`） |
 | APK | `xiaole-6.11.7+59-0a713ef-release.apk`，**40,806,378 B** |
 | sha256 | `2f695d3b711230bc3004b8cd066805a875170ccbfd9dcc9a5711957d759f5990` |
 | analyze | `87 issues`，**0 error**（全部既有 `info`/`warning`；本次仅新增 1 条 `constant_identifier_names` info，与仓库既有常量命名风格一致）；`flutter build apk --release` 通过即为编译自证 |
@@ -162,7 +162,7 @@ installerPackageName=pc
 
 ## 六、证据文件索引
 
-- `C:\Users\Administrator\AppData\Local\Temp\xiaole-apk\A_3min.log`（17:13:41 覆盖安装原始行）
-- `C:\Users\Administrator\AppData\Local\Temp\xiaole-apk\verify_v2.log`（17:08:40 我方 6.11.6 安装 + 17:13:41 降级覆盖）
-- `C:\Users\Administrator\AppData\Local\Temp\xiaole-apk\v6117\xiaole-apk-6.11.7+59-0a713ef\`（APK + SHA256SUMS + analyze.log）
+- `<TEMP>\xiaole-apk\A_3min.log`（17:13:41 覆盖安装原始行）
+- `<TEMP>\xiaole-apk\verify_v2.log`（17:08:40 我方 6.11.6 安装 + 17:13:41 降级覆盖）
+- `<TEMP>\xiaole-apk\v6117\xiaole-apk-6.11.7+59-0a713ef\`（APK + SHA256SUMS + analyze.log）
 - 文档原文：`...\recon-xiaozhi\xiaozhi-esp32\docs\websocket_zh.md`、`websocket.md`、`mcp-protocol_zh.md`、`mqtt-udp_zh.md`

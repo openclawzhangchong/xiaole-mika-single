@@ -2,7 +2,7 @@
 
 **结论：本地 MCP 真实存在（App 实现了设备侧 MCP 服务器，27 个 `self.*` 工具，能直接挂 `mika.*`）；但代码里没有"断网自闭环"——工具执行是纯本地，触发仍必须由后端（云端或局域网自建服务器）下发；因此 Mika 可以做成 App 内工具在同一台手机/同一局域网被调用，外连式网关应降级为可选。**
 
-核对对象：`Z:\github项目\_recon\xiaole-client-flutter-2027`（用户实际版本，v6.11.5+57）。
+核对对象：`<WORKSPACE>\_recon\xiaole-client-flutter-2027`（用户实际版本，v6.11.5+57）。
 （上一轮克隆的 `eiriksgata/xiaozhi-client-flutter` 是阉割参考版，无 MCP，不能作为依据。）
 
 ---

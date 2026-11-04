@@ -61,7 +61,7 @@
 - **代码**：远端 commit `86e67ecbb5de17fb717e697f4c0fb8bbb6f18b0a`（本地 8a78873，API 创建带 gpgsig 故 sha 不同；19 文件 +643/-31），tag `v4.3.0`。
 - **质量门**：flutter analyze 0 error（改动文件 0 告警）；红线校验 `git diff b207428 -- lib/core/ lib/data/` 为空 ✅；golden 套件三轮 5/5 稳定（我页基线随导出入口/隐藏通用区更新）。
 - **CI**：run `34357670313`（build-apk.yml，tag v4.3.0 触发）**success**。
-- **APK**：`C:\Users\Administrator\Desktop\xiaole-client-v4.3.0.apk`，59,372,282 字节（与 Release 资产一致），sha1 `7d94a65c1c666426…`。
+- **APK**：`<DESKTOP>\xiaole-client-v4.3.0.apk`，59,372,282 字节（与 Release 资产一致），sha1 `7d94a65c1c666426…`。
 - **实施偏差（与草案的差异，均已在代码注释说明）**：
   - 3.2「无完整时间戳的历史消息在启用日期过滤时排除」在 App 侧不适用：`MessageModel.timestamp` 为非空 required `DateTime`，App 消息天然全有时间戳，故日期过滤直接按 ts 比较、无排除分支。
   - 1.2 全局矫正入口落在 `chat_page.initState`（`AgentIdentityStore.normalizeGlobalModel()` 幂等），独立身份矫正落在 `_initializeWebSocket` 身份应用段；「我」页设备型号展示保持**单跳只读**（golden 固定 pump 下多跳异步链会时序漂移），矫正收敛在前述两处（激活流程必经添加页，覆盖完整）。
