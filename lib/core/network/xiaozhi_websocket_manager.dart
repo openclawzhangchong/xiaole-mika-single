@@ -32,6 +32,14 @@ class XiaozhiWebSocketManager {
   static const int RECONNECT_MAX_MS = 30000;
   static const int RECONNECT_MAX_TRIES = 12;
 
+  /// v6.11.6：WS 保活间隔。云端会把空闲长连接约 60s 回收（真机日志实证：
+  /// 16:07:53.809 连上 → 16:08:54.071 code=1006，时长 60.26s），
+  /// 25s 发一次 ping 可稳定保活。
+  static const Duration PING_INTERVAL = Duration(seconds: 25);
+
+  /// v6.11.6：看门狗检查间隔（Dart 定时器，不依赖 didChangeAppLifecycleState）
+  static const Duration WATCHDOG_INTERVAL = Duration(seconds: 20);
+
   WebSocketChannel? _channel;
   String? _serverUrl;
   String? _deviceId;
@@ -42,6 +50,7 @@ class XiaozhiWebSocketManager {
   final List<XiaozhiWebSocketListener> _listeners = [];
   bool _isReconnecting = false;
   Timer? _reconnectTimer;
+  Timer? _watchdogTimer;
   StreamSubscription? _streamSubscription;
   int _reconnectAttempts = 0;
   bool _manualClosed = false;
@@ -148,7 +157,9 @@ class XiaozhiWebSocketManager {
         }
 
         // 使用IOWebSocketChannel并传递headers
-        _channel = IOWebSocketChannel.connect(uri, headers: headers);
+        // v6.11.6：加 pingInterval 保活，避免空闲约 60s 被云端回收（1006/1005）
+        _channel = IOWebSocketChannel.connect(uri,
+            headers: headers, pingInterval: PING_INTERVAL);
 
         logger.info('使用headers方式连接WebSocket成功');
       } catch (e) {
@@ -194,6 +205,8 @@ class XiaozhiWebSocketManager {
       });
 
       logger.info('已连接到 $uri');
+      // v6.11.6：连接建立即启动看门狗（独立 Dart Timer，不需要生命周期回调）
+      _startWatchdog();
     } catch (e) {
       logger.severe('连接失败: $e');
       _dispatchEvent(
@@ -212,6 +225,10 @@ class XiaozhiWebSocketManager {
     // 取消重连
     _reconnectTimer?.cancel();
     _isReconnecting = false;
+
+    // v6.11.6：主动断开时停掉看门狗，避免它把用户手动断开又连回去
+    _watchdogTimer?.cancel();
+    _watchdogTimer = null;
 
     // 取消订阅
     await _streamSubscription?.cancel();
@@ -351,7 +368,13 @@ class XiaozhiWebSocketManager {
       XiaozhiEvent(type: XiaozhiEventType.disconnected, data: codeInfo),
     );
 
-    // v3.0.0 指数退避自动重连
+    // v3.0.0 指数退避自动重连（v6.11.6 抽成 _scheduleReconnect，看门狗复用同一路径）
+    _scheduleReconnect();
+  }
+
+  /// v6.11.6：安排下一次重连。纯 Dart Timer 调度，不依赖 didChangeAppLifecycleState，
+  /// 进程被冻结/回前台后定时器恢复即继续补连。
+  void _scheduleReconnect() {
     if (_manualClosed) {
       logger.info('用户主动断开，不自动重连');
       return;
@@ -379,6 +402,22 @@ class XiaozhiWebSocketManager {
       _isReconnecting = false;
       if (!_manualClosed && _serverUrl != null && _token != null) {
         connect(_serverUrl!, _token!, isReconnect: true);
+      }
+    });
+  }
+
+  /// v6.11.6：看门狗。每到 WATCHDOG_INTERVAL 检查一次，专门处理"进程被系统冻结
+  /// 后 Dart 定时器停摆、回前台时订阅还在但连接早已丢失"这类"断了再也不回来"：
+  /// 连接不存在就立即补连。僵死 socket 由 pingInterval 的 pong 超时自动触发
+  /// _onDisconnected，这里不再重复判定（云端空闲时不下发消息，用消息静默判僵死会误杀）。
+  void _startWatchdog() {
+    _watchdogTimer?.cancel();
+    _watchdogTimer = Timer.periodic(WATCHDOG_INTERVAL, (_) {
+      if (_manualClosed) return;
+      if (!isConnected && !_isReconnecting) {
+        logger.warning('看门狗：连接不存在，立即补连（已尝试 $_reconnectAttempts 次）');
+        if (_reconnectAttempts >= RECONNECT_MAX_TRIES) _reconnectAttempts = 0;
+        _scheduleReconnect();
       }
     });
   }
