@@ -70,6 +70,11 @@ jobs:
       - name: flutter pub get
         run: flutter pub get
 
+      - name: flutter analyze (error 才失败)
+        run: |
+          set -o pipefail
+          flutter analyze --no-fatal-infos --no-fatal-warnings | tee analyze.log
+
       - name: Gradle 前置（Mika 测试输入路径 + local.properties）
         run: |
           # Mika 的 :mika-core:test 把 rootProject 下的 README/docs/eval 声明成输入；
@@ -107,11 +112,12 @@ jobs:
       - name: Stage artifact
         run: |
           mkdir -p dist
-          cp build/app/outputs/flutter-apk/app-release.apk dist/xiaole-6.11.7-mika1.apk
+          cp build/app/outputs/flutter-apk/app-release.apk dist/xiaole-6.11.11-mika1.apk
           cp build.log dist/build.log || true
           cp micgate-test.log dist/micgate-test.log || true
+          cp analyze.log dist/analyze.log || true
           cp permissions.txt dist/permissions.txt || true
-          sha256sum dist/xiaole-6.11.7-mika1.apk | tee dist/SHA256SUMS.txt
+          sha256sum dist/xiaole-6.11.11-mika1.apk | tee dist/SHA256SUMS.txt
           ls -lh dist
 
       - name: Upload APK artifact
