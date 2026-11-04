@@ -7,7 +7,8 @@ plugins {
 
 android {
     namespace = "com.zcstudy.xiaole"
-    compileSdk = flutter.compileSdkVersion
+    // Mika 的 library 用 compileSdk 36,宿主必须 >= 它
+    compileSdk = 36
     ndkVersion = "27.0.12077973"
 
     compileOptions {
@@ -30,8 +31,9 @@ android {
         applicationId = "com.zcstudy.xiaole"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        // record_android 插件要求最低 SDK 版本为 23
-        minSdk = 24
+        // 嵌入 Mika 后清单合并要求宿主 minSdk >= library 的 minSdk(30)。
+        // 真机是 Android 12(API 31),Android 11 以下不再支持。
+        minSdk = 30
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
@@ -63,6 +65,17 @@ android {
             signingConfig = signingConfigs.getByName("release")
         }
     }
+
+    // 从 Mika 的 application 模块搬过来:沙箱程序要从 nativeLibraryDir 直接执行,安装时必须解到磁盘;
+    // rootfs.tar.xz 已是 xz,不再压一遍。
+    packaging {
+        jniLibs {
+            useLegacyPackaging = true
+        }
+    }
+    androidResources {
+        noCompress += "xz"
+    }
 }
 
 flutter {
@@ -73,4 +86,6 @@ dependencies {
     // v6.8.2：配合上面的 isCoreLibraryDesugaringEnabled —— 提供 Java 8+ API 的脱糖实现。
     // AGP 8.9.1 支持 desugar_jdk_libs 2.1.x。
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
+    // 同一个 APK 里的 Mika 引擎(任务执行、手机能力、内置模型调用),不再走 adb forward / PC 网关
+    implementation(project(":mika-app"))
 }

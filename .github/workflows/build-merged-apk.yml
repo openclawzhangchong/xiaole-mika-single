@@ -1,0 +1,97 @@
+name: Build Merged Xiaole + Mika APK
+
+# 单包验证:小乐(Flutter) + Mika(Kotlin 引擎)编进同一个 APK。
+# Mika 源码来自 fork 的分支 feat/embed-into-xiaole,检出到 <repo>/mika,
+# 由 android/settings.gradle.kts 以 include(":mika-core")/include(":mika-app") 并入。
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - spike/embed-mika-core
+    paths:
+      - 'lib/**'
+      - 'android/**'
+      - 'pubspec.yaml'
+      - 'pubspec.lock'
+      - '.github/workflows/build-merged-apk.yml'
+
+concurrency:
+  group: build-merged-apk-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    env:
+      XIAOLE_KEYSTORE_PASSWORD: 'REDACTED-KEYSTORE-PASSWORD'
+      XIAOLE_KEY_PASSWORD: 'REDACTED-KEYSTORE-PASSWORD'
+
+    steps:
+      - name: Checkout Xiaole
+        uses: actions/checkout@v4
+        with:
+          path: app-src
+
+      - name: Checkout Mika (feat/embed-into-xiaole)
+        uses: actions/checkout@v4
+        with:
+          repository: openclawzhangchong/Mika
+          ref: feat/embed-into-xiaole
+          path: app-src/mika
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Setup Flutter 3.32.2 (stable)
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.32.2'
+          channel: 'stable'
+          cache: true
+
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/lib/android/sdk/ndk/* 2>/dev/null || true
+          df -h /
+
+      - name: flutter pub get
+        working-directory: app-src
+        run: flutter pub get
+
+      - name: flutter build apk (release, stable signing)
+        working-directory: app-src
+        run: |
+          set -o pipefail
+          flutter build apk --release 2>&1 | tee build.log
+
+      - name: Verify APK metadata & signature
+        working-directory: app-src
+        run: |
+          APK=build/app/outputs/flutter-apk/app-release.apk
+          SDK="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
+          BUILD_TOOLS=$(ls -d "$SDK"/build-tools/* 2>/dev/null | sort -V | tail -1)
+          "$BUILD_TOOLS/aapt2" dump badging "$APK" | head -n 5 | tee -a "$GITHUB_STEP_SUMMARY" || true
+          "$BUILD_TOOLS/apksigner" verify --print-certs --verbose "$APK" 2>&1 | tee -a "$GITHUB_STEP_SUMMARY"
+          ls -lh "$APK"
+
+      - name: Stage artifact
+        working-directory: app-src
+        run: |
+          mkdir -p dist
+          cp build/app/outputs/flutter-apk/app-release.apk dist/xiaole-mika-merged-release.apk
+          cp build.log dist/build.log || true
+          sha256sum dist/xiaole-mika-merged-release.apk | tee dist/SHA256SUMS.txt
+          ls -lh dist
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: xiaole-mika-merged-apk
+          path: app-src/dist/
+          if-no-files-found: error
+          retention-days: 14

@@ -17,6 +17,12 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+
+    <!-- 嵌入 Mika 引擎后新增的运行时权限(Mika 清单已声明,这里保留 Flutter 侧自己申请的入口) -->
+    <!-- 前台任务服务 + 通知 -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
     
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
@@ -27,7 +33,7 @@
 
     <application
         android:label="小乐"
-        android:name="${applicationName}"
+        android:name="com.wangzan101.mika.MikaApp"
         android:icon="@mipmap/ic_launcher"
         android:usesCleartextTraffic="true">
         <!-- usesCleartextTraffic：视觉识物上游接口为 http://（v3.1.0，xiaoleweb.md §7） -->
