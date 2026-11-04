@@ -10,7 +10,7 @@
 - 可见性：原为 **private**，按授权已执行 `gh repo edit --visibility public`，现为 **public**（源码已公开）。
 - 新增 workflow：[`.github/workflows/build-apk.yml`](https://github.com/openclawzhangchong/xiaole-client-flutter-2027/blob/master/.github/workflows/build-apk.yml)
   - 触发：`workflow_dispatch` + push `master` 且路径命中 `lib/**`、`android/**`、`assets/**`、`pubspec.yaml|lock`、workflow 自身。
-  - 无 Secrets：签名密码写在 job `env`（`XIAOLE_KEYSTORE_PASSWORD` / `XIAOLE_KEY_PASSWORD` = `REDACTED-KEYSTORE-PASSWORD`），keystore 随仓库提交，公开仓库即可跑。
+  - 无 Secrets：签名密码写在 job `env`（`XIAOLE_KEYSTORE_PASSWORD` / `XIAOLE_KEY_PASSWORD` = `***已移除***`），keystore 随仓库提交，公开仓库即可跑（**此做法已废止，见下方注记**）。
   - `flutter analyze` 为 `continue-on-error`，结果写 Job Summary，不阻塞出包。
   - 产物：`xiaole-<version>-<sha7>-release.apk` + `SHA256SUMS.txt` + `analyze.log`，artifact 名 `xiaole-apk-<version>-<sha7>`，保留 14 天。
 - 既有 `build-apk-v2.yml`（tag 触发、GitHub Release）未改动。

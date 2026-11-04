@@ -59,9 +59,11 @@ android {
         // 密码走环境变量，默认值与 workflow env 保持一致（公开仓库，不追求保密）。
         create("release") {
             storeFile = file("xiaole-release.p12")
-            storePassword = System.getenv("XIAOLE_KEYSTORE_PASSWORD") ?: "REDACTED-KEYSTORE-PASSWORD"
+            storePassword = System.getenv("XIAOLE_KEYSTORE_PASSWORD")
+                ?: error("XIAOLE_KEYSTORE_PASSWORD 未设置（本地构建请从 secret 导出到环境变量）")
             keyAlias = "xiaole"
-            keyPassword = System.getenv("XIAOLE_KEY_PASSWORD") ?: "REDACTED-KEYSTORE-PASSWORD"
+            keyPassword = System.getenv("XIAOLE_KEY_PASSWORD")
+                ?: error("XIAOLE_KEY_PASSWORD 未设置（本地构建请从 secret 导出到环境变量）")
             storeType = "pkcs12"
         }
     }

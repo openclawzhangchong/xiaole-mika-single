@@ -79,8 +79,8 @@ apksigner verify --print-certs <b.apk> | Select-String "SHA-256 digest"
 | keystore 文件 | `android/app/xiaole-release.p12`（随仓库提交，**全项目仅此一份**） |
 | 类型 | PKCS12 |
 | alias | `xiaole` |
-| storePassword | `REDACTED-KEYSTORE-PASSWORD`（CI/构建可用 `XIAOLE_KEYSTORE_PASSWORD` 覆盖） |
-| keyPassword | `REDACTED-KEYSTORE-PASSWORD`（CI/构建可用 `XIAOLE_KEY_PASSWORD` 覆盖） |
+| storePassword | `***已移除***`（现由 Actions secret `KEYSTORE_PASSWORD` 提供） |
+| keyPassword | `***已移除***`（现由 Actions secret `KEYSTORE_PASSWORD` 提供） |
 | 证书 DN | `C=CN, O=ZCStudy, CN=XiaoLe Release` |
 | 算法 | RSA 2048 / SHA256withRSA |
 | 证书 SHA-256 | `9d2da8805e784801e13c54a635e8bf528db303a235adb5633745cadceb12a169` |
@@ -150,7 +150,7 @@ BQAEINCpMKSjCH1quIjF5/CGsFx51z2xZnAWtcx/xlSvx5wNBAhVHlxh+BhV+gICCAA=
 
 ```powershell
 [IO.File]::WriteAllBytes("android/app/xiaole-release.p12", [Convert]::FromBase64String((Get-Content "android/app/xiaole-release.p12.base64" -Raw)))
-keytool -list -v -keystore android/app/xiaole-release.p12 -storepass REDACTED-KEYSTORE-PASSWORD -storetype PKCS12
+keytool -list -v -keystore android/app/xiaole-release.p12 -storepass "$KEYSTORE_PASSWORD" -storetype PKCS12
 ```
 
 ---
