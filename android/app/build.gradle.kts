@@ -91,4 +91,7 @@ dependencies {
     // 而 MikaBridge 直接用到 RemoteTaskHub/RemoteStatus 这些 core 类型。
     implementation(project(":mika-app"))
     implementation(project(":mika-core"))
+    // RemoteStatus.describe() 的返回类型是 kotlinx.serialization 的 JsonObject;
+    // mika-core 用 implementation 引它,不传递,这里补上编译类路径(版本取 Mika 的目录)。
+    implementation(mikaLibs.kotlinx.serialization.json)
 }
