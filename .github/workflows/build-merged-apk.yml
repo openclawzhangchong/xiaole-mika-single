@@ -57,10 +57,11 @@ jobs:
 
       - name: Add swap (7GB runner 编 Kotlin+Compose 容易触发 OOM/SIGTERM)
         run: |
-          sudo fallocate -l 6G /swapfile || sudo dd if=/dev/zero of=/swapfile bs=1M count=6144
-          sudo chmod 600 /swapfile
-          sudo mkswap /swapfile
-          sudo swapon /swapfile
+          echo "swap already active:"; swapon --show || true
+          sudo fallocate -l 6G /swapfile-ci || sudo dd if=/dev/zero of=/swapfile-ci bs=1M count=6144
+          sudo chmod 600 /swapfile-ci
+          sudo mkswap /swapfile-ci
+          sudo swapon /swapfile-ci
           free -h
 
       - name: Fetch Mika (pinned) + apply embed patch
