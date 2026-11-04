@@ -29,8 +29,8 @@ jobs:
     timeout-minutes: 150
 
     env:
-      XIAOLE_KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-      XIAOLE_KEY_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+      XIAOLE_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+      XIAOLE_KEY_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
       # 签名基线(纯小乐 xiaole-client-flutter-2027 一致):C=CN, O=ZCStudy, CN=XiaoLe Release
       # 见 docs/ci-artifact-6.11.9.md「签名基线」;只需方法,不写 p12 本体与密码以外的东西
       XIAOLE_CERT_SHA256: '9d2da8805e784801e13c54a635e8bf528db303a235adb5633745cadceb12a169'
@@ -43,7 +43,7 @@ jobs:
 
       - name: Decode keystore from secret
         env:
-          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
         run: |
           test -n "$KEYSTORE_BASE64" || { echo "::error::缺少 KEYSTORE_BASE64 secret"; exit 1; }
           printf '%s' "$KEYSTORE_BASE64" | base64 -d > android/app/xiaole-release.p12
