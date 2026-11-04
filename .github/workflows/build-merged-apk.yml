@@ -55,6 +55,14 @@ jobs:
           sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/lib/android/sdk/ndk/* 2>/dev/null || true
           df -h /
 
+      - name: Add swap (7GB runner 编 Kotlin+Compose 容易触发 OOM/SIGTERM)
+        run: |
+          sudo fallocate -l 6G /swapfile || sudo dd if=/dev/zero of=/swapfile bs=1M count=6144
+          sudo chmod 600 /swapfile
+          sudo mkswap /swapfile
+          sudo swapon /swapfile
+          free -h
+
       - name: Fetch Mika (pinned) + apply embed patch
         run: bash scripts/fetch-mika.sh
 
