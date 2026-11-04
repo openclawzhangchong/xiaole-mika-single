@@ -12,10 +12,14 @@ class MainActivity : FlutterActivity() {
         private const val CHANNEL = "xiaole/debug"
         private const val EXTRA_TEXTS = "debug_send_texts"
         private const val EXTRA_TEXT = "debug_send_text"
+        private const val EXTRA_SEG_TEXTS = "debug_send_text_seg"
     }
 
     /** am start 时注入的文本（多条用 \n 分隔），由 Dart 侧一次性取走 */
     private var pendingDebugTexts: String? = null
+
+    /** 走真实发送路径（含分段）的注入文本 */
+    private var pendingDebugSegTexts: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -32,7 +36,9 @@ class MainActivity : FlutterActivity() {
         if (intent == null) return
         val multi = intent.getStringExtra(EXTRA_TEXTS)
         val single = intent.getStringExtra(EXTRA_TEXT)
+        val seg = intent.getStringExtra(EXTRA_SEG_TEXTS)
         pendingDebugTexts = multi ?: single ?: pendingDebugTexts
+        pendingDebugSegTexts = seg ?: pendingDebugSegTexts
     }
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
@@ -43,6 +49,11 @@ class MainActivity : FlutterActivity() {
                     "takeDebugTexts" -> {
                         val texts = pendingDebugTexts
                         pendingDebugTexts = null
+                        result.success(texts)
+                    }
+                    "takeDebugSegTexts" -> {
+                        val texts = pendingDebugSegTexts
+                        pendingDebugSegTexts = null
                         result.success(texts)
                     }
                     else -> result.notImplemented()

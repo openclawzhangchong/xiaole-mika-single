@@ -1,4 +1,4 @@
-# 证据：云端按「业务消息空闲」回收 WS（1005 / ~60–70s）与 pingInterval 无效
+﻿# 证据：云端按「业务消息空闲」回收 WS（1005 / ~60–70s）与 pingInterval 无效
 
 > 入库证据说明。原始日志均来自真机（realme RMX3161，`7f:f1:b7:5e:ef:aa`，M5Stack CoreS3 身份），
 > 日志文件：`C:\Users\Administrator\AppData\Local\Temp\xiaole-apk\A_3min.log`（下称 A 日志）。
@@ -269,5 +269,69 @@ v6.11.12+64 实测埋点原样（设备时钟）：
    或直接引用应用自带埋点（本项目的 `耗时=Nms` 字段就是为此加的）。
 4. 结论口径：**怀疑"代码慢"之前，先把测量链路的每一段延迟拆出来**。
    本次拆完发现"真凶"是 adb 往返，"嫌疑人"是清白的。
+
+## 12. v6.11.14：中文边界实测，以及 `detect` 文本上限到底是什么口径
+
+### 12.1 为什么要开一个 adb 中文注入通道
+
+`adb shell input text` 只支持 ASCII，测不了"用户打中文"；`cmd clipboard set-text`
+在本机返回 `No shell command implementation.`，剪贴板通道也不可用。
+最终走 **Intent extra（UTF-8 原生支持）+ MethodChannel**，仅开发者模式生效：
+
+```
+# ① 原样单帧（绕过分段）——量服务端真实边界
+adb -s 36c77fb6 shell am force-stop com.zcstudy.xiaole
+adb -s 36c77fb6 shell am start -n com.zcstudy.xiaole/.MainActivity \
+  -e debug_send_texts "中文一<换行>中文二"
+
+# ② 走真实发送路径（分段/排队/兜底）——回归"长中文一定被切开且每段都有回复"
+adb -s 36c77fb6 shell am start -n com.zcstudy.xiaole/.MainActivity \
+  -e debug_send_text_seg "六十个字左右的中文……"
+```
+
+- 前提：**开发者模式已授权**（`AppFeats.devAuthed`，密码 `zc19901111`，解锁一次持久化）。
+  未授权时通道完全不生效，release 普通用户路径不暴露任何入口。
+- 日志前缀 `[DEBUGINJECT]`，一次打出 `码点 / utf8字节 / utf16` 三个口径，
+  随后是 `发送文本请求: {...}` 与服务端 `stt` / `tts` / `alert`。
+- 坑：`am start` 的 extra **含空格会被 adb shell 当参数分隔符**（实测
+  `"the quick brown fox"` 到达应用只剩 `"the"`），带空格的用例必须整体加引号。
+
+### 12.2 实测数据（2026-11-04，官方 api.xiaozhi.me 云端，真机 RMX3161）
+
+被拒时固定返回
+`{"type":"alert","emotion":"sad","status":"ERROR","message":"Detect is only for wake words, do not send long texts."}`，
+且不产生任何 stt/llm/tts。
+
+| 内容类别 | 通过 | 被拒 |
+|---|---|---|
+| 纯 ASCII 字母数字 | 31 / 32 / 33 / 34 / 40 | 60 |
+| 纯汉字（无标点） | 11 / 16 | 17 / 18 / 19 / 20 / 25 / 30 / 33 / 34 / 40 |
+| 汉字 + 标点 | 15 码点 / 16 码点 | 17 码点；16 汉字 + 2 标点（18 码点） |
+| 真实中英混排（`帮我查下iPhone15多少钱` 15 码点、`帮我看下iPhone价格` 12 码点） | 通过 | — |
+| 单字母交替式混排（`中A文B混C排D测E试F…`） | 12 码点 | 13 码点 |
+| 纯 emoji（astral，单码点） | 8 / 9 / 10 个 | 11 / 16 / 33 / 34 个 |
+
+### 12.3 结论：云端不是按单一字符数、也不是按单一字节数
+
+三条同时成立的证据：
+
+1. **48 字节通过，44 字节被拒**：16 个纯汉字 = 48 UTF-8 字节被收；
+   11 个 emoji = 44 字节被拒 → 不是"UTF-8 字节 ≤33/48"这类单一阈值。
+2. **同样 48 字节，码点不同结果不同**：16 汉字（16 码点）通过，
+   `16 汉字 + 2 标点`（18 码点、48 字节）被拒 → 标点也占预算。
+3. **ASCII 可以到 40 而 emoji 只到 10**，单字母交替混排 12 就到顶
+   → 与"字符数"同样对不上。
+
+表现最像**按内容类别加权的等效 token 预算**（CJK≈1/字、ASCII 词内可合并、
+孤立字母与 emoji 更贵）。服务端闭源，无法拿到判据原文，因此**不猜公式，只取实测值**：
+
+| 类别 | 实测通过上界 | 采用上限 | 余量 |
+|---|---|---|---|
+| 纯 ASCII | 40 | **33**（维持 v6.11.13） | 7 |
+| 汉字 / 中英混排 | 16 / 15 | **12** | 3–4 |
+| 含 astral（emoji） | 10 | **10** | 0（该类别已是最小实测值） |
+
+切段函数 `_splitTextForDetect` 同时累加**码点**与**UTF-8 字节**（先到者为准），
+上限集中在 `_textLimitsFor()` 的三个常量里；云端口径若变，只改数字，不用重写逻辑。
 
 

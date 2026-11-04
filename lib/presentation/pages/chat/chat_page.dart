@@ -219,6 +219,12 @@ class _ChatPageState extends ConsumerState<ChatPage> {
 
   Future<void> _consumeDebugInjection() async {
     if (!AppFeats.devAuthed) return;
+    await _consumeRawInjection();
+    await _consumeSegInjection();
+  }
+
+  /// 原样单帧注入（`-e debug_send_texts`），**绕过分段**，用于量服务端真实边界
+  Future<void> _consumeRawInjection() async {
     try {
       final raw = await _debugChannel.invokeMethod<String>('takeDebugTexts');
       if (raw == null || raw.trim().isEmpty) return;
@@ -236,6 +242,30 @@ class _ChatPageState extends ConsumerState<ChatPage> {
       }
     } catch (e) {
       logger.warning('[DEBUGINJECT] 注入通道不可用: $e');
+    }
+  }
+
+  /// 走**真实发送路径**（含分段/排队/兜底）（`-e debug_send_text_seg`），
+  /// 用于回归"中文长文本一定被切开且每段都收到回复"
+  Future<void> _consumeSegInjection() async {
+    try {
+      final raw = await _debugChannel.invokeMethod<String>('takeDebugSegTexts');
+      if (raw == null || raw.trim().isEmpty) return;
+      final items =
+          raw.split('\n').where((e) => e.trim().isNotEmpty).toList();
+      logger.info('[DEBUGINJECT] 收到 ${items.length} 条分段回归文本');
+      for (var i = 0; i < items.length; i++) {
+        final t = items[i];
+        logger.info('[DEBUGINJECT] 分段回归 ${i + 1}/${items.length} 码点=${t.runes.length} '
+            'utf8字节=${utf8.encode(t).length} text=$t');
+        _textController.text = t;
+        _sendTextMessage();
+        if (i < items.length - 1) {
+          await Future.delayed(const Duration(seconds: 30));
+        }
+      }
+    } catch (e) {
+      logger.warning('[DEBUGINJECT] 分段注入通道不可用: $e');
     }
   }
 
@@ -579,26 +609,80 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     );
   }
 
-  /// v6.11.13：`listen{state:"detect"}` 的文字载荷有服务端长度上限。
-  /// 2026-11-04 真机二分实测（ASCII）：≤33 字符正常收 + 回 TTS；≥34 字符被
+  /// v6.11.14：`listen{state:"detect"}` 的文字载荷上限实测（2026-11-04 真机，
+  /// 官方 api.xiaozhi.me 云端，拒绝时回
   /// `alert{status:ERROR, message:"Detect is only for wake words, do not send long texts."}`
-  /// 拒绝且不产生任何 stt/llm/tts。按 33 切段，优先在标点/空白处断开。
-  static const int kTextDetectMaxRunes = 33;
-
-  /// 待发送的文字分段队列（>1 段时按"上一段 TTS 结束"逐段发送）
+  /// 且不产生任何 stt/llm/tts）。
+  ///
+  /// 结论：云端**不是**按单一"字符数"或"UTF-8 字节数"卡的——同一 48 字节的
+  /// 纯汉字 16 字通过，而 11 个 emoji（44 字节）被拒，48 字节的 16 汉字+2 标点
+  /// （18 码点）被拒。实测边界随内容类别变化，因此按类别取最小安全值：
+  ///
+  /// | 内容类别                | 通过        | 被拒        | 采用上限 |
+  /// |-------------------------|-------------|-------------|----------|
+  /// | 纯 ASCII 字母数字       | 40          | 60          | 33       |
+  /// | 纯汉字（可含标点）      | 16 码点     | 17 码点     | 12       |
+  /// | 真实中英混排            | 15 码点     | —           | 12       |
+  /// | 单字母交替式混排        | 12 码点     | 13 码点     | 12       |
+  /// | 纯 emoji（astral）      | 10          | 11          | 10       |
+  ///
+  /// 采用值一律比实测通过值再低一档，宁可多切一段，也不冒"零回应"的险。
+  /// 切段同时按**码点**与**UTF-8 字节**两个口径累加（字节上限来自实测通过值），
+  /// 未来云端口径若变化，只需调 [_textLimitsFor] 的四个数字，切段逻辑不用重写。
   final List<String> _textSegments = [];
   Timer? _textSegmentTimer;
 
-  /// 按 [maxRunes] 切段：优先回退到 8 个字符内的标点或空白，避免把词劈开
-  List<String> _splitTextForDetect(String text, int maxRunes) {
+  static const _TextLimits _limitsAscii = _TextLimits(33, 33);
+  static const _TextLimits _limitsCjk = _TextLimits(12, 45);
+  static const _TextLimits _limitsAstral = _TextLimits(10, 40);
+
+  /// 依内容类别选上限：含 astral（emoji）→ 10；纯 ASCII → 33；其余（汉字/混排）→ 12
+  _TextLimits _textLimitsFor(String text) {
+    var hasAstral = false;
+    var hasNonAscii = false;
+    for (final r in text.runes) {
+      if (r > 0x7F) hasNonAscii = true;
+      if (r > 0xFFFF) hasAstral = true;
+    }
+    if (hasAstral) return _limitsAstral;
+    if (!hasNonAscii) return _limitsAscii;
+    return _limitsCjk;
+  }
+
+  static int _utf8LenOfRune(int rune) {
+    if (rune <= 0x7F) return 1;
+    if (rune <= 0x7FF) return 2;
+    if (rune <= 0xFFFF) return 3;
+    return 4;
+  }
+
+  /// 按 [limits] 切段：码点与字节同时累加，先到者为准；
+  /// 断开处优先回退到 6 个码点内的标点或空白，避免把词劈开。
+  List<String> _splitTextForDetect(String text, _TextLimits limits) {
     final runes = text.runes.toList();
-    if (runes.length <= maxRunes) return [text];
+    var totalBytes = 0;
+    for (final r in runes) {
+      totalBytes += _utf8LenOfRune(r);
+    }
+    if (runes.length <= limits.maxRunes && totalBytes <= limits.maxBytes) {
+      return [text];
+    }
+
     final out = <String>[];
     var start = 0;
     while (start < runes.length) {
-      var end = start + maxRunes < runes.length ? start + maxRunes : runes.length;
+      var end = start;
+      var bytes = 0;
+      while (end < runes.length) {
+        final b = _utf8LenOfRune(runes[end]);
+        if (end - start >= limits.maxRunes || bytes + b > limits.maxBytes) break;
+        bytes += b;
+        end++;
+      }
+      if (end == start) end = start + 1; // 单个码点就超限时也保证前进
+
       if (end < runes.length) {
-        final floor = end - 8 < start + 1 ? start + 1 : end - 8;
+        final floor = end - 6 < start + 1 ? start + 1 : end - 6;
         for (var i = end - 1; i >= floor; i--) {
           final c = String.fromCharCode(runes[i]);
           if ('。！？；，、.,!?;: '.contains(c)) {
@@ -631,11 +715,14 @@ class _ChatPageState extends ConsumerState<ChatPage> {
 
     // v6.11.13：超长文字分段——服务端会对 detect 的长文本静默拒绝（只回 alert），
     // 用户视角就是"打完一段话零回应"。这里显式提示并自动分段，绝不静默丢。
-    final segments = _splitTextForDetect(text, kTextDetectMaxRunes);
+    final limits = _textLimitsFor(text);
+    final segments = _splitTextForDetect(text, limits);
     if (segments.length > 1) {
-      logger.info('[TEXTSPLIT] 原文 ${text.runes.length} 字 > ${kTextDetectMaxRunes} 字，'
-          '分 ${segments.length} 段发送');
-      ToastUtil.show('文字较长，已自动分 ${segments.length} 段发送（每段 ≤$kTextDetectMaxRunes 字）');
+      logger.info('[TEXTSPLIT] 原文 ${text.runes.length}码点/${utf8.encode(text).length}字节 '
+          '> 上限 ${limits.maxRunes}码点/${limits.maxBytes}字节，分 ${segments.length} 段 '
+          '（每段码点=${segments.map((e) => e.runes.length).join('/')} '
+          '字节=${segments.map((e) => utf8.encode(e).length).join('/')}）');
+      ToastUtil.show('文字较长，已自动分 ${segments.length} 段发送（每段 ≤${limits.maxRunes} 字）');
     }
 
     _textController.clear();
@@ -2857,4 +2944,11 @@ class _ChatPageState extends ConsumerState<ChatPage> {
       ],
     );
   }
+}
+
+/// v6.11.14：单个文本分段的双口径上限（码点数 / UTF-8 字节数）
+class _TextLimits {
+  const _TextLimits(this.maxRunes, this.maxBytes);
+  final int maxRunes;
+  final int maxBytes;
 }
