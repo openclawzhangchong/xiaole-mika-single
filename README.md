@@ -3,7 +3,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Flutter-3.32.2-blue.svg" alt="Flutter">
   <img src="https://img.shields.io/badge/包名-com.zcstudy.xiaole-green.svg" alt="Package">
-  <img src="https://img.shields.io/badge/当前版本-6.11.7-success.svg" alt="Version">
+  <img src="https://img.shields.io/badge/当前版本-6.11.9-success.svg" alt="Version">
 </p>
 
 本仓库是小智客户端 Flutter 版（上游 [eiriksgata/xiaozhi-client-flutter](https://github.com/eiriksgata/xiaozhi-client-flutter)）的**微信风 UI 定制版**，由张老师定制维护。上游的架构与功能说明保留在本文档后半部分，仍然适用。
@@ -73,6 +73,7 @@
 > **改动出错需要回退时，优先按下表找最近的 ✅ 版本**；标 ❌ 者为**构建失败、无 APK**，**勿用**。
 
 | 版本标签 | 内容 | 包名 | 验证状态 | 验证日期 |
+| `v6.11.9`（commit `de7ede8`，未打 tag） | 🧯 **detect 保活收敛（默认关）+ 会话感知暂停 + 下行帧取证** —— 4 候选真机结论：`hello`/`abort`/`ping` 66–69s 全断，**仅 `detect` 撑过 240s**；但查实 detect 每个 tick 会触发服务端一轮 `stt→llm→tts`（240s/8 tick = 8 条 stt + 8 条 llm + 43 条 tts + 344 音频帧，真实外放 8 段"哎，我在呢！"）⇒ 探针缩为 `off`/`detect` 二值、**默认 off**、间隔 45s；新增 `markConversationActive/Idle`（发文字/上行麦克风/stt/llm/tts start/下行音频 → 暂停；tts stop/播放结束/挂断 → 5s 后恢复；60s 无活动兜底解除）；`[PROBE]` 记录每条下行 `type`+脱敏预览（token/session_id 打码）、二进制前 3 帧首 32 字节 hex、断开汇总文本/音频/各 type 计数 | `com.zcstudy.xiaole` | ✅ CI 通过（run **41816712171**；artifact `xiaole-apk-6.11.9+61-de7ede8`，APK 40,806,486 B，sha256 `783f5963d742e5b2fbda09ef003abc1f0e29c36d018fd3c535f61b1610acf6ac`）；analyze 0 error；**按指令未装机** | 2026-11-04 |
 | `v6.11.8`（commit `0450cb8`，未打 tag） | 🔬 **WS 心跳实验（默认关）** —— 新增 `WsProbeMode` 4 候选（① 重发 `hello` / ② `listen{state:"detect"}` / ③ `abort{reason:"heartbeat"}` / ④ 仅 WS ping 对照组），30s 可配探针；开发者中心「调试 → WS 心跳实验」切换即重建连接（避免"候选有效→永远等不到重连"死锁）；日志统一 `[PROBE]` 前缀（候选/间隔/tick/首帧/断开时存活秒数+发送数+收帧数+closeCode）；`全部关闭` 一并归零。用途：真机判定哪条业务消息能续命云端 1005 回收 | `com.zcstudy.xiaole` | ✅ CI 通过（run **41809567015**，8m37s；APK 40,806,486 B，sha256 `f1b23bd35188f5729aab6cfb3f55c60f8e573c98d8db70525a2a1eed37a285e1`）；**按指令未装机**，等设备窗口 | 2026-11-04 |
 | `v6.11.7`（commit `0a713ef`，未打 tag） | 🔌 **断线无感重连** —— 6.11.6 实测 `pingInterval=25s` 仍被云端按业务空闲 ~70s 静默回收（`1005`），且上游文档未定义 WS 心跳 ⇒ 改为 UI 层无感：断线不再显示"已断开"，改为等宽"重连中…"，4s 内不亮状态条（回连成功即无感），超 4s 才亮条 + 手动重连；432x 身份拒绝仍显真实关闭码。仅改 `chat_page.dart` | `com.zcstudy.xiaole` | ✅ CI 通过（run **41807490945**，耗时 9m17s；artifact `xiaole-apk-6.11.7+59-0a713ef`，APK 40,806,378 B，sha256 `2f695d3b711230bc3004b8cd066805a875170ccbfd9dcc9a5711957d759f5990`）；**本版未装机** | 2026-11-04 |
 | `v6.11.6`（commit `93a1eda`，未打 tag） | 🩺 **WS 保活 + 看门狗** —— `pingInterval=25s`、`WATCHDOG_INTERVAL=20s`、重连抽成 `_scheduleReconnect()`（1s→2s→4s…封顶 30s，最多 12 次）。真机实测仍每 ~70s `1005` ⇒ WS 层 ping 不算业务活跃，由 v6.11.7 接续 | `com.zcstudy.xiaole` | ✅ CI 通过（run **41800363754**） | 2026-11-04 |
@@ -143,8 +144,9 @@
 
 - 真机实测（realme RMX3161，M5Stack CoreS3 身份，**全程安静不说话**）：6.11.5 无 ping 时 `16:07:53.809 → 16:08:54.071` = **60.26s** 被 `1006` 回收；6.11.6 加 WS `pingInterval=25s` 后仍按 `67.9s / 69.8s` 被 `code=1005` 静默关闭（17:10:12 / 17:11:23 / 17:12:33）⇒ **WS 控制帧 ping 不算"业务活跃"**。
 - 上游协议文档（`docs/websocket_zh.md`、`mcp-protocol_zh.md`）**没有**任何 WebSocket 心跳 / 空闲超时 / keepalive 条款（只有 hello 握手 10s 超时）；唯一有 `Keep Alive` 的是 MQTT/UDP 篇（240s），协议不同不适用。
-- 因此 6.11.7 先做**无感重连**兜底（1s→2s→4s，UI 不再报"已断开"），6.11.8 再用**可开关实验**（`WsProbeMode` 4 候选，默认关）逐个确认哪条业务消息能续命。
-- 证据原文 + 时间序列 + 实验设计与判定阈值：[docs/ws-idle-reclaim-evidence.md](docs/ws-idle-reclaim-evidence.md)
+- 因此 6.11.7 先做**无感重连**兜底（1s→2s→4s，UI 不再报"已断开"）；6.11.8 用可开关实验逐个验证，**结论：只有 `listen{state:"detect"}` 能续命**（240s+ 无 1005，其余候选 65–68s 全断）。
+- **但 detect 有代价**：每个 tick 都会触发服务端一轮 `stt → llm → tts`（240s/8 tick 换来 8 条 `stt`、8 条 `llm`、43 条 tts 文本、344 个音频帧，并真实外放 8 段"哎，我在呢！"）⇒ **v6.11.9 起生产默认 `off`**，detect 仅留作诊断项；靠"WS ping + 无感重连"兜底。详见 [证据 §5](docs/ws-idle-reclaim-evidence.md)。
+- 证据原文 + 时间序列 + 实验设计 + 406 帧构成 + 三问结论：[docs/ws-idle-reclaim-evidence.md](docs/ws-idle-reclaim-evidence.md)
 
 ## ⏪ 回退指南
 
