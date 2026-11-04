@@ -274,7 +274,7 @@ class AudioUtil {
       // 否则两路 MIC 同时开流，云端可能只听到其中一路（表现为“按住说话云端听不到”）。
       final micGranted = await MikaBridge.acquireMic();
       if (!micGranted) {
-        print('$TAG: 麦克风被 Mika 占用，跳过本次录音');
+        print('$TAG: 麦克风被引擎占用，跳过本次录音');
         return;
       }
 

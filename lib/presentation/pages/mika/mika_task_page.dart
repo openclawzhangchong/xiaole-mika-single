@@ -107,7 +107,7 @@ class _MikaTaskPageState extends State<MikaTaskPage> {
     final scheme = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: AppBar(
-        title: const Text(' Mika 执行'),
+        title: const Text('小乐 · 执行'),
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
@@ -222,7 +222,7 @@ class _MikaTaskPageState extends State<MikaTaskPage> {
             child: info == null
                 ? const Text('正在读取引擎信息…')
                 : Text(
-                    'Mika ${info['version'] ?? '?'} · 进程内直调 · PID ${info['process'] ?? '?'}',
+                    '小乐 · 你的手机助手 · 引擎 ${info['version'] ?? '?'} · PID ${info['process'] ?? '?'}',
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
           ),

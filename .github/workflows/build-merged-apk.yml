@@ -1,4 +1,4 @@
-name: Build Merged Xiaole + Mika APK
+name: Build Xiaole Single APK
 
 # 正式单包构建:小乐(Flutter) + Mika(Kotlin 引擎)编进同一个 APK。
 # 1. 检出本仓库(小乐 6.11.7 基线 + 嵌入改动)
@@ -64,7 +64,7 @@ jobs:
           sudo swapon /swapfile-ci
           free -h
 
-      - name: Fetch Mika (pinned) + apply embed patch
+      - name: Fetch engine source (pinned) + apply embed patch
         run: bash scripts/fetch-mika.sh
 
       - name: flutter pub get
@@ -79,7 +79,7 @@ jobs:
           printf 'flutter.sdk=%s\nsdk.dir=%s\n' "$FLUTTER_ROOT" "${ANDROID_HOME:-/usr/local/lib/android/sdk}" > android/local.properties
           cat android/local.properties
 
-      - name: Mika mic-gate unit test
+      - name: Engine mic-gate unit test
         run: |
           set -o pipefail
           cd android
@@ -107,17 +107,17 @@ jobs:
       - name: Stage artifact
         run: |
           mkdir -p dist
-          cp build/app/outputs/flutter-apk/app-release.apk dist/xiaole-mika-6.11.7-mika1.apk
+          cp build/app/outputs/flutter-apk/app-release.apk dist/xiaole-6.11.7-mika1.apk
           cp build.log dist/build.log || true
           cp micgate-test.log dist/micgate-test.log || true
           cp permissions.txt dist/permissions.txt || true
-          sha256sum dist/xiaole-mika-6.11.7-mika1.apk | tee dist/SHA256SUMS.txt
+          sha256sum dist/xiaole-6.11.7-mika1.apk | tee dist/SHA256SUMS.txt
           ls -lh dist
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: xiaole-mika-merged-apk
+          name: xiaole-single-apk
           path: dist/
           if-no-files-found: error
           retention-days: 14
