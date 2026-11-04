@@ -7,14 +7,16 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 MIKA_DIR="$ROOT/mika"
 MIKA_REPO="${MIKA_REPO:-https://github.com/wangzan101/Mika.git}"
-MIKA_COMMIT="${MIKA_COMMIT:-6661b9e9}"
+# 必须是完整 SHA:git fetch 不认短哈希。
+MIKA_COMMIT="${MIKA_COMMIT:-6661b9e99a9a8f372c93845f5f9572de0711f239}"
 PATCH="$ROOT/patches/mika-embed.patch"
 
-if [ -d "$MIKA_DIR/.git" ]; then
-  git -C "$MIKA_DIR" fetch --filter=blob:none origin "$MIKA_COMMIT"
-else
+if [ ! -d "$MIKA_DIR/.git" ]; then
   rm -rf "$MIKA_DIR"
   git clone --filter=blob:none "$MIKA_REPO" "$MIKA_DIR"
+fi
+
+if ! git -C "$MIKA_DIR" rev-parse --verify --quiet "$MIKA_COMMIT^{commit}" >/dev/null; then
   git -C "$MIKA_DIR" fetch --filter=blob:none origin "$MIKA_COMMIT"
 fi
 
