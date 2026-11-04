@@ -1,7 +1,7 @@
 name: Build Xiaole Single APK
 
 # 正式单包构建:小乐(Flutter) + Mika(Kotlin 引擎)编进同一个 APK。
-# 1. 检出本仓库(小乐 6.11.7 基线 + 嵌入改动)
+# 1. 检出本仓库(小乐 6.11.12 基线 + 嵌入改动)
 # 2. scripts/fetch-mika.sh 把 Mika 固定到 6661b9e9 并打 patches/mika-embed.patch
 # 3. android/settings.gradle.kts 以 include(":mika-core")/include(":mika-app") 并入
 on:
@@ -112,12 +112,12 @@ jobs:
       - name: Stage artifact
         run: |
           mkdir -p dist
-          cp build/app/outputs/flutter-apk/app-release.apk dist/xiaole-6.11.11-mika1.apk
+          cp build/app/outputs/flutter-apk/app-release.apk dist/xiaole-6.11.12-mika1.apk
           cp build.log dist/build.log || true
           cp micgate-test.log dist/micgate-test.log || true
           cp analyze.log dist/analyze.log || true
           cp permissions.txt dist/permissions.txt || true
-          sha256sum dist/xiaole-6.11.11-mika1.apk | tee dist/SHA256SUMS.txt
+          sha256sum dist/xiaole-6.11.12-mika1.apk | tee dist/SHA256SUMS.txt
           ls -lh dist
 
       - name: Upload APK artifact

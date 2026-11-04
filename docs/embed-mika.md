@@ -2,8 +2,8 @@
 
 一个 APK、一个包名（`com.zcstudy.xiaole`）、一个安装包。Flutter 负责界面（实时语音对话 + 任务执行），内嵌的 Kotlin 引擎以 **library 模块** 的形式编进同一个进程（内部模块名仍是 `mika-core` / `mika-app`，见文末「内部标识与外部品牌分离」）。
 
-- 基线：小乐 `master` 6.11.11 + 63（commit `7fe3264`，文档 `2e0df3d`；含 listen stop 45s 保活、预连接音频回灌、断线无感重连）
-- 单包版本：`6.11.11-mika1+65`（versionCode 65；64 留给纯小乐 `6.11.12+64`）
+- 基线：小乐 `master` 6.11.12 + 64（commit `0aa7d20`；含 listen stop 45s 保活、预连接音频回灌、断线无感重连，以及「保活置位前置到 listen start 与文字发送之前」）
+- 单包版本：`6.11.12-mika1+67`（versionCode 67；64 归纯小乐 `6.11.12+64`、66 归纯小乐 `6.11.13+66`，均留空不碰；68 预留给最终版 `6.11.13-mika1`）
 - 引擎源码：`wangzan101/Mika` 固定提交 `6661b9e9`（0.1.35）+ `patches/mika-embed.patch`
 
 ## 目录结构
