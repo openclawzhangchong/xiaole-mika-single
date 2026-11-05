@@ -9,6 +9,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.IBinder
+import android.os.PowerManager
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
@@ -27,6 +28,11 @@ class KeepAliveService : Service() {
         private const val CHANNEL_NAME = "后台保持连接"
         private const val NOTIFICATION_ID = 7301
         private const val STOP_ACTION_ID = 1
+        // v6.11.21（78 轮）：服务自己也要持锁——只靠 Activity 侧
+        // chat_page 的 acquire，一旦页面不在栈顶/删路径漏调，息屏照样冻结。
+        // 上限 30 分钟：服务随回前台必停，超时只是兜底，避免长期耗电。
+        private const val WAKE_LOCK_TIMEOUT_MS = 30 * 60 * 1000L
+        private const val WAKE_LOCK_TAG = "XiaoLe:keepalive"
 
         @Volatile
         private var running = false
@@ -48,6 +54,30 @@ class KeepAliveService : Service() {
 
     override fun onBind(intent: Intent?): IBinder? = null
 
+    private var wakeLock: PowerManager.WakeLock? = null
+
+    private fun acquireWakeLock() {
+        if (wakeLock?.isHeld == true) return
+        val pm = getSystemService(POWER_SERVICE) as PowerManager
+        wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, WAKE_LOCK_TAG).apply {
+            setReferenceCounted(false)
+            acquire(WAKE_LOCK_TIMEOUT_MS)
+        }
+        Log.i(TAG, "[KEEPALIVE] wakelock on 上限=${WAKE_LOCK_TIMEOUT_MS / 1000}s")
+    }
+
+    private fun releaseWakeLock() {
+        val wl = wakeLock ?: return
+        if (wl.isHeld) {
+            try {
+                wl.release()
+            } catch (_: Exception) {
+            }
+        }
+        wakeLock = null
+        Log.i(TAG, "[KEEPALIVE] wakelock off")
+    }
+
     override fun onCreate() {
         super.onCreate()
         createChannel()
@@ -57,10 +87,12 @@ class KeepAliveService : Service() {
         if (intent?.action == ACTION_STOP) {
             // 通知栏「停止」：用户点一下就必须真停
             Log.i(TAG, "[KEEPALIVE] stop_action")
+            releaseWakeLock()
             stopSelf()
             return START_NOT_STICKY
         }
         startForeground(NOTIFICATION_ID, buildNotification())
+        acquireWakeLock()
         running = true
         Log.i(TAG, "[KEEPALIVE] foreground_on id=$NOTIFICATION_ID")
         // 不自动重启：只在"有连接且进后台"时由 App 启动，避免常驻白挂
@@ -69,6 +101,7 @@ class KeepAliveService : Service() {
 
     override fun onDestroy() {
         running = false
+        releaseWakeLock()
         Log.i(TAG, "[KEEPALIVE] service_destroyed")
         super.onDestroy()
     }

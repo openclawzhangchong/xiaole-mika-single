@@ -71,6 +71,7 @@ class KeepAliveCoordinator {
   bool _connected = false;
   bool _foreground = true;
   bool _serviceRunning = false;
+  bool _notifAsked = false;
 
   void onConnectionChanged(bool connected) {
     _connected = connected;
@@ -79,7 +80,19 @@ class KeepAliveCoordinator {
 
   void onForegroundChanged(bool foreground) {
     _foreground = foreground;
+    // Android 13+ 没通知权限时前台服务能起、但通知栏看不见，验收会判 FAIL；
+    // 回前台（有 Activity，可弹框）时补一次授权请求，只问一次。
+    if (foreground) _ensureNotificationPermission();
     sync();
+  }
+
+  Future<void> _ensureNotificationPermission() async {
+    if (_notifAsked) return;
+    _notifAsked = true;
+    if (!enabled) return;
+    if (await KeepAliveService.notificationsEnabled()) return;
+    final granted = await KeepAliveService.requestNotificationPermission();
+    NativeLog.write('[KEEPALIVE] notif_permission requested granted=$granted');
   }
 
   Future<void> sync() async {
