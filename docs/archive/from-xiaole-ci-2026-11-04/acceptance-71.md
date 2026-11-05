@@ -1,4 +1,4 @@
-# 6.11.15+70 装机验收：全功能逐项点验（16 项实测 + 3 项流程）
+# 6.11.15+71 装机验收：全功能逐项点验（16 项实测 + 3 项流程）
 
 > 原则：**每个功能都要真点真用，多次运行多次诊断**。不看代码推断、不以日志替代点击。
 > 判定一律"命令 + 正则 + 阈值"，可直接复制执行。
@@ -10,8 +10,9 @@
 # 0.1 装前记录
 adb -s <DEVICE> shell "dumpsys package com.zcstudy.xiaole | grep -E 'versionCode|firstInstallTime'"
 
-# 0.2 装 70（APK 由单包线产出后放到本地目录；69 不装）
-adb -s <DEVICE> install -r "<TEMP>\xiaole-apk\v61115\<70.apk>"
+# 0.2 装 71（69/70 不装）
+# 71 已在设备 36c77fb6 上（versionCode=71，base.apk sha256 = 66d1f307…bb4，59,897,491 B），无需重装
+adb -s 36c77fb6 install -r "C:\Users\Administrator\Documents\Trae-CN\temp_20261104_05\dist71\xiaole-6.11.16-mika1-arm64.apk"
 # 若返回 Failure [-99]：不要 uninstall。按三连弹点：
 #   复选框"已知悉该应用存在风险" → "授权本次安装" → 风险弹窗"仍然继续" → 完成页"打开应用"
 
@@ -24,10 +25,10 @@ adb -s <DEVICE> shell "dumpsys package com.zcstudy.xiaole | grep -E 'versionCode
 验收期间统一的开日志方式（新开一个终端常驻）：
 
 ```powershell
-$D="<DEVICE>"; $LOG="$env:TEMP\log-70.txt"; $XL="$env:TEMP\log-70-xiaole.txt"
+$D="36c77fb6"; $LOG="$env:TEMP\log-71.txt"; $XL="$env:TEMP\log-71-xiaole.txt"
 adb -s $D logcat -c
 adb -s $D logcat -v time > $LOG                                        # 全量：崩溃/系统告警
-adb -s $D logcat -v time -s XiaoLe > $XL                               # 70 固定 tag：KEEPALIVE/TEXTSPLIT/RECONNECT/PRECONNECT/MicGate
+adb -s $D logcat -v time -s XiaoLe > $XL                               # 71 固定 tag：KEEPALIVE/TEXTSPLIT/RECONNECT/PRECONNECT/MicGate
 function G([string]$p){ Select-String -Path $LOG -Pattern $p -Encoding UTF8 }
 function L([string]$p){ Select-String -Path $XL  -Pattern $p -Encoding UTF8 }
 # 启动锚点：每次冷启动/杀进程重启后必须出现
@@ -260,7 +261,7 @@ adb -s <DEVICE> shell svc wifi enable
 
 ## 16. 声学回环：真人语音等价验证（5 次一组，阈值 **4/5**）
 
-**排期决策（不留待定）**：本项排在 **70 装机 + 开发者授权 + 选智能体之后**，作为最后一批，而不是验收开头。实测依据见 §16.4：67 当前数据为空（页面 `暂无会话 / 添加智能体`）且 `RECORD_AUDIO` 为 `ignore`，声学链路在"没绑智能体 + 没麦克风权限"两处同时断，先跑只会得到 0/5 的噪声。
+**排期决策（不留待定）**：本项排在 **71 装机 + 开发者授权 + 选智能体之后**，作为最后一批，而不是验收开头。实测依据见 §16.4：67 当前数据为空（页面 `暂无会话 / 添加智能体`）且 `RECORD_AUDIO` 为 `ignore`，声学链路在"没绑智能体 + 没麦克风权限"两处同时断，先跑只会得到 0/5 的噪声。
 
 ### 16.0 前置通路检查（不依赖云端、不依赖智能体，必须先过）
 
@@ -308,9 +309,9 @@ powershell -File acoustic-loop.ps1 -Wav speech-zh-g90.wav -Runs 5 -IntervalSec 7
 | ① 音频通路 | `dumpsys audio` 新增行含 `pack:com.zcstudy.xiaole` 的 `rec start/update`（已触发）+ `callingPack=com.zcstudy.xiaole` 的 `requestAudioFocus`（已发声） | 每次两条都要有 | 直接 FAIL |
 | ② 界面 | 截图裁掉状态栏/底栏（y 30%–85%）后的指纹，与本轮基线不同（气泡出现） | 每次都要变 | 直接 FAIL |
 | ③ 权限 | `dumpsys appops RECORD_AUDIO` 不是 `ignore` | 全程成立 | 直接 FAIL |
-| ④ 日志（70 起**必检**） | `-s XiaoLe`：`[KEEPALIVE]` 置位 + `listen start` +（`stt` 或 `tts`）；启动另有 `BOOT MainActivity onCreate` 锚点 | 每次都要命中 | 未命中 ⇒ **直接 FAIL** |
+| ④ 日志（71 起**必检**） | `-s XiaoLe`：`[KEEPALIVE]` 置位 + `listen start` +（`stt` 或 `tts`）；启动另有 `BOOT MainActivity onCreate` 锚点 | 每次都要命中 | 未命中 ⇒ **直接 FAIL** |
 
-- **四源全齐 = PASS**（①+②+③+④）。④ 不再是"恢复后可选"，70 已把四类日志走原生通道，**不存在"没日志也能过"的口子**。
+- **四源全齐 = PASS**（①+②+③+④）。④ 不再是"恢复后可选"，71 已把四类日志走原生通道，**不存在"没日志也能过"的口子**。
 - "判定降级" 只在**采集层面异常**时使用（logcat 断了 / 文件 0 行 / 系统限制），且必须写明缺哪一源、用什么替代证据；正常情况不该出现这个词。
 - 完整链路阈值不变：**5 次里 ≥4 次**。
 
@@ -320,7 +321,7 @@ Import-Csv "$d\summary.csv" | Format-Table Run,AppRec,AppPlay,UiChanged,Result,N
 $pass=(Import-Csv "$d\summary.csv" | Where-Object Result -eq PASS).Count; "PASS=$pass/5"
 ```
 
-**日志口径（70 起）**：`adb logcat -s XiaoLe` 直读 `[KEEPALIVE]` / `[TEXTSPLIT]` / `[RECONNECT]` / `[PRECONNECT]` / `MicGate`，`BOOT MainActivity onCreate` 作启动锚点。67 时代 release 无任何 Dart 日志，才退到 `dumpsys` 判定；70 修好后 ④ 恢复必检，① 退为辅助证据。
+**日志口径（71 起）**：`adb logcat -s XiaoLe` 直读 `[KEEPALIVE]` / `[TEXTSPLIT]` / `[RECONNECT]` / `[PRECONNECT]` / `MicGate`，`BOOT MainActivity onCreate` 作启动锚点。67 时代 release 无任何 Dart 日志，才退到 `dumpsys` 判定；71 修好后 ④ 恢复必检，① 退为辅助证据。
 
 ### 16.4 基线实测（67，5 次/组；2026-11-04 ~ 11-05）
 
@@ -331,7 +332,7 @@ $pass=(Import-Csv "$d\summary.csv" | Where-Object Result -eq PASS).Count; "PASS=
 | 00:03 | 前置通路检查，VAD 3 次 | **0/3** | 权限仍 `ignore`；`pm grant` 被 ColorOS 拒绝（`GRANT_RUNTIME_PERMISSIONS`），`appops set` 同样被拒（`MANAGE_APP_OPS_MODES`） |
 | 00:10 | `grant-mic-ui.ps1 -DryRun` | 定位成功 | 应用详情 → `权限管理`(168,1252) → `麦克风` → `使用时允许`(192,1944)，**未点确认**（不提前授予以免掩盖"App 自己申请"的产品行为） |
 
-两条根因都必须在 70 装机时消除：**① 权限（走 App 自身弹窗点"允许"；本机无 adb 授权通道）；② 开发者授权 + 选智能体**。任一未做，本项必挂。顺手记一条：`-GrantMic` 在本机**不可用**，已被 `grant-mic-ui.ps1` 取代。
+两条根因都必须在 71 装机时消除：**① 权限（走 App 自身弹窗点"允许"；本机无 adb 授权通道）；② 开发者授权 + 选智能体**。任一未做，本项必挂。顺手记一条：`-GrantMic` 在本机**不可用**，已被 `grant-mic-ui.ps1` 取代。
 
 ### 16.5 参数扫描（三档各 5 次，成功组合回填）
 
@@ -339,9 +340,9 @@ $pass=(Import-Csv "$d\summary.csv" | Where-Object Result -eq PASS).Count; "PASS=
 
 | 档位 | wav | 等价条件 | 结果 | 结论 |
 |---|---|---|---|---|
-| 高 | `speech-zh-g90.wav` | 90% 音量 ≈ 20cm | 待 70 回填 | — |
-| 中 | `speech-zh-g70.wav` | 70% 音量 ≈ 28cm | 待 70 回填 | — |
-| 低 | `speech-zh-g50.wav` | 50% 音量 ≈ 40cm（−6 dB） | 待 70 回填 | — |
+| 高 | `speech-zh-g90.wav` | 90% 音量 ≈ 20cm | 待 71 回填 | — |
+| 中 | `speech-zh-g70.wav` | 70% 音量 ≈ 28cm | 待 71 回填 | — |
+| 低 | `speech-zh-g50.wav` | 50% 音量 ≈ 40cm（−6 dB） | 待 71 回填 | — |
 
 **稳定组合**（验收后填入，后续复测直接照抄）：`____________`
 
@@ -373,7 +374,7 @@ $pass=(Import-Csv "$d\summary.csv" | Where-Object Result -eq PASS).Count; "PASS=
 
 ## 18. Bug 处理（当场闭环）
 
-发现 bug 时：**同一会话内定位 → 改 → 重出包（70.x）→ 重新安装 → 只重验该项 + 通用失败信号**，
+发现 bug 时：**同一会话内定位 → 改 → 重出包（71.x）→ 重新安装 → 只重验该项 + 通用失败信号**，
 不许攒到最后。重装仍走 §0.2 三连弹，**禁止 `adb uninstall`**。
 
 ## 19. 收尾
@@ -385,7 +386,7 @@ adb -s <DEVICE> reverse --remove-all
 adb -s <DEVICE> shell input keyevent KEYCODE_HOME
 ```
 
-还原后用 `docs/device-baseline-<DEVICE>-2026-11-04.md` §2 的字段复核，并追加本次 70 的 `firstInstallTime`。
+还原后用 `docs/device-baseline-<DEVICE>-2026-11-04.md` §2 的字段复核，并追加本次 71 的 `firstInstallTime`。
 
 ## 20. 执行时序（连跑批 / 独占批）与最短时间表
 
@@ -399,7 +400,7 @@ adb -s <DEVICE> shell input keyevent KEYCODE_HOME
 | **P2 连跑但需 Mika 配合** | §12 MicGate 5 轮 ×10 次 | 需要 Mika 在线并反复抢麦，仍可连续跑，但中途不能杀进程 |
 | **P3 独占·系统态** | §15 断网恢复（改系统网络）、§14 息屏/后台（3 分钟零输入） | §15 期间网络不可用，不能和任何联网项交叉；§14 期间不能有 adb 注入或点击 |
 | **P4 独占·物理态** | §16 声学回环（电脑外放 + 手机静置） | 播放期间只允许截图/抓 dump；必须先过 §16.0 通路检查 |
-| **P0 前置（串行）** | 装 70（三连弹）→ `zc19901111` → 选智能体 → 首次按住说话触发 **App 自身权限弹窗**并点"允许" | 没有可测对象之前，其它项都无意义；权限必须由 App 弹出，脚本授权不算产品行为 |
+| **P0 前置（串行）** | 装 71（三连弹）→ `zc19901111` → 选智能体 → 首次按住说话触发 **App 自身权限弹窗**并点"允许" | 没有可测对象之前，其它项都无意义；权限必须由 App 弹出，脚本授权不算产品行为 |
 
 ### 20.2 最短顺序
 

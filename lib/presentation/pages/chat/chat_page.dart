@@ -101,6 +101,11 @@ class _ChatPageState extends ConsumerState<ChatPage>
   // 失败轮次等不到 AI 气泡时，下一轮文本不会再拼进上一条用户气泡
   bool _sttMergeOpen = false;
   bool _aiMergeOpen = false;
+  // v6.11.17（P0-3 方案 A）：息屏/后台持 PARTIAL_WAKE_LOCK，回前台立即释放。
+  // 这是分诊手段——若持锁后 tick 能续上，说明是 Dart timer 被冻结；
+  // 若仍 0 tick，则是进程被 ROM 冻结，下一版需上前台服务。
+  static const MethodChannel _powerChannel = MethodChannel('xiaole/power');
+  DateTime? _wakeLockBeganAt;
   /// 预连接期间缓存的 Opus 帧（上限 40 帧 ≈ 2.4s），连上后按序回灌
   final List<Uint8List> _preconnectAudio = <Uint8List>[];
   // v3.1.0：视觉识物（vision 接口从 MCP initialize 的 params.capabilities.vision 提取）
@@ -216,17 +221,60 @@ class _ChatPageState extends ConsumerState<ChatPage>
     WidgetsBinding.instance.addObserver(this);
   }
 
-  /// v6.11.17：息屏期间 Dart Timer 会被系统冻结，心跳停摆后连接多半已被服务端
-  /// 判死（唤醒后 1002）。回前台时不再等下一拍看门狗，直接按静默时长决定是否重建。
+  /// v6.11.17（P0-3 方案 A）：后台/息屏持 PARTIAL_WAKE_LOCK，回前台立刻释放。
+  /// 另外回前台时按静默时长判定僵死并立即重建，不再等下一拍看门狗。
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused) {
+      unawaited(_acquireWakeLock());
+      return;
+    }
     if (state != AppLifecycleState.resumed) return;
+    unawaited(_releaseWakeLock('resumed'));
     final mgr = _wsManager;
     if (mgr == null) return;
     final silent = mgr.silentSeconds;
     logger.info('[LIFECYCLE] 回到前台 连接=$_isConnected '
         '静默=${silent == null ? '尚未收包' : '${silent}s'}');
     mgr.forceReconnect(dropStale: silent != null && silent > 70);
+  }
+
+  Future<void> _acquireWakeLock() async {
+    if (!Platform.isAndroid) return;
+    if (_wakeLockBeganAt != null) return; // 幂等：已持有
+    if (_wsManager == null) {
+      logger.info('[POWER] 跳过 acquire：当前没有 WS 会话');
+      return;
+    }
+    _wakeLockBeganAt = DateTime.now();
+    try {
+      await _powerChannel.invokeMethod('acquire');
+      logger.info('[LIFECYCLE] [POWER] acquire wakelock 已请求（息屏保心跳）');
+    } catch (e) {
+      _wakeLockBeganAt = null;
+      logger.warning('[POWER] acquire wakelock 失败: $e');
+    }
+  }
+
+  /// 幂等释放。任何路径（回前台/页面销毁）都走这里，原生侧同样幂等。
+  Future<void> _releaseWakeLock(String why) async {
+    if (!Platform.isAndroid) return;
+    final began = _wakeLockBeganAt;
+    if (began == null) {
+      // 未记过持有状态也要调一次原生 release：防止 Dart 状态与原生不一致时漏放
+      try {
+        await _powerChannel.invokeMethod('release');
+      } catch (_) {}
+      return;
+    }
+    _wakeLockBeganAt = null;
+    final held = DateTime.now().difference(began).inSeconds;
+    try {
+      await _powerChannel.invokeMethod('release');
+      logger.info('[POWER] release wakelock why=$why held=${held}s');
+    } catch (e) {
+      logger.warning('[POWER] release wakelock 失败: $e');
+    }
   }
 
   /// v6.11.14：中文文本注入通道（仅开发者模式已授权时生效）。
@@ -382,6 +430,8 @@ class _ChatPageState extends ConsumerState<ChatPage>
     _otaReportTimer?.cancel();
     _reconnectUiTimer?.cancel();
     _preconnectTimer?.cancel();
+    // v6.11.17（P0-3）：页面销毁必须放锁，避免后台持锁泄漏
+    unawaited(_releaseWakeLock('dispose'));
     WidgetsBinding.instance.removeObserver(this);
     AppFeats.wsProbeRevision.removeListener(_onWsProbeChanged);
     _mqttPresence?.stop();
