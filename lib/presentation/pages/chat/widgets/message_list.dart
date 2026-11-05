@@ -87,6 +87,7 @@ class MessageList extends StatelessWidget {
         final msgIndex = messages.length - 1 - (index - typingOffset);
         final msg = messages[msgIndex];
 
+        final isDark = Theme.of(context).brightness == Brightness.dark;
         final bool showDivider = msgIndex == 0 ||
             _minuteKey(messages[msgIndex - 1]) != _minuteKey(msg);
 
@@ -97,7 +98,10 @@ class MessageList extends StatelessWidget {
                   '${msg.timestamp.hour.toString().padLeft(2, '0')}:'
                   '${msg.timestamp.minute.toString().padLeft(2, '0')}',
                   textAlign: TextAlign.center,
-                  style: XlType.meta.copyWith(color: p.textQuaternary),
+                  // preview-09 实测深色时间分隔 #8A8A8A（浅色仍 #6E6E6E）
+                  style: XlType.meta.copyWith(
+                    color: isDark ? p.textTertiary : p.textQuaternary,
+                  ),
                 ),
               )
             : null;

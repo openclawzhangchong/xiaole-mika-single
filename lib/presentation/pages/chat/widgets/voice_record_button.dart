@@ -13,8 +13,14 @@ import '../../../widgets/xl/xl_voice_overlay.dart';
 
 /// 供 ChatPage「更多」菜单调用持续监听（保留原功能，不丢入口）
 class VoiceRecordController {
+  /// 录音浮层状态：由聊天页 `Stack` 内的兄弟节点监听并渲染。
+  final ValueNotifier<XlVoiceOverlayState> overlayState =
+      ValueNotifier<XlVoiceOverlayState>(XlVoiceOverlayState.hidden);
+
   VoidCallback? _toggle;
   bool Function()? _active;
+
+  void dispose() => overlayState.dispose();
 
   void attach({
     required VoidCallback toggle,
@@ -77,17 +83,12 @@ class _VoiceRecordButtonState extends State<VoiceRecordButton> {
   DateTime? _startAt;
   Timer? _ticker;
   StreamSubscription<Uint8List>? _audioSub;
-  OverlayEntry? _overlayEntry;
 
-  final ValueNotifier<_VoiceOverlayState> _overlayState =
-      ValueNotifier<_VoiceOverlayState>(
-    const _VoiceOverlayState(
-      visible: true,
-      willCancel: false,
-      elapsed: Duration.zero,
-      showLimitHint: false,
-    ),
-  );
+  final ValueNotifier<XlVoiceOverlayState> _localOverlayState =
+      ValueNotifier<XlVoiceOverlayState>(XlVoiceOverlayState.hidden);
+
+  ValueNotifier<XlVoiceOverlayState> get _overlayState =>
+      widget.controller?.overlayState ?? _localOverlayState;
 
   @override
   void initState() {
@@ -103,9 +104,7 @@ class _VoiceRecordButtonState extends State<VoiceRecordButton> {
     widget.controller?.detach();
     _ticker?.cancel();
     _audioSub?.cancel();
-    _overlayEntry?.remove();
-    _overlayEntry = null;
-    _overlayState.dispose();
+    _localOverlayState.dispose();
     super.dispose();
   }
 
@@ -192,13 +191,11 @@ class _VoiceRecordButtonState extends State<VoiceRecordButton> {
     if (!_willCancel && dy < -XlMotion.cancelThreshold) {
       setState(() => _willCancel = true);
       _overlayState.value = _overlayState.value.copyWith(willCancel: true);
-      _overlayEntry?.markNeedsBuild();
       HapticFeedback.lightImpact();
     } else if (_willCancel &&
         dy > -(XlMotion.cancelThreshold - XlMotion.cancelHysteresis)) {
       setState(() => _willCancel = false);
       _overlayState.value = _overlayState.value.copyWith(willCancel: false);
-      _overlayEntry?.markNeedsBuild();
     }
   }
 
@@ -244,11 +241,9 @@ class _VoiceRecordButtonState extends State<VoiceRecordButton> {
         elapsed: tooShortElapsed,
         hintOverride: '说话时间太短，请按住再说',
       );
-      _overlayEntry?.markNeedsBuild();
       await Future<void>.delayed(const Duration(milliseconds: 700));
       _overlayState.value = _overlayState.value.copyWith(visible: false);
       await Future<void>.delayed(XlMotion.fast);
-      if (mounted) _removeOverlay();
       if (mounted) {
         setState(() {
           _isRecording = false;
@@ -266,7 +261,6 @@ class _VoiceRecordButtonState extends State<VoiceRecordButton> {
     await Future<void>.delayed(
       send ? const Duration(milliseconds: 90) : XlMotion.fast,
     );
-    if (mounted) _removeOverlay();
 
     await _stopAudio();
     if (mounted) {
@@ -307,14 +301,13 @@ class _VoiceRecordButtonState extends State<VoiceRecordButton> {
         _willCancel = false;
         _startAt = DateTime.now();
       });
-      _overlayState.value = const _VoiceOverlayState(
+      _overlayState.value = const XlVoiceOverlayState(
         visible: true,
         willCancel: false,
         elapsed: Duration.zero,
         showLimitHint: false,
         hintOverride: null,
       );
-      _showOverlay();
       _ticker = Timer.periodic(
         const Duration(milliseconds: 50),
         (_) => _tick(),
@@ -352,50 +345,12 @@ class _VoiceRecordButtonState extends State<VoiceRecordButton> {
     _ticker = null;
     await _stopAudio();
     if (!mounted) return;
-    _removeOverlay();
+    _overlayState.value = XlVoiceOverlayState.hidden;
     setState(() {
       _isRecording = false;
       _willCancel = false;
     });
     _showError(message);
-  }
-
-  void _showOverlay() {
-    if (_overlayEntry != null) return;
-    final overlay = Overlay.of(context);
-    _overlayEntry = OverlayEntry(
-      builder: (ctx) {
-        final media = MediaQuery.of(ctx);
-        final bottom = XlDims.voiceOverlayBottom + media.viewInsets.bottom;
-        return Positioned(
-          left: (media.size.width - XlDims.voiceOverlayW) / 2,
-          bottom: bottom,
-          child: IgnorePointer(
-            child: ValueListenableBuilder<_VoiceOverlayState>(
-              valueListenable: _overlayState,
-              builder: (context, state, _) => AnimatedOpacity(
-                opacity: state.visible ? 1 : 0,
-                duration: XlMotion.fast,
-                curve: XlMotion.standard,
-                child: XlVoiceRecordOverlay(
-                  amplitudeStream: AudioUtil.amplitudeStream,
-                  elapsed: state.elapsed,
-                  willCancel: state.willCancel,
-                  showLimitHint: state.showLimitHint,
-                  hintOverride: state.hintOverride,
-                ),
-              ),
-            ),
-          ),
-        );
-      },
-    );
-    overlay.insert(_overlayEntry!);
-  }
-
-  void _removeOverlay() {
-    _overlayEntry?.remove();
-    _overlayEntry = null;
   }
 
   Future<bool> _ensureMic() async {
@@ -474,37 +429,3 @@ class _VoiceRecordButtonState extends State<VoiceRecordButton> {
   }
 }
 
-@immutable
-class _VoiceOverlayState {
-  const _VoiceOverlayState({
-    required this.visible,
-    required this.willCancel,
-    required this.elapsed,
-    required this.showLimitHint,
-    this.hintOverride,
-  });
-
-  final bool visible;
-  final bool willCancel;
-  final Duration elapsed;
-  final bool showLimitHint;
-
-  /// v6.11.18：临时提示文案（如"说话时间太短"），为空则用默认提示
-  final String? hintOverride;
-
-  _VoiceOverlayState copyWith({
-    bool? visible,
-    bool? willCancel,
-    Duration? elapsed,
-    bool? showLimitHint,
-    String? hintOverride,
-  }) {
-    return _VoiceOverlayState(
-      visible: visible ?? this.visible,
-      willCancel: willCancel ?? this.willCancel,
-      elapsed: elapsed ?? this.elapsed,
-      showLimitHint: showLimitHint ?? this.showLimitHint,
-      hintOverride: hintOverride ?? this.hintOverride,
-    );
-  }
-}

@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import '../../app/themes/app_colors.dart';
+import '../../app/themes/xl_tokens.dart';
 import '../../presentation/services/agent_avatar_store.dart';
 
 /// 智能体预设头像（原型 v6 的 10 套渐变 + 符号）
@@ -164,6 +165,9 @@ class AgentAvatar extends StatelessWidget {
         // 文件不存在（典型：重装 App 后路径失效）→ 优雅回落文字头像
         avatar = _textInner(displayName, cfg, r);
       }
+    } else if (_isUntouched(cfg)) {
+      // preview-01/03：未自定义过的智能体用品牌头像（深底 + 绿色波形）
+      avatar = _brandInner(r);
     } else {
       avatar = _textInner(displayName, cfg, r);
     }
@@ -195,6 +199,57 @@ class AgentAvatar extends StatelessWidget {
                 ),
               ),
             ),
+        ],
+      ),
+    );
+  }
+
+  /// 未自定义：图片为空、取字模式默认、无自填字、色板仍是该 agent 的默认色板。
+  bool _isUntouched(AgentAvatarConfig cfg) {
+    if (agentId == null) return false;
+    if (cfg.imagePath != null) return false;
+    if (cfg.mode != 0 || cfg.customChar.trim().isNotEmpty) return false;
+    return cfg.paletteIndex ==
+        AgentAvatarStore.defaultConfig(agentId!).paletteIndex;
+  }
+
+  /// 品牌头像（preview-01 实测）：
+  /// 底 #1E1E1E、圆角同列表 6pt；5 根圆头竖条，外两根 #D5D5D5、次两根 #E8E8E8、
+  /// 中间 #07C160，高度 8/14/19/14/8（48pt 基准，等比缩放）。
+  Widget _brandInner(double r) {
+    const heights = <double>[8, 14, 19, 14, 8];
+    const colors = <Color>[
+      XlColor.brandBarOuter,
+      XlColor.brandBarInner,
+      XlColor.brand,
+      XlColor.brandBarInner,
+      XlColor.brandBarOuter,
+    ];
+    final k = size / 48.0;
+    final barW = XlDims.brandBarW * k;
+    final gap = XlDims.brandBarGap * k;
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: XlColor.brandAvatarBg,
+        borderRadius: BorderRadius.circular(r),
+      ),
+      alignment: Alignment.center,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (var i = 0; i < heights.length; i++) ...[
+            if (i > 0) SizedBox(width: gap),
+            Container(
+              width: barW,
+              height: heights[i] * k,
+              decoration: BoxDecoration(
+                color: colors[i],
+                borderRadius: BorderRadius.circular(barW / 2),
+              ),
+            ),
+          ],
         ],
       ),
     );

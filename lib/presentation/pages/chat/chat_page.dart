@@ -43,6 +43,7 @@ import '../../services/app_feats.dart';
 import '../../widgets/xl/xl_voice_overlay.dart';
 import '../incoming_call_page.dart';
 import '../../services/chat_history_store.dart';
+import '../../services/unread_store.dart';
 import 'widgets/message_list.dart';
 import 'widgets/chat_input_bar.dart';
 import 'widgets/voice_record_button.dart';
@@ -218,6 +219,8 @@ class _ChatPageState extends ConsumerState<ChatPage>
     AgentIdentityStore.normalizeGlobalModel();
     _loadHistory();
     _loadAgent();
+    // 78：进入会话即清未读红点（preview-01）
+    UnreadStore.clear(widget.agentId);
     // v4.3.3：页面生命周期打点——相机 Activity 可能触发页面重建，
     // 用 initState / dispose 时间戳可判定"识图过程中页面是否被销毁"（会中断识图流程）
     logger.info('聊天页 initState（页面挂载）agentId=${widget.agentId}');
@@ -463,6 +466,7 @@ class _ChatPageState extends ConsumerState<ChatPage>
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     _cleanupWebSocket(source: 'dispose');
     _otaService?.dispose();
+    _voiceRecordController.dispose();
     super.dispose();
   }
 
@@ -477,7 +481,12 @@ class _ChatPageState extends ConsumerState<ChatPage>
       appBar: _showVoiceCallOverlay
           ? null
           : AppBar(
-              title: Text(_agentName),
+              title: GestureDetector(
+                // v6.11.21（78 轮）：05/06 视觉验证用 mock 任务卡注入入口，
+                // 仅 devAuthed 打开时生效，正式用户长按无任何反应。
+                onLongPress: _injectMockTaskCards,
+                child: Text(_agentName),
+              ),
               actions: [
                 IconButton(
                   icon: const Icon(Icons.more_horiz_rounded, size: 24),
@@ -529,6 +538,32 @@ class _ChatPageState extends ConsumerState<ChatPage>
                   onMore: _showMoreOptions,
                 ),
             ],
+          ),
+          // 录音浮层：与页面同层渲染（不是独立 OverlayEntry），
+          // 这样 BackdropFilter 才能采样到下方已绘制的消息气泡。
+          ValueListenableBuilder<XlVoiceOverlayState>(
+            valueListenable: _voiceRecordController.overlayState,
+            builder: (context, state, _) {
+              final media = MediaQuery.of(context);
+              return Positioned(
+                left: (media.size.width - XlDims.voiceOverlayW) / 2,
+                bottom: XlDims.voiceOverlayBottom + media.viewInsets.bottom,
+                child: IgnorePointer(
+                  child: AnimatedOpacity(
+                    opacity: state.visible ? 1 : 0,
+                    duration: XlMotion.fast,
+                    curve: XlMotion.standard,
+                    child: XlVoiceRecordOverlay(
+                      amplitudeStream: AudioUtil.amplitudeStream,
+                      elapsed: state.elapsed,
+                      willCancel: state.willCancel,
+                      showLimitHint: state.showLimitHint,
+                      hintOverride: state.hintOverride,
+                    ),
+                  ),
+                ),
+              );
+            },
           ),
           // 语音通话全屏覆盖层
           if (_showVoiceCallOverlay) _buildVoiceCallOverlay(),
@@ -1088,6 +1123,109 @@ class _ChatPageState extends ConsumerState<ChatPage>
     return '$h:$m';
   }
 
+  /// 任务在后台完成/失败 → 会话列表挂未读红点（preview-01）；回到本页即清零。
+  void _markTaskUnread(Map<String, dynamic> data) {
+    final status = data['status']?.toString();
+    if (status != 'done' && status != 'failed') return;
+    if (ModalRoute.of(context)?.isCurrent ?? true) return;
+    UnreadStore.bump(widget.agentId);
+  }
+
+  /// v6.11.21（78 轮 ⑤）：05/06 截图只验 UI 视觉，用注入的 mock 任务卡。
+  ///
+  /// 仅 `AppFeats.devAuthed` 为 true 时长按聊天页标题可触发；默认关闭，
+  /// 正式用户碰不到，也不写进真实任务链路。真实链路仍受限于
+  /// `openai-fast`（pollinations 免费接口）不支持 tool calling。
+  void _injectMockTaskCards() {
+    if (!AppFeats.devAuthed) return;
+    final clock = _formatMikaClock(DateTime.now());
+    final base = <String, dynamic>{
+      'stepTotal': 4,
+      'startedAt': '今天 $clock',
+      'device': '当前手机',
+      'trigger': '对话内指令',
+      'icon': 'list',
+    };
+    final mocks = <Map<String, dynamic>>[
+      {
+        ...base,
+        'task_id': 'mock_queued',
+        'title': '把明早的闹钟设到 7:30',
+        'status': 'queued',
+        'stepIndex': 0,
+        'elapsedMs': 0,
+        'steps': <Map<String, dynamic>>[],
+        'results': <String>[],
+      },
+      {
+        ...base,
+        'task_id': 'mock_running',
+        'title': '把低电量模式打开',
+        'status': 'running',
+        'stepIndex': 3,
+        'elapsedMs': 8200,
+        'progress': 0.5,
+        'steps': <Map<String, dynamic>>[
+          {'title': '解析指令', 'meta': '0.8s', 'state': 'done'},
+          {'title': '打开设置页', 'meta': '1.4s', 'state': 'done'},
+          {'title': '修改低电量模式', 'meta': '2.1s', 'state': 'running'},
+          {'title': '回读并确认', 'meta': '等待执行', 'state': 'pending'},
+        ],
+        'results': <String>[],
+      },
+      {
+        ...base,
+        'task_id': 'mock_done',
+        'title': '清理相册重复照片',
+        'status': 'done',
+        'stepIndex': 4,
+        'elapsedMs': 15300,
+        'steps': <Map<String, dynamic>>[
+          {'title': '扫描相册', 'meta': '3.2s', 'state': 'done'},
+          {'title': '比对重复照片', 'meta': '4.6s', 'state': 'done'},
+          {'title': '删除重复照片', 'meta': '5.1s', 'state': 'done'},
+          {'title': '释放空间', 'meta': '2.4s', 'state': 'done'},
+        ],
+        'results': <String>['已清理 128 张重复照片', '释放 1.2 GB 空间'],
+      },
+      {
+        ...base,
+        'task_id': 'mock_failed',
+        'title': '把屏幕亮度调到 30%',
+        'status': 'failed',
+        'stepIndex': 1,
+        'elapsedMs': 6400,
+        'failReason': '系统拒绝修改亮度（权限不足）',
+        'steps': <Map<String, dynamic>>[
+          {'title': '解析指令', 'meta': '0.9s', 'state': 'done'},
+          {'title': '修改系统亮度', 'meta': '权限不足', 'state': 'failed'},
+          {'title': '回读并确认', 'meta': '未执行', 'state': 'pending'},
+        ],
+        'results': <String>[],
+      },
+    ];
+    // mock 卡只进内存、不进历史，重进页面即消失
+    setState(() {
+      for (final data in mocks) {
+        final id = data['task_id'].toString();
+        _messages.add(
+          MessageModel(
+            id: 'task_$id',
+            agentId: widget.agentId,
+            type: MessageType.system,
+            content: (data['title'] ?? '任务').toString(),
+            sender: MessageSender.system,
+            status: MessageStatus.sent,
+            timestamp: DateTime.now(),
+            metadata: <String, dynamic>{'card': 'task', 'data': data},
+          ),
+        );
+      }
+    });
+    _scrollToBottom();
+    logger.info('[MOCK] 已注入 4 条 mock 任务卡（仅 UI 视觉验证）');
+  }
+
   /// 同一 task_id 只占一条消息，状态原地刷新（不刷屏、不重复落库）。
   /// 先按消息里记录的 task_id 找，再按内存映射，最后按确定性 id，
   /// 保证页面重建、历史回填、重复事件都不会刷出第二条卡。
@@ -1124,6 +1262,7 @@ class _ChatPageState extends ConsumerState<ChatPage>
       });
       ChatHistoryStore.save(widget.agentId, _messages);
       _scrollToBottom();
+      _markTaskUnread(data);
       return;
     }
 
@@ -1144,6 +1283,7 @@ class _ChatPageState extends ConsumerState<ChatPage>
     });
     ChatHistoryStore.save(widget.agentId, _messages);
     _scrollToBottom();
+    _markTaskUnread(data);
   }
 
   /// 更多菜单入口：把输入框里的目标交给同进程 Mika 真实执行。
