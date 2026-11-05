@@ -36,6 +36,7 @@ import '../../../app/themes/app_colors.dart';
 import '../../../app/themes/app_text_styles.dart';
 import '../../../app/themes/xl_tokens.dart';
 import '../../../core/utils/toast_util.dart';
+import '../../../core/mika/mika_bridge.dart';
 import '../../widgets/agent_avatar.dart';
 import '../../services/agent_identity_store.dart';
 import '../../services/app_feats.dart';
@@ -49,6 +50,7 @@ import 'widgets/emotion_animation_overlay.dart';
 import 'package:logging/logging.dart';
 import '../../widgets/wx_action_sheet.dart';
 import '../../widgets/wx_dialog.dart';
+import '../../widgets/xl/xl_task_card.dart';
 
 /// 聊天页面
 class ChatPage extends ConsumerStatefulWidget {
@@ -69,6 +71,13 @@ class _ChatPageState extends ConsumerState<ChatPage> {
   bool _showVoiceButton = false;
   final VoiceRecordController _voiceRecordController = VoiceRecordController();
   AgentModel? _currentAgent;
+
+  // Mika 任务卡：task_id → 聊天流消息 id（同一任务状态原地刷新，不刷屏）
+  final Map<String, String> _mikaTaskMessageIds = {};
+  final Map<String, DateTime> _mikaTaskStartedAt = {};
+  final Set<String> _mikaTaskNoticeSent = {};
+  StreamSubscription<Map<String, dynamic>>? _mikaTaskSub;
+  bool _mikaTaskRunning = false;
 
   // WebSocket 相关
   XiaozhiWebSocketManager? _wsManager;
@@ -207,6 +216,9 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     AppFeats.wsProbeRevision.addListener(_onWsProbeChanged);
     // v6.11.14：调试注入通道（仅开发者模式已授权时生效）
     unawaited(_consumeDebugInjection());
+    // 任务卡：订阅 Mika 进程内任务事件，把真实状态写进聊天流
+    MikaBridge.install();
+    _mikaTaskSub = MikaBridge.taskStates.listen(_onMikaTaskState);
   }
 
   /// v6.11.14：中文文本注入通道（仅开发者模式已授权时生效）。
@@ -356,6 +368,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     unawaited(ProactivePollService.instance.stop());
     _textController.dispose();
     _scrollController.dispose();
+    _mikaTaskSub?.cancel();
     _aiPlayingTimer?.cancel();
     _textSegmentTimer?.cancel();
     _voiceCallTimer?.cancel();
@@ -910,6 +923,150 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     _scrollToBottom();
   }
 
+  /// 把 Mika 真实任务事件映射为聊天流里的任务卡。
+  /// 只消费引擎真实上报的状态；未知状态不落卡，避免伪造进度。
+  void _onMikaTaskState(Map<String, dynamic> event) {
+    if (!mounted) return;
+    final taskId = event['task_id']?.toString() ?? '';
+    if (taskId.isEmpty) return;
+    final rawStatus = event['status']?.toString() ?? '';
+
+    if (rawStatus == 'refused' || rawStatus == 'unknown') {
+      if (!_mikaTaskNoticeSent.add(taskId)) return;
+      final reason = event['message']?.toString() ?? '引擎未受理该任务';
+      _appendOrCreateChatMessage(MessageSender.system, '任务未启动：$reason');
+      return;
+    }
+
+    final status = _mikaTaskCardStatus(rawStatus);
+    if (status == null) return; // starting 以外的过渡态（waiting_*）不覆盖上一张卡
+
+    final startedMs = (event['started_at_ms'] as num?)?.toInt();
+    final startedAt = startedMs != null
+        ? DateTime.fromMillisecondsSinceEpoch(startedMs)
+        : _mikaTaskStartedAt.putIfAbsent(taskId, () => DateTime.now());
+    final elapsedMs = DateTime.now().difference(startedAt).inMilliseconds;
+    final step = (event['step'] as num?)?.toInt() ?? 0;
+    final goal = (event['goal'] ?? '').toString();
+    final answer = (event['answer'] ?? '').toString();
+    final reason = (event['reason'] ?? '').toString();
+
+    final data = <String, dynamic>{
+      'title': goal.isEmpty ? '手机任务' : goal,
+      'status': status.name,
+      'icon': 'list',
+      'stepIndex': step,
+      // Mika 只上报当前第几步，不上报总步数；不编造分母，卡片按「第 N 步」显示
+      'stepTotal': 0,
+      'elapsedMs': elapsedMs < 0 ? 0 : elapsedMs,
+      'failReason': status == XlTaskStatus.failed && reason.isNotEmpty
+          ? reason
+          : null,
+      'startedAt': '今天 ${_formatMikaClock(startedAt)}',
+      'device': '当前手机',
+      'trigger': '对话内指令',
+      'results': answer.isEmpty ? <String>[] : <String>[answer],
+      'steps': <Map<String, dynamic>>[],
+    };
+    logger.info('任务卡事件 task=$taskId status=$rawStatus '
+        '→ ${status.name} step=$step goal=$goal');
+    _upsertMikaTaskCard(taskId, data);
+  }
+
+  XlTaskStatus? _mikaTaskCardStatus(String raw) {
+    switch (raw) {
+      case 'queued':
+        return XlTaskStatus.queued;
+      case 'starting':
+      case 'running':
+        return XlTaskStatus.running;
+      case 'done':
+        return XlTaskStatus.done;
+      case 'failed':
+        return XlTaskStatus.failed;
+      case 'cancelled':
+        return XlTaskStatus.cancelled;
+    }
+    return null;
+  }
+
+  String _formatMikaClock(DateTime t) {
+    final h = t.hour.toString().padLeft(2, '0');
+    final m = t.minute.toString().padLeft(2, '0');
+    return '$h:$m';
+  }
+
+  /// 同一 task_id 只占一条消息，状态原地刷新（不刷屏、不重复落库）。
+  void _upsertMikaTaskCard(String taskId, Map<String, dynamic> data) {
+    final metadata = <String, dynamic>{'card': 'task', 'data': data};
+    final existingId = _mikaTaskMessageIds[taskId];
+    if (existingId != null) {
+      final idx = _messages.indexWhere((m) => m.id == existingId);
+      if (idx >= 0) {
+        final old = _messages[idx];
+        setState(() {
+          _messages[idx] = MessageModel(
+            id: old.id,
+            agentId: old.agentId,
+            type: MessageType.system,
+            content: old.content,
+            sender: MessageSender.system,
+            status: MessageStatus.sent,
+            timestamp: DateTime.now(),
+            metadata: metadata,
+          );
+        });
+        ChatHistoryStore.save(widget.agentId, _messages);
+        _scrollToBottom();
+        return;
+      }
+    }
+
+    final messageId = 'task_$taskId';
+    _mikaTaskMessageIds[taskId] = messageId;
+    final message = MessageModel(
+      id: messageId,
+      agentId: widget.agentId,
+      type: MessageType.system,
+      content: (data['title'] ?? '任务').toString(),
+      sender: MessageSender.system,
+      status: MessageStatus.sent,
+      timestamp: DateTime.now(),
+      metadata: metadata,
+    );
+    setState(() {
+      _messages.add(message);
+    });
+    ChatHistoryStore.save(widget.agentId, _messages);
+    _scrollToBottom();
+  }
+
+  /// 更多菜单入口：把输入框里的目标交给同进程 Mika 真实执行。
+  Future<void> _startMikaTaskFromInput() async {
+    final goal = _textController.text.trim();
+    if (goal.isEmpty) {
+      ToastUtil.show('先在输入框写下任务目标，再让 Mika 执行');
+      return;
+    }
+    if (_mikaTaskRunning) {
+      ToastUtil.show('上一个任务还在执行，请等它结束');
+      return;
+    }
+    _mikaTaskRunning = true;
+    _textController.clear();
+    ToastUtil.show('已交给 Mika 执行：$goal');
+    logger.info('提交 Mika 任务 goal=$goal');
+    try {
+      await MikaBridge.runTask(goal);
+    } catch (e) {
+      if (!mounted) return;
+      logger.warning('Mika 任务启动失败: $e');
+      _appendOrCreateChatMessage(MessageSender.system, '任务启动失败：$e');
+    } finally {
+      _mikaTaskRunning = false;
+    }
+  }
+
   /// 取消录音
   void _onRecordCancel() {
     ToastUtil.show('已取消录音');
@@ -936,6 +1093,9 @@ class _ChatPageState extends ConsumerState<ChatPage> {
       if (!_showVoiceButton) setState(() => _showVoiceButton = true);
       _voiceRecordController.toggleContinuousListen();
     });
+
+    items.add(const WxActionSheetItem(label: '让 Mika 执行任务'));
+    actions.add(_startMikaTaskFromInput);
 
     if (_showVoiceButton) {
       items.add(const WxActionSheetItem(label: '切换到键盘'));

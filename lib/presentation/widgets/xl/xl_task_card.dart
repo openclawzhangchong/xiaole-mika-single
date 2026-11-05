@@ -267,6 +267,10 @@ class XlTaskCard extends StatelessWidget {
         if (model.stepTotal > 0) {
           return '第 ${model.stepIndex} / ${model.stepTotal} 步 · 已用 $secs 秒';
         }
+        // 引擎只报当前第几步、不报总步数时，如实显示"第 N 步"，不补假分母
+        if (model.stepIndex > 0) {
+          return '第 ${model.stepIndex} 步 · 已用 $secs 秒';
+        }
         return '已用 $secs 秒';
       case XlTaskStatus.done:
         return model.timeLabel == null

@@ -37,15 +37,17 @@ class MikaBridge(private val context: Context, private val channel: MethodChanne
                     reply { result.success("""{"task_id":"$id","status":"refused","message":${quote(outcome.message)}}""") }
                     return@execute
                 }
-                var last = ""
+                var lastJson = ""
                 val started = System.currentTimeMillis()
                 val deadline = started + 180_000
                 while (System.currentTimeMillis() < deadline) {
                     val task = hub.get(id)
                     val status = RemoteStatus.of(task?.state)
-                    if (status != last) {
-                        last = status
-                        emit("taskState", """{"task_id":"$id","status":"$status"}""")
+                    val json = task?.let { RemoteStatus.describe(it).toString() }
+                        ?: """{"task_id":"$id","status":"$status"}"""
+                    if (json != lastJson) {
+                        lastJson = json
+                        emit("taskState", json)
                     }
                     if (RemoteStatus.finished(status)) break
                     if (task == null && System.currentTimeMillis() - started > LOST_MS) break
