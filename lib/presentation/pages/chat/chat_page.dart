@@ -953,6 +953,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     final reason = (event['reason'] ?? '').toString();
 
     final data = <String, dynamic>{
+      'task_id': taskId,
       'title': goal.isEmpty ? '手机任务' : goal,
       'status': status.name,
       'icon': 'list',
@@ -998,30 +999,42 @@ class _ChatPageState extends ConsumerState<ChatPage> {
   }
 
   /// 同一 task_id 只占一条消息，状态原地刷新（不刷屏、不重复落库）。
+  /// 先按消息里记录的 task_id 找，再按内存映射，最后按确定性 id，
+  /// 保证页面重建、历史回填、重复事件都不会刷出第二条卡。
   void _upsertMikaTaskCard(String taskId, Map<String, dynamic> data) {
     final metadata = <String, dynamic>{'card': 'task', 'data': data};
     logger.info('任务卡 metadata=${jsonEncode(metadata)}');
-    final existingId = _mikaTaskMessageIds[taskId];
-    if (existingId != null) {
-      final idx = _messages.indexWhere((m) => m.id == existingId);
-      if (idx >= 0) {
-        final old = _messages[idx];
-        setState(() {
-          _messages[idx] = MessageModel(
-            id: old.id,
-            agentId: old.agentId,
-            type: MessageType.system,
-            content: old.content,
-            sender: MessageSender.system,
-            status: MessageStatus.sent,
-            timestamp: DateTime.now(),
-            metadata: metadata,
-          );
+
+    int indexOfTaskCard() => _messages.indexWhere((m) {
+          if (m.metadata == null || m.metadata!['card'] != 'task') return false;
+          final raw = m.metadata!['data'];
+          return raw is Map && raw['task_id']?.toString() == taskId;
         });
-        ChatHistoryStore.save(widget.agentId, _messages);
-        _scrollToBottom();
-        return;
-      }
+
+    var idx = indexOfTaskCard();
+    if (idx < 0) {
+      final mappedId = _mikaTaskMessageIds[taskId] ?? 'task_$taskId';
+      idx = _messages.indexWhere((m) => m.id == mappedId);
+    }
+
+    if (idx >= 0) {
+      _mikaTaskMessageIds[taskId] = _messages[idx].id;
+      final old = _messages[idx];
+      setState(() {
+        _messages[idx] = MessageModel(
+          id: old.id,
+          agentId: old.agentId,
+          type: MessageType.system,
+          content: old.content,
+          sender: MessageSender.system,
+          status: MessageStatus.sent,
+          timestamp: DateTime.now(),
+          metadata: metadata,
+        );
+      });
+      ChatHistoryStore.save(widget.agentId, _messages);
+      _scrollToBottom();
+      return;
     }
 
     final messageId = 'task_$taskId';

@@ -4,7 +4,7 @@ name: Build Xiaole Single APK
 # 1. 检出本仓库
 # 2. scripts/fetch-mika.sh 把 Mika 固定到 6661b9e9 并打 patches/mika-embed.patch
 # 3. android/settings.gradle.kts 以 include(":mika-core")/include(":mika-app") 并入
-# 4. 一次跑出两个包:universal(arm64+armv7) 与 arm64(主分发);两者 versionCode 同为 73
+# 4. 一次跑出两个包:universal(arm64+armv7) 与 arm64(主分发);两者 versionCode 同为 74
 on:
   workflow_dispatch:
   push:
