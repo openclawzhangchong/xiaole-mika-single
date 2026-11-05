@@ -34,6 +34,11 @@ abstract final class XlColor {
 
   // brand
   static const brand = Color(0xFF07C160); // 仅状态点 / 开关 / 进度 / 波形
+  // preview-01 实测：默认智能体头像 = 深底 + 绿色波形
+  static const brandAvatarBg = Color(0xFF1E1E1E);
+  static const brandBarOuter = Color(0xFFD5D5D5);
+  static const brandBarInner = Color(0xFFE8E8E8);
+  static const badgeRed = Color(0xFFD93636); // 未读红点（preview-01 实测，深浅一致）
   static const brandDeep = Color(0xFF0B7F40); // 实心按钮 / Tab 选中 / 白字
   static const mint = Color(0xFF8CF0AE); // 录音浮层 / 通话波形（ui.css）
   static const brandSoft = Color(0xFFEAF8EF);
@@ -82,6 +87,7 @@ abstract final class XlColor {
 
 abstract final class XlColorDark {
   static const canvas = Color(0xFF111111);
+  static const nav = Color(0xFF1A1A1A); // preview-09 实测：导航/状态栏比画布浅一档
   static const surface = Color(0xFF1C1C1E);
   static const subtle = Color(0xFF242426);
   static const pressed = Color(0xFF2E2E30);
@@ -617,6 +623,9 @@ abstract final class XlDims {
 
   // conversation list
   static const listAvatar = 48.0;
+  // 品牌头像内 5 根竖条：preview-01 实测 4pt 宽 / 2.5pt 间距（48pt 基准）
+  static const brandBarW = 4.0;
+  static const brandBarGap = 2.5;
   static const listDividerInset = 76.0;
   static const badgeSize = 18.0;
 
@@ -634,6 +643,13 @@ abstract final class XlDims {
   static const waveBarGap = 2.0;
   static const waveBarMaxH = 18.0;
   static const voiceWaveBarMaxH = 34.0; // 录音浮层波形满槽高（ui.css 34 优先）
+  static const voiceWaveBarCount = 9; // preview-03 实测 9 根（tokens 原 11 有误，已回写）
+  static const voiceWaveBarW = 3.0;
+  static const voiceWaveGap = 3.0;
+  // preview-03 逐根实测高度 16/24/32/20/26/34/22/13/24pt，归一化到满槽 34
+  static const voiceWaveProfile = <double>[
+    0.47, 0.71, 0.94, 0.59, 0.76, 1.00, 0.65, 0.38, 0.71,
+  ];
   static const waveOpacity = 0.55;
   static const taskCardWidth = 268.0;
   static const taskCardPadding = 12.0;
@@ -712,7 +728,7 @@ abstract final class XlMotion {
   static const pageCurve = Cubic(0.32, 0.72, 0, 1);
   static const spring = Cubic(0.34, 1.56, 0.64, 1);
 
-  static const waveBarCount = 11; // §15 I5
+  static const waveBarCount = 9; // §15 I5（preview-03 实测 9 根）
   static const callWaveBarCount = 30;
   static const waveSampleMs = 50;
   static const waveAttackMs = 90;

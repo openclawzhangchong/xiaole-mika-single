@@ -8,6 +8,7 @@ import '../../../app/themes/xl_tokens.dart';
 import '../../../core/providers/agent_provider.dart';
 import '../../../data/models/agent_model.dart';
 import '../../widgets/agent_avatar.dart';
+import '../../services/unread_store.dart';
 import '../../widgets/wx_action_sheet.dart';
 import '../../widgets/wx_dialog.dart';
 import '../../widgets/wx_empty.dart';
@@ -237,13 +238,59 @@ class _ConversationRow extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: XlDims.s),
-                Text(
-                  timeStr,
-                  style: XlType.meta.copyWith(color: p.textQuaternary),
+                ValueListenableBuilder<int>(
+                  valueListenable: UnreadStore.revision,
+                  builder: (context, _, __) {
+                    final unread = UnreadStore.of(agent.id);
+                    return Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          timeStr,
+                          style: XlType.meta.copyWith(color: p.textQuaternary),
+                        ),
+                        if (unread > 0) ...[
+                          const SizedBox(height: 4),
+                          _UnreadBadge(count: unread, color: XlColor.badgeRed),
+                        ],
+                      ],
+                    );
+                  },
                 ),
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// 未读红点（preview-01 实测：18pt 圆、#D93636 底、白字 11/600）
+class _UnreadBadge extends StatelessWidget {
+  const _UnreadBadge({required this.count, required this.color});
+
+  final int count;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: XlDims.badgeSize,
+      height: XlDims.badgeSize,
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(XlDims.badgeSize / 2),
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        count > 99 ? '99+' : '$count',
+        style: const TextStyle(
+          fontSize: 11,
+          height: 1,
+          fontWeight: FontWeight.w600,
+          color: Colors.white,
         ),
       ),
     );

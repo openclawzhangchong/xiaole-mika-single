@@ -73,7 +73,8 @@ class AppTheme {
         elevation: 0,
         scrolledUnderElevation: 0,
         toolbarHeight: XlDims.navHeight,
-        backgroundColor: p.canvas,
+        // preview-09 实测深色导航 #1A1A1A（比画布 #111111 浅一档）
+        backgroundColor: dark ? XlColorDark.nav : p.canvas,
         surfaceTintColor: Colors.transparent,
         foregroundColor: p.textPrimary,
         iconTheme: IconThemeData(color: p.textPrimary, size: 24),
