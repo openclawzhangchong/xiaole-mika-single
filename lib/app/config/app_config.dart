@@ -4,7 +4,7 @@ class AppConfig {
 
   // 应用信息
   static const String appName = '小乐'; // v4.0.0：品牌统一（默认智能体名前缀等）
-  static const String appVersion = '6.11.16'; // v6.11.16：修复 xiaole/log 通道 ClassCastException（Dart 传字符串、Kotlin 按 Map 取值），release 关键日志恢复可直读；v6.11.15：日志固定 tag XiaoLe + 首次按住说话申请麦克风权限。详见 CHANGELOG.md
+  static const String appVersion = '6.11.16-ui1'; // v6.11.16-ui1：按已确认 UI 设计稿落地 9 屏视觉（令牌化/深浅色/任务卡/录音浮层/通话页），通信层未改；基于 master 6.11.16
 
   /// v4.4.0 尾音保护：AI 播放结束后丢弃麦克风音频的时长（毫秒）
   static const int defaultTailGuardMs = 300;

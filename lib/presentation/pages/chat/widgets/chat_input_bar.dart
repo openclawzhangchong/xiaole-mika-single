@@ -1,35 +1,43 @@
 import 'package:flutter/material.dart';
-import '../../../../app/themes/app_colors.dart';
-import '../../../../app/themes/app_text_styles.dart';
 
-/// 聊天输入栏组件（微信风格，对齐原型 v6）
+import '../../../../app/themes/xl_tokens.dart';
+
+/// 聊天输入栏（DESIGN §8.3）
+/// 高 50 + 安全区 / #F7F7F7 / 顶部 1px 分隔；
+/// 左语音 32 · 输入框 36 白底 4pt · 内嵌表情 · 右发送 56×32 或「更多 +」32
 class ChatInputBar extends StatefulWidget {
-  final TextEditingController textController;
-  final VoidCallback onSendText;
-  final VoidCallback onStartVoice;
-  final VoidCallback onStartCall;
-  final VoidCallback? onTakePhoto; // v3.1.0：视觉识物（拍照问 AI）
-
   const ChatInputBar({
     super.key,
     required this.textController,
     required this.onSendText,
     required this.onStartVoice,
-    required this.onStartCall,
-    this.onTakePhoto,
+    required this.onMore,
+    this.autoFocus = false,
   });
+
+  final TextEditingController textController;
+  final VoidCallback onSendText;
+  final VoidCallback onStartVoice;
+  final VoidCallback onMore;
+  final bool autoFocus;
 
   @override
   State<ChatInputBar> createState() => _ChatInputBarState();
 }
 
 class _ChatInputBarState extends State<ChatInputBar> {
+  static const List<String> _emojis = <String>[
+    '🙂', '😄', '😂', '🥰', '😎', '🤔', '😴', '😭',
+    '👍', '👏', '🙏', '💪', '🎉', '❤️', '🔥', '✨',
+    '🌿', '☀️', '🌙', '📱', '✅', '⚡', '🎵', '🍀',
+  ];
+
+  final FocusNode _focusNode = FocusNode();
   bool _hasText = false;
 
   @override
   void initState() {
     super.initState();
-    // 同步初始文字状态（防御：controller 带文字进入时发送胶囊立即可见）
     _hasText = widget.textController.text.trim().isNotEmpty;
     widget.textController.addListener(_onTextChanged);
   }
@@ -37,153 +45,248 @@ class _ChatInputBarState extends State<ChatInputBar> {
   @override
   void dispose() {
     widget.textController.removeListener(_onTextChanged);
+    _focusNode.dispose();
     super.dispose();
   }
 
   void _onTextChanged() {
     final hasText = widget.textController.text.trim().isNotEmpty;
     if (hasText != _hasText) {
-      setState(() {
-        _hasText = hasText;
-      });
+      setState(() => _hasText = hasText);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    // 侧边图标统一约束：40x36 视觉盒，让图标中心与输入框单行中心对齐
-    // （解决"高低不齐"：此前 IconButton 默认 48x48，底部对齐时图标中心偏高）
-    const sideConstraints = BoxConstraints(minWidth: 40, minHeight: 36);
-    const sidePadding = EdgeInsets.zero;
-
+    final p = XlPalette.of(context);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.surfaceDark : AppColors.surface,
-        border: Border(
-          top: BorderSide(
-            color: isDark ? AppColors.dividerDark : AppColors.divider,
-            width: 0.5,
+        color: p.subtle,
+        border: Border(top: BorderSide(color: p.hairline, width: 0.5)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 7),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              _BarIcon(
+                icon: Icons.mic_none_rounded,
+                color: p.textPrimary,
+                tooltip: '按住说话',
+                onTap: widget.onStartVoice,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Container(
+                  constraints: const BoxConstraints(
+                    minHeight: XlDims.composerField,
+                    maxHeight: 120,
+                  ),
+                  decoration: BoxDecoration(
+                    color: p.surface,
+                    borderRadius: BorderRadius.circular(XlDims.rField),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: widget.textController,
+                          focusNode: _focusNode,
+                          autofocus: widget.autoFocus,
+                          style: XlType.body.copyWith(color: p.textPrimary),
+                          cursorColor: p.brandDeep,
+                          cursorWidth: 2,
+                          maxLines: null,
+                          textInputAction: TextInputAction.send,
+                          onSubmitted: (_) {
+                            if (_hasText) widget.onSendText();
+                          },
+                          decoration: InputDecoration(
+                            hintText: '输入消息',
+                            hintStyle:
+                                XlType.body.copyWith(color: p.placeholder),
+                            border: InputBorder.none,
+                            enabledBorder: InputBorder.none,
+                            focusedBorder: InputBorder.none,
+                            isDense: true,
+                            contentPadding: const EdgeInsets.fromLTRB(
+                              12,
+                              9,
+                              4,
+                              9,
+                            ),
+                            filled: false,
+                          ),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(right: 4, bottom: 2),
+                        child: _EmojiButton(
+                          color: p.textSecondary,
+                          onTap: _showEmojiSheet,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              AnimatedSwitcher(
+                duration: XlMotion.fast,
+                switchInCurve: XlMotion.standard,
+                switchOutCurve: XlMotion.standard,
+                transitionBuilder: (child, animation) => FadeTransition(
+                  opacity: animation,
+                  child: ScaleTransition(
+                    scale: Tween<double>(begin: 0.92, end: 1).animate(animation),
+                    child: child,
+                  ),
+                ),
+                child: _hasText
+                    ? _SendButton(
+                        key: const ValueKey<String>('send'),
+                        palette: p,
+                        onTap: widget.onSendText,
+                      )
+                    : _BarIcon(
+                        key: const ValueKey<String>('more'),
+                        icon: Icons.add_circle_outline_rounded,
+                        color: p.textPrimary,
+                        tooltip: '更多',
+                        onTap: widget.onMore,
+                      ),
+              ),
+            ],
           ),
         ),
       ),
-      child: SafeArea(
-        child: Row(
-          // 多行输入时底部对齐、输入框向上撑开（微信行为）；单行时各组件
-          // 因高度统一（36）视觉上即居中
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            // v3.1.0：📷 视觉识物（拍照问 AI；未获取 vision 接口时回调内自行提示）
-            if (widget.onTakePhoto != null) ...[
-              IconButton(
-                icon: const Icon(Icons.photo_camera_outlined),
-                onPressed: widget.onTakePhoto,
-                tooltip: '拍照识物',
-                color: isDark
-                    ? AppColors.textPrimaryDark
-                    : AppColors.textPrimary,
-                padding: sidePadding,
-                constraints: sideConstraints,
-              ),
-              const SizedBox(width: 4),
-            ],
+    );
+  }
 
-            // 语音按钮（切换到按住说话）
-            IconButton(
-              icon: const Icon(Icons.mic_none_outlined),
-              onPressed: widget.onStartVoice,
-              tooltip: '按住说话',
-              color: isDark
-                  ? AppColors.textPrimaryDark
-                  : AppColors.textPrimary,
-              padding: sidePadding,
-              constraints: sideConstraints,
-            ),
-
-            const SizedBox(width: 10),
-
-            // 输入框（微信：白底圆角矩形 5px）
-            Expanded(
-              child: Container(
-                constraints: const BoxConstraints(minHeight: 36, maxHeight: 120),
-                decoration: BoxDecoration(
-                  color: isDark
-                      ? AppColors.inputBackgroundDark
-                      : AppColors.inputBackground,
-                  borderRadius: BorderRadius.circular(5),
-                ),
-                child: TextField(
-                  controller: widget.textController,
-                  style: AppTextStyles.body.copyWith(
-                    color: isDark
-                        ? AppColors.textPrimaryDark
-                        : AppColors.textPrimary,
-                  ),
-                  decoration: InputDecoration(
-                    hintText: '输入消息',
-                    hintStyle: TextStyle(
-                      color: isDark
-                          ? AppColors.textSecondaryDark
-                          : AppColors.textSecondary,
-                    ),
-                    border: InputBorder.none,
-                    isDense: true,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
+  Future<void> _showEmojiSheet() async {
+    final p = XlPalette.of(context);
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: p.canvas,
+      builder: (ctx) => SafeArea(
+        top: false,
+        child: SizedBox(
+          height: 260,
+          child: GridView.count(
+            crossAxisCount: 8,
+            padding: const EdgeInsets.all(12),
+            mainAxisSpacing: 4,
+            crossAxisSpacing: 4,
+            children: _emojis
+                .map(
+                  (e) => InkWell(
+                    onTap: () {
+                      _insertEmoji(e);
+                      Navigator.of(ctx).pop();
+                    },
+                    child: Center(
+                      child: Text(e, style: const TextStyle(fontSize: 24)),
                     ),
                   ),
-                  maxLines: null,
-                  textInputAction: TextInputAction.send,
-                  onSubmitted: (_) {
-                    if (_hasText) {
-                      widget.onSendText();
-                    }
-                  },
-                ),
-              ),
-            ),
-
-            const SizedBox(width: 10),
-
-            // 右侧互斥切换（微信原版行为，v6.11.2）：
-            // 有文字 → 只显示绿色发送胶囊（电话按钮隐藏，解决拥挤）；
-            // 清空   → 恢复电话按钮
-            if (_hasText)
-              GestureDetector(
-                onTap: widget.onSendText,
-                child: Container(
-                  // 高度 36 与输入框单行高度一致，底部对齐即居中
-                  height: 36,
-                  padding: const EdgeInsets.symmetric(horizontal: 14),
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: AppColors.primary,
-                    borderRadius: BorderRadius.circular(5),
-                  ),
-                  child: Text(
-                    '发送',
-                    style: AppTextStyles.body.copyWith(
-                      fontWeight: FontWeight.w500,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              )
-            else
-              IconButton(
-                icon: const Icon(Icons.call_outlined),
-                onPressed: widget.onStartCall,
-                tooltip: '语音通话',
-                color: isDark
-                    ? AppColors.textPrimaryDark
-                    : AppColors.textPrimary,
-                padding: sidePadding,
-                constraints: sideConstraints,
-              ),
-          ],
+                )
+                .toList(),
+          ),
         ),
+      ),
+    );
+    _focusNode.requestFocus();
+  }
+
+  void _insertEmoji(String emoji) {
+    final value = widget.textController.value;
+    final selection = value.selection;
+    final offset = selection.isValid ? selection.start : value.text.length;
+    final newText = value.text.replaceRange(offset, offset, emoji);
+    widget.textController.value = value.copyWith(
+      text: newText,
+      selection: TextSelection.collapsed(offset: offset + emoji.length),
+      composing: TextRange.empty,
+    );
+  }
+}
+
+class _SendButton extends StatelessWidget {
+  const _SendButton({super.key, required this.palette, required this.onTap});
+
+  final XlPalette palette;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Container(
+        width: XlDims.sendW,
+        height: XlDims.sendH,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: palette.brandDeep,
+          borderRadius: BorderRadius.circular(XlDims.rField),
+        ),
+        child: Text(
+          '发送',
+          style: XlType.sendButton.copyWith(color: Colors.white),
+        ),
+      ),
+    );
+  }
+}
+
+class _BarIcon extends StatelessWidget {
+  const _BarIcon({
+    super.key,
+    required this.icon,
+    required this.color,
+    required this.onTap,
+    this.tooltip,
+  });
+
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
+  final String? tooltip;
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: tooltip ?? '',
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: SizedBox(
+          width: XlDims.composerIcon,
+          height: XlDims.composerIcon,
+          child: Icon(icon, size: 24, color: color),
+        ),
+      ),
+    );
+  }
+}
+
+class _EmojiButton extends StatelessWidget {
+  const _EmojiButton({required this.color, required this.onTap});
+
+  final Color color;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: SizedBox(
+        width: 28,
+        height: 32,
+        child: Icon(Icons.emoji_emotions_outlined, size: 20, color: color),
       ),
     );
   }

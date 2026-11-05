@@ -34,10 +34,12 @@ import '../../../data/models/message_model.dart';
 import '../../../app/routes/app_routes.dart';
 import '../../../app/themes/app_colors.dart';
 import '../../../app/themes/app_text_styles.dart';
+import '../../../app/themes/xl_tokens.dart';
 import '../../../core/utils/toast_util.dart';
 import '../../widgets/agent_avatar.dart';
 import '../../services/agent_identity_store.dart';
 import '../../services/app_feats.dart';
+import '../../widgets/xl/xl_voice_overlay.dart';
 import '../incoming_call_page.dart';
 import '../../services/chat_history_store.dart';
 import 'widgets/message_list.dart';
@@ -65,6 +67,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
   final ScrollController _scrollController = ScrollController();
   final List<MessageModel> _messages = [];
   bool _showVoiceButton = false;
+  final VoiceRecordController _voiceRecordController = VoiceRecordController();
   AgentModel? _currentAgent;
 
   // WebSocket 相关
@@ -387,39 +390,16 @@ class _ChatPageState extends ConsumerState<ChatPage> {
       appBar: _showVoiceCallOverlay
           ? null
           : AppBar(
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(_agentName),
-            const SizedBox(width: 6),
-            Container(
-              width: 6,
-              height: 6,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: _isConnected
-                    ? AppColors.success
-                    : (_isAutoReconnecting
-                        ? AppColors.warning
-                        : AppColors.textSecondary),
-              ),
+              title: Text(_agentName),
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.more_horiz_rounded, size: 24),
+                  onPressed: _showMoreOptions,
+                  tooltip: '更多',
+                ),
+                const SizedBox(width: 4),
+              ],
             ),
-            const SizedBox(width: 4),
-            Text(
-              _isConnected
-                  ? '已连接'
-                  : (_isAutoReconnecting ? '重连中' : '未连接'),
-              style: AppTextStyles.caption,
-            ),
-          ],
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.more_horiz),
-            onPressed: _showMoreOptions,
-          ),
-        ],
-      ),
       body: Stack(
         children: [
           Column(
@@ -459,8 +439,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                       _showVoiceButton = true;
                     });
                   },
-                  onStartCall: _startVoiceCall,
-                  onTakePhoto: AppFeats.vision ? _takePhotoAndAsk : null,
+                  onMore: _showMoreOptions,
                 ),
             ],
           ),
@@ -563,47 +542,65 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     await _initializeWebSocket();
   }
 
-  /// 语音输入区域
+  /// 语音输入区域（DESIGN §8.3：高 50 / 键盘 32 / 按住说话 36 / 更多 + 32）
   Widget _buildVoiceInputArea() {
+    final p = XlPalette.of(context);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
       decoration: BoxDecoration(
-        color: Theme.of(context).scaffoldBackgroundColor,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 4,
-            offset: const Offset(0, -2),
-          ),
-        ],
+        color: p.subtle,
+        border: Border(top: BorderSide(color: p.hairline, width: 0.5)),
       ),
       child: SafeArea(
-        child: Row(
-          children: [
-            // 切换回文本输入按钮
-            IconButton(
-              icon: const Icon(Icons.keyboard),
-              onPressed: () {
-                setState(() {
-                  _showVoiceButton = false;
-                });
-              },
-              tooltip: '切换到文本输入',
-            ),
-
-            // 按住说话按钮
-            Expanded(
-              child: VoiceRecordButton(
-                onRecordStart: _handleAudioStart,
-                onAudioSend: _handleAudioSend,
-                onRecordEnd: _handleAudioStop,
-                onRecordCancel: _onRecordCancel,
-                onContinuousListenStart: _handleContinuousListenStart,
-                onContinuousListenStop: _handleContinuousListenStop,
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 7),
+          child: Row(
+            children: [
+              GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () {
+                  setState(() {
+                    _showVoiceButton = false;
+                  });
+                },
+                child: SizedBox(
+                  width: XlDims.composerIcon,
+                  height: XlDims.composerIcon,
+                  child: Icon(
+                    Icons.keyboard_alt_outlined,
+                    size: 24,
+                    color: p.textPrimary,
+                  ),
+                ),
               ),
-            ),
-
-          ],
+              const SizedBox(width: 8),
+              Expanded(
+                child: VoiceRecordButton(
+                  controller: _voiceRecordController,
+                  onRecordStart: _handleAudioStart,
+                  onAudioSend: _handleAudioSend,
+                  onRecordEnd: _handleAudioStop,
+                  onRecordCancel: _onRecordCancel,
+                  onContinuousListenStart: _handleContinuousListenStart,
+                  onContinuousListenStop: _handleContinuousListenStop,
+                ),
+              ),
+              const SizedBox(width: 8),
+              GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: _showMoreOptions,
+                child: SizedBox(
+                  width: XlDims.composerIcon,
+                  height: XlDims.composerIcon,
+                  child: Icon(
+                    Icons.add_circle_outline_rounded,
+                    size: 24,
+                    color: p.textPrimary,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -919,37 +916,55 @@ class _ChatPageState extends ConsumerState<ChatPage> {
   }
 
   /// 显示更多选项（微信 ActionSheet 风格）
+  /// 说明：为匹配 DESIGN §8.3 输入栏（左语音 / 中输入 / 右发送或更多），
+  /// 通话与拍照入口从常驻图标移入本菜单，功能不丢、操作路径多一步。
   void _showMoreOptions() {
-    showWxActionSheet(
-      context,
-      items: const [
-        WxActionSheetItem(label: '清空聊天记录', danger: true),
-        WxActionSheetItem(label: '智能体设置'),
-      ],
-      cancelText: '取消',
-    ).then((index) async {
-      if (index == null) return;
-      if (index == 0) {
-        _clearMessages();
-        return;
-      }
-      if (index == 1) {
-        // v4.3.1：接线智能体设置（与会话列表页长按编辑同款）
-        await context.push(
-            '${AppRoutes.agentConfig}?agentId=${widget.agentId}');
-        // 返回后刷新标题（配置页改名经 agentListProvider 已更新）
-        if (!context.mounted) return;
-        final agents = ref.read(agentListProvider).value ?? [];
-        for (final a in agents) {
-          if (a.id == widget.agentId) {
-            if (a.name != _agentName) {
-              setState(() => _agentName = a.name);
-            }
-            break;
-          }
-        }
-      }
+    final items = <WxActionSheetItem>[];
+    final actions = <VoidCallback>[];
+
+    items.add(const WxActionSheetItem(label: '语音通话'));
+    actions.add(_startVoiceCall);
+
+    if (AppFeats.vision) {
+      items.add(const WxActionSheetItem(label: '拍照识物'));
+      actions.add(_takePhotoAndAsk);
+    }
+
+    final listening = _voiceRecordController.isContinuousListening;
+    items.add(WxActionSheetItem(label: listening ? '停止持续监听' : '持续监听'));
+    actions.add(() {
+      if (!_showVoiceButton) setState(() => _showVoiceButton = true);
+      _voiceRecordController.toggleContinuousListen();
     });
+
+    if (_showVoiceButton) {
+      items.add(const WxActionSheetItem(label: '切换到键盘'));
+      actions.add(() => setState(() => _showVoiceButton = false));
+    }
+
+    items.add(const WxActionSheetItem(label: '清空聊天记录', danger: true));
+    actions.add(_clearMessages);
+    items.add(const WxActionSheetItem(label: '智能体设置'));
+    actions.add(_openAgentSettings);
+
+    showWxActionSheet(context, items: items, cancelText: '取消').then((index) {
+      if (index == null || index >= actions.length) return;
+      actions[index]();
+    });
+  }
+
+  Future<void> _openAgentSettings() async {
+    await context.push('${AppRoutes.agentConfig}?agentId=${widget.agentId}');
+    if (!context.mounted) return;
+    final agents = ref.read(agentListProvider).value ?? [];
+    for (final a in agents) {
+      if (a.id == widget.agentId) {
+        if (a.name != _agentName) {
+          setState(() => _agentName = a.name);
+        }
+        break;
+      }
+    }
   }
 
   /// 清空消息
@@ -2688,7 +2703,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     _bargeinSub?.cancel();
     _bargeinSub = null;
     _handleContinuousListenStart();
-    if (mounted) setState(() => _callStatus = '已连接');
+    if (mounted) setState(() => _callStatus = '正在听你说');
   }
 
   void _updateVoiceCallDuration() {
@@ -2777,8 +2792,9 @@ class _ChatPageState extends ConsumerState<ChatPage> {
   }
 
   Widget _buildVoiceCallBanner() {
+    final p = XlPalette.of(context);
     return Material(
-      color: AppColors.primary,
+      color: p.brandDeep,
       child: InkWell(
         onTap: _expandVoiceCallOverlay,
         child: Padding(
@@ -2789,8 +2805,10 @@ class _ChatPageState extends ConsumerState<ChatPage> {
               const SizedBox(width: 8),
               const Text('通话中', style: TextStyle(color: Colors.white)),
               const SizedBox(width: 8),
-              Text(_voiceCallDuration,
-                  style: const TextStyle(color: Colors.white)),
+              Text(
+                _voiceCallDuration,
+                style: XlType.meta.copyWith(color: Colors.white),
+              ),
               const Spacer(),
               const Icon(Icons.keyboard_arrow_up, color: Colors.white),
             ],
@@ -2800,104 +2818,184 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     );
   }
 
-  /// 语音通话全屏覆盖层（对齐原型 v6）
+  /// 语音通话全屏覆盖层（DESIGN §10）
+  /// 径向渐变 / 头像 96-24 / 脉冲圈 128·152 / 波形 30 根 / 控制 64·72·64
   Widget _buildVoiceCallOverlay() {
     return Material(
       color: Colors.black,
       child: Container(
         decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
+          gradient: RadialGradient(
+            center: Alignment(0, -0.24),
+            radius: 1.2,
             colors: [
-              AppColors.callBgTop,
-              AppColors.callBgMid,
-              AppColors.callBgBottom,
+              XlColor.callBgTop,
+              XlColor.callBgMid,
+              XlColor.callBgBottom,
             ],
+            stops: [0, 0.45, 1],
           ),
         ),
         child: SafeArea(
           child: Column(
             children: [
-              Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                child: Row(
+              SizedBox(
+                height: XlDims.navHeight,
+                child: Stack(
+                  alignment: Alignment.center,
                   children: [
-                    IconButton(
-                      icon: const Icon(Icons.keyboard_arrow_down,
-                          color: Colors.white),
-                      // v6.0.0：收起通话全屏层（同时恢复系统 UI，避免沉浸式残留）
-                      onPressed: _collapseVoiceCallOverlay,
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: IconButton(
+                        icon: const Icon(
+                          Icons.keyboard_arrow_down,
+                          color: Colors.white,
+                          size: 24,
+                        ),
+                        onPressed: _collapseVoiceCallOverlay,
+                        tooltip: '收起',
+                      ),
                     ),
-                    const Spacer(),
-                    IconButton(
-                      icon: const Icon(Icons.more_horiz, color: Colors.white),
-                      onPressed: () => ToastUtil.show('更多选项'),
+                    Text(
+                      '语音通话',
+                      style: XlType.navTitle.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: IconButton(
+                        icon: const Icon(
+                          Icons.more_horiz,
+                          color: Colors.white,
+                          size: 24,
+                        ),
+                        onPressed: () => ToastUtil.show('更多选项'),
+                        tooltip: '更多',
+                      ),
                     ),
                   ],
                 ),
               ),
-              const Spacer(),
-              AgentAvatar(
-                agentId: widget.agentId,
-                name: _agentName,
-                size: 96,
-                radius: 48,
-                showOnlineDot: true,
-                online: true,
+              const SizedBox(height: XlDims.callTopTitleGap),
+              Text(
+                'AI 语音 · 任务可随时打断',
+                style: XlType.meta.copyWith(color: XlColor.callTextDim),
               ),
-              const SizedBox(height: 16),
+              const Spacer(flex: 2),
+              Stack(
+                alignment: Alignment.center,
+                children: [
+                  const _CallPulseRings(),
+                  AgentAvatar(
+                    agentId: widget.agentId,
+                    name: _agentName,
+                    size: XlDims.callAvatar,
+                    radius: XlDims.avatarCall,
+                    showOnlineDot: false,
+                  ),
+                ],
+              ),
+              const SizedBox(height: XlDims.xl),
               Text(
                 _agentName,
-                style: AppTextStyles.title20.copyWith(
-                  fontWeight: FontWeight.w500,
-                  color: Colors.white,
-                ),
+                style: XlType.callName.copyWith(color: Colors.white),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: XlDims.s),
               Text(
                 _callStatus,
-                style: AppTextStyles.subtitle.copyWith(color: Colors.white70),
+                style: XlType.callStatus.copyWith(
+                  color: XlColor.callTextDim,
+                ),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: XlDims.xs),
               Text(
                 _voiceCallDuration,
-                style: AppTextStyles.body.copyWith(color: Colors.white),
+                style: XlType.callTimer.copyWith(color: Colors.white),
               ),
-              const Spacer(),
+              const SizedBox(height: XlDims.xl),
+              XlVoiceWave(
+                amplitudeStream: AudioUtil.amplitudeStream,
+                active: _isConnected && !_micMuted,
+                width: XlDims.callWaveW,
+                height: XlDims.callWaveH,
+                maxBarHeight: XlDims.callWaveMaxH,
+                barCount: XlMotion.callWaveBarCount,
+                color: Colors.white.withOpacity(0.72),
+                highlightColor: XlColor.brand,
+                highlightBars: XlDims.callHighlightBars,
+              ),
+              const SizedBox(height: XlDims.l),
+              Container(
+                width: XlDims.callHintW,
+                height: XlDims.callHintH,
+                padding: const EdgeInsets.symmetric(horizontal: XlDims.m),
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: XlColor.callHintBg,
+                  borderRadius: BorderRadius.circular(XlDims.rL),
+                ),
+                child: Text(
+                  '语音通话中，请直接说话',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: XlType.meta.copyWith(
+                    color: XlColor.callTextDim,
+                  ),
+                ),
+              ),
+              const Spacer(flex: 3),
               Padding(
-                padding: const EdgeInsets.only(bottom: 48),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                padding: const EdgeInsets.only(bottom: XlDims.callHintBottom),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    _voiceCallCircleButton(
-                      icon: _micMuted ? Icons.mic_off : Icons.mic,
-                      label: _micMuted ? '已静音' : '麦克风',
-                      circleColor:
-                          _micMuted ? const Color(0xFF555555) : Colors.white,
-                      iconColor:
-                          _micMuted ? Colors.white : const Color(0xFF1A1A1A),
-                      onTap: _toggleMic,
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        _voiceCallCircleButton(
+                          icon: _micMuted ? Icons.mic_off : Icons.mic,
+                          label: _micMuted ? '已静音' : '静音',
+                          circleColor: _micMuted
+                              ? XlColor.callControlMuted
+                              : XlColor.callControl,
+                          iconColor: _micMuted
+                              ? Colors.white
+                              : XlColor.callControlIcon,
+                          onTap: _toggleMic,
+                        ),
+                        const SizedBox(width: XlDims.callControlsGap),
+                        _voiceCallCircleButton(
+                          icon: Icons.call_end,
+                          label: '挂断',
+                          size: XlDims.callHangup,
+                          circleColor: XlColor.danger,
+                          iconColor: Colors.white,
+                          onTap: _endVoiceCall,
+                        ),
+                        const SizedBox(width: XlDims.callControlsGap),
+                        _voiceCallCircleButton(
+                          icon: _isSpeakerOn
+                              ? Icons.volume_up
+                              : Icons.volume_off,
+                          label: _isSpeakerOn ? '免提' : '听筒',
+                          circleColor: _isSpeakerOn
+                              ? XlColor.brand
+                              : XlColor.callControl,
+                          iconColor: _isSpeakerOn
+                              ? Colors.white
+                              : XlColor.callControlIcon,
+                          onTap: _toggleSpeaker,
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 40),
-                    _voiceCallCircleButton(
-                      icon: _isSpeakerOn ? Icons.volume_up : Icons.volume_off,
-                      label: _isSpeakerOn ? '扬声器' : '听筒',
-                      circleColor:
-                          _isSpeakerOn ? AppColors.primary : Colors.white,
-                      iconColor: _isSpeakerOn
-                          ? Colors.white
-                          : const Color(0xFF1A1A1A),
-                      onTap: _toggleSpeaker,
-                    ),
-                    const SizedBox(width: 40),
-                    _voiceCallCircleButton(
-                      icon: Icons.call_end,
-                      label: '挂断',
-                      circleColor: AppColors.error,
-                      iconColor: Colors.white,
-                      onTap: _endVoiceCall,
+                    const SizedBox(height: XlDims.callHintGap),
+                    Text(
+                      '随时说话即可打断小乐',
+                      style: XlType.caption.copyWith(
+                        color: XlColor.callTextDim,
+                      ),
                     ),
                   ],
                 ),
@@ -2913,35 +3011,122 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     required IconData icon,
     required String label,
     required VoidCallback onTap,
+    double size = XlDims.callControl,
     Color circleColor = Colors.white,
     Color iconColor = const Color(0xFF1A1A1A),
   }) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        InkWell(
+        GestureDetector(
+          behavior: HitTestBehavior.opaque,
           onTap: onTap,
-          borderRadius: BorderRadius.circular(36),
           child: Container(
-            width: 64,
-            height: 64,
+            width: size,
+            height: size,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: circleColor,
               boxShadow: const [
                 BoxShadow(
-                  color: Colors.black38,
+                  color: Color(0x38000000),
                   blurRadius: 12,
                   offset: Offset(0, 4),
                 ),
               ],
             ),
-            child: Icon(icon, color: iconColor, size: 28),
+            child: Icon(icon, color: iconColor, size: size >= 72 ? 30 : 28),
           ),
         ),
-        const SizedBox(height: 8),
-        Text(label, style: AppTextStyles.caption.copyWith(color: Colors.white70)),
+        const SizedBox(height: XlDims.s),
+        Text(
+          label,
+          style: XlType.caption.copyWith(color: XlColor.callTextDim),
+        ),
       ],
+    );
+  }
+}
+
+/// 通话头像外圈脉冲（128 / 152，2400ms，错峰 400ms；reduce motion 时静止）
+class _CallPulseRings extends StatefulWidget {
+  const _CallPulseRings();
+
+  @override
+  State<_CallPulseRings> createState() => _CallPulseRingsState();
+}
+
+class _CallPulseRingsState extends State<_CallPulseRings>
+    with TickerProviderStateMixin {
+  late final AnimationController _a = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 2400),
+  );
+  late final AnimationController _b = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 2400),
+  );
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final reduce = MediaQuery.of(context).disableAnimations;
+    if (reduce) {
+      _a.stop();
+      _b.stop();
+      return;
+    }
+    if (!_a.isAnimating) {
+      _a.repeat();
+    }
+    if (!_b.isAnimating) {
+      Future<void>.delayed(const Duration(milliseconds: 400), () {
+        if (mounted && !_b.isAnimating) _b.repeat();
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _a.dispose();
+    _b.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final reduce = MediaQuery.of(context).disableAnimations;
+    if (reduce) return const SizedBox.shrink();
+    return SizedBox(
+      width: XlDims.callPulseOuter,
+      height: XlDims.callPulseOuter,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          _ring(_a, XlDims.callPulseInner),
+          _ring(_b, XlDims.callPulseOuter),
+        ],
+      ),
+    );
+  }
+
+  Widget _ring(AnimationController controller, double size) {
+    return AnimatedBuilder(
+      animation: controller,
+      builder: (context, child) {
+        final t = controller.value;
+        return Opacity(
+          opacity: (0.20 * (1 - t)).clamp(0.0, 1.0).toDouble(),
+          child: Container(
+            width: size * (1 + 0.22 * t),
+            height: size * (1 + 0.22 * t),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white, width: 1),
+            ),
+          ),
+        );
+      },
     );
   }
 }

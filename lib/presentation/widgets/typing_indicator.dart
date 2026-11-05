@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import '../../app/themes/app_colors.dart';
 
-/// AI 正在输入指示器（对齐原型 v6 的三点弹跳）
+import '../../app/themes/xl_tokens.dart';
+
+/// AI 正在输入指示器（对齐原型 v6 的三点弹跳；气泡随设计令牌）
 class TypingIndicator extends StatefulWidget {
   final double dotSize;
   final EdgeInsetsGeometry padding;
@@ -9,7 +10,10 @@ class TypingIndicator extends StatefulWidget {
   const TypingIndicator({
     super.key,
     this.dotSize = 7,
-    this.padding = const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+    this.padding = const EdgeInsets.symmetric(
+      horizontal: XlDims.pagePadding,
+      vertical: XlDims.bubbleGap / 2,
+    ),
   });
 
   @override
@@ -37,32 +41,30 @@ class _TypingIndicatorState extends State<TypingIndicator>
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final dotColor = isDark ? AppColors.typingDotDark : AppColors.typingDot;
-    final bubbleColor =
-        isDark ? AppColors.aiMessageBgDark : AppColors.aiMessageBg;
+    final p = XlPalette.of(context);
+    final dotColor = p.textQuaternary;
+    final bubbleColor = p.bubbleOtherBg;
 
     return Padding(
       padding: widget.padding,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          CircleAvatar(
-            radius: 20,
-            backgroundColor: AppColors.avatarGray,
-            child: const Icon(Icons.smart_toy, size: 22, color: Colors.white),
+          Container(
+            width: XlDims.chatAvatar,
+            height: XlDims.chatAvatar,
+            decoration: BoxDecoration(
+              color: p.brandSoft,
+              borderRadius: BorderRadius.circular(XlDims.avatarChat),
+            ),
+            child: Icon(Icons.graphic_eq_rounded, size: 22, color: p.brandDeep),
           ),
           const SizedBox(width: 10),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
               color: bubbleColor,
-              borderRadius: const BorderRadius.only(
-                topRight: Radius.circular(6),
-                bottomLeft: Radius.circular(6),
-                bottomRight: Radius.circular(6),
-                topLeft: Radius.circular(2),
-              ),
+              borderRadius: BorderRadius.circular(XlDims.rBubble),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,

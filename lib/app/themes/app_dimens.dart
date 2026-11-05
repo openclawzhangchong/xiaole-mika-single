@@ -26,27 +26,27 @@ class AppDimens {
   static const double radiusAvatar = 6;
 
   // ========== 高度 ==========
-  /// 导航栏高
-  static const double navBarHeight = 48;
+  /// 导航栏高（DESIGN §8.5：44）
+  static const double navBarHeight = 44;
 
-  /// 底部 TabBar 高（微信 56）
-  static const double tabBarHeight = 56;
+  /// 底部 TabBar 高（tokens.rowHeights.tabBar：49）
+  static const double tabBarHeight = 49;
 
-  /// 输入栏高
-  static const double inputBarHeight = 52;
+  /// 输入栏高（tokens.composer.barHeight：50）
+  static const double inputBarHeight = 50;
 
-  /// 单元格单行高
-  static const double cellSingle = 56;
+  /// 单元格单行高（设置行 50）
+  static const double cellSingle = 50;
 
   /// 单元格双行高
-  static const double cellDouble = 68;
+  static const double cellDouble = 64;
 
   // ========== 头像 / 图标 ==========
   /// 会话列表头像 48
   static const double avatarList = 48;
 
-  /// 消息气泡头像 40
-  static const double avatarMessage = 40;
+  /// 消息气泡头像 36（DESIGN §6：36→5）
+  static const double avatarMessage = 36;
 
   /// 资料页头像 64
   static const double avatarProfile = 64;

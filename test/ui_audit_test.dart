@@ -139,7 +139,7 @@ void main() {
           textController: controller,
           onSendText: () {},
           onStartVoice: () {},
-          onStartCall: () {},
+          onMore: () {},
         ),
       ],
     )));
@@ -163,7 +163,7 @@ void main() {
           textController: controller,
           onSendText: () {},
           onStartVoice: () {},
-          onStartCall: () {},
+          onMore: () {},
         ),
       ],
     )));
