@@ -49,6 +49,7 @@ abstract final class XlColor {
 
   // danger
   static const danger = Color(0xFFFA5151);
+  static const cancelMark = Color(0xFFFF8A8A); // preview-04 实测 X 圆标描边（底 16% #FA5151 = #614646）
   static const dangerText = Color(0xFFC43434); // §15 I1（取消胶囊 5.40:1）
   static const dangerBadge = Color(0xFFD93636);
   static const dangerSoft = Color(0xFFFDEDED);
@@ -643,12 +644,13 @@ abstract final class XlDims {
   static const waveBarGap = 2.0;
   static const waveBarMaxH = 18.0;
   static const voiceWaveBarMaxH = 34.0; // 录音浮层波形满槽高（ui.css 34 优先）
-  static const voiceWaveBarCount = 9; // preview-03 实测 9 根（tokens 原 11 有误，已回写）
+  // preview-03 按列扫描实测 11 根（x=312..437@2x，柱 6px + 隙 6px = 3pt/3pt）
+  static const voiceWaveBarCount = 11;
   static const voiceWaveBarW = 3.0;
   static const voiceWaveGap = 3.0;
-  // preview-03 逐根实测高度 16/24/32/20/26/34/22/13/24pt，归一化到满槽 34
+  // preview-03 逐根实测高度 7/16/24/32/20/26/34/22/13/24/8pt，归一化到满槽 34
   static const voiceWaveProfile = <double>[
-    0.47, 0.71, 0.94, 0.59, 0.76, 1.00, 0.65, 0.38, 0.71,
+    0.21, 0.47, 0.71, 0.94, 0.59, 0.76, 1.00, 0.65, 0.38, 0.71, 0.24,
   ];
   static const waveOpacity = 0.55;
   static const taskCardWidth = 268.0;

@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 
 import '../../../app/themes/xl_tokens.dart';
 
-/// 竖条波形（preview-03 浮层 9 根；通话页仍 30 根）
+/// 竖条波形（preview-03 浮层 11 根、3pt 柱 / 3pt 隙；通话页仍 30 根）
 /// 采样 20Hz、上升 90ms / 下降 220ms、静音保留 0.12 基线。
 class XlVoiceWave extends StatefulWidget {
   const XlVoiceWave({
@@ -223,7 +223,7 @@ class XlVoiceRecordOverlay extends StatelessWidget {
                       : XlVoiceWave(
                           key: const ValueKey<String>('wave'),
                           amplitudeStream: amplitudeStream,
-                          width: 51,
+                          width: 63, // 11 根 × 3pt + 10 × 3pt 隙（preview-03 实测 126px@2x）
                           height: XlDims.voiceWaveSlot,
                           maxBarHeight: XlDims.voiceWaveBarMaxH,
                           color: XlColor.mint,
@@ -292,7 +292,7 @@ class _CancelMark extends StatelessWidget {
         shape: BoxShape.circle,
       ),
       alignment: Alignment.center,
-      child: Icon(Icons.close_rounded, size: 18, color: p.danger),
+      child: Icon(Icons.close_rounded, size: 18, color: XlColor.cancelMark),
     );
   }
 }
