@@ -728,7 +728,7 @@ abstract final class XlMotion {
   static const pageCurve = Cubic(0.32, 0.72, 0, 1);
   static const spring = Cubic(0.34, 1.56, 0.64, 1);
 
-  static const waveBarCount = 9; // §15 I5（preview-03 实测 9 根）
+  static const waveBarCount = 11; // §15 I5（语音气泡 11 根；浮层单独用 9 根）
   static const callWaveBarCount = 30;
   static const waveSampleMs = 50;
   static const waveAttackMs = 90;
