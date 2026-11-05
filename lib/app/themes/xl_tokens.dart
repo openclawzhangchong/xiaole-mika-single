@@ -668,6 +668,9 @@ abstract final class XlDims {
   static const stepDot = 11.0; // §15 I6
   static const detailIcon = 40.0;
   static const detailIconRadius = 8.0;
+  static const resultIndex = 20.0;
+  static const noteIcon = 16.0;
+  static const hairlineWidth = 0.5;
   static const stepGapX = 12.0;
   static const stepGapY = 12.0;
   static const sectionLabelSize = 13.0;

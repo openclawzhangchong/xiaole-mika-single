@@ -171,7 +171,7 @@ class XlVoiceRecordOverlay extends StatelessWidget {
     final p = XlPalette.of(context);
     final hint = willCancel
         ? '松开手指，取消发送'
-        : (showLimitHint ? '松开发送，最长 60 秒' : '上滑取消');
+        : (showLimitHint ? '松开发送，最长 60 秒' : '手指上滑，取消发送');
 
     return ExcludeSemantics(
       child: Container(
@@ -208,7 +208,7 @@ class XlVoiceRecordOverlay extends StatelessWidget {
                           width: 53,
                           height: XlDims.voiceWaveSlot,
                           maxBarHeight: 18,
-                          color: Colors.white,
+                          color: XlColor.brand,
                           highlightColor: XlColor.brand,
                           highlightBars: 3,
                         ),

@@ -351,16 +351,16 @@ class _ResultList extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                width: 20,
-                height: 20,
+                width: XlDims.resultIndex,
+                height: XlDims.resultIndex,
                 decoration: BoxDecoration(
-                  color: p.brandSoft,
+                  color: p.subtle,
                   shape: BoxShape.circle,
                 ),
                 alignment: Alignment.center,
                 child: Text(
                   '${i + 1}',
-                  style: XlType.caption.copyWith(color: p.brandDeep),
+                  style: XlType.caption.copyWith(color: p.textSecondary),
                 ),
               ),
               const SizedBox(width: XlDims.s),
@@ -398,7 +398,11 @@ class _PrivacyNote extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.shield_outlined, size: 16, color: p.brandDeep),
+          Icon(
+            Icons.shield_outlined,
+            size: XlDims.noteIcon,
+            color: p.brandDeep,
+          ),
           const SizedBox(width: XlDims.s),
           Expanded(
             child: Column(
@@ -406,14 +410,12 @@ class _PrivacyNote extends StatelessWidget {
               children: [
                 Text(
                   ended ? '任务已结束，小乐已停止读取屏幕' : '任务执行中，小乐正在读取屏幕',
-                  style: TextStyle(
-                    fontSize: 12,
+                  style: XlType.meta.copyWith(
+                    color: p.textPrimary,
                     fontWeight: FontWeight.w500,
-                    height: 17 / 12,
-                    color: p.brandDeep,
                   ),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: XlDims.hairlineWidth),
                 Text(
                   '屏幕读取仅在任务期间开启，任务结束立即停止。',
                   style: XlType.caption.copyWith(color: p.textSecondary),

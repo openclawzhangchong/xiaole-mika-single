@@ -272,7 +272,16 @@ class MessageBubble extends StatelessWidget {
       canCancel: status == XlTaskStatus.queued,
       canRetry: status == XlTaskStatus.failed,
       icon: _taskIcon(data['icon']),
+      timeLabel: message.timestamp == null
+          ? null
+          : _formatTime(message.timestamp!),
     );
+  }
+
+  String _formatTime(DateTime t) {
+    final h = t.hour.toString().padLeft(2, '0');
+    final m = t.minute.toString().padLeft(2, '0');
+    return '$h:$m';
   }
 
   XlTaskStatus _parseStatus(dynamic raw) {

@@ -267,58 +267,79 @@ class _SearchField extends StatelessWidget {
         decoration: BoxDecoration(
           color: p.surface,
           borderRadius: BorderRadius.circular(XlDims.rField),
-          border: Border.all(
-            color: p.border,
-            width: 0.5,
-          ),
         ),
-        child: Row(
-          children: [
-            const SizedBox(width: 10),
-            Icon(Icons.search_rounded, size: 16, color: p.textQuaternary),
-            const SizedBox(width: 6),
-            Expanded(
-              child: TextField(
-                controller: controller,
-                onChanged: onChanged,
-                style: TextStyle(
-                  fontSize: 14,
-                  height: 19 / 14,
-                  color: p.textPrimary,
-                ),
-                cursorColor: p.brandDeep,
-                textInputAction: TextInputAction.search,
-                decoration: InputDecoration(
-                  hintText: '搜索',
-                  hintStyle: TextStyle(
-                    fontSize: 14,
-                    height: 19 / 14,
-                    color: p.placeholder,
+        child: ValueListenableBuilder<TextEditingValue>(
+          valueListenable: controller,
+          builder: (context, value, _) {
+            final empty = value.text.isEmpty;
+            return Row(
+              children: [
+                Expanded(
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      if (empty)
+                        IgnorePointer(
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.search_rounded,
+                                size: 16,
+                                color: p.textQuaternary,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                '搜索',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  height: 19 / 14,
+                                  color: p.placeholder,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      TextField(
+                        controller: controller,
+                        onChanged: onChanged,
+                        style: TextStyle(
+                          fontSize: 14,
+                          height: 19 / 14,
+                          color: p.textPrimary,
+                        ),
+                        cursorColor: p.brandDeep,
+                        textInputAction: TextInputAction.search,
+                        decoration: const InputDecoration(
+                          hintText: '',
+                          border: InputBorder.none,
+                          isDense: true,
+                          contentPadding: EdgeInsets.symmetric(vertical: 9),
+                          filled: false,
+                        ),
+                      ),
+                    ],
                   ),
-                  border: InputBorder.none,
-                  isDense: true,
-                  contentPadding: const EdgeInsets.symmetric(vertical: 9),
-                  filled: false,
                 ),
-              ),
-            ),
-            if (controller.text.isNotEmpty)
-              GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: () {
-                  controller.clear();
-                  onChanged('');
-                },
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  child: Icon(
-                    Icons.cancel,
-                    size: 16,
-                    color: p.textQuaternary,
+                if (!empty)
+                  GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () {
+                      controller.clear();
+                      onChanged('');
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      child: Icon(
+                        Icons.cancel,
+                        size: 16,
+                        color: p.textQuaternary,
+                      ),
+                    ),
                   ),
-                ),
-              ),
-          ],
+              ],
+            );
+          },
         ),
       ),
     );

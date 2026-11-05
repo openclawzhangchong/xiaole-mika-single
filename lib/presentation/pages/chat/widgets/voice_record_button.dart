@@ -113,9 +113,7 @@ class _VoiceRecordButtonState extends State<VoiceRecordButton> {
     final bg = cancel
         ? p.dangerSoft
         : (pressed ? p.pressed : p.surface);
-    final fg = cancel
-        ? p.dangerText
-        : (pressed ? p.brandDeep : p.textPrimary);
+    final fg = cancel ? p.dangerText : p.textPrimary;
     final label = _isContinuousListening
         ? '正在聆听…'
         : (_isRecording
@@ -326,9 +324,7 @@ class _VoiceRecordButtonState extends State<VoiceRecordButton> {
     _overlayEntry = OverlayEntry(
       builder: (ctx) {
         final media = MediaQuery.of(ctx);
-        final bottom = XlDims.voiceOverlayBottom +
-            media.viewInsets.bottom +
-            (_willCancel ? 4 : 0);
+        final bottom = XlDims.voiceOverlayBottom + media.viewInsets.bottom;
         return Positioned(
           left: (media.size.width - XlDims.voiceOverlayW) / 2,
           bottom: bottom,

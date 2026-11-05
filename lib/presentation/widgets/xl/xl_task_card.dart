@@ -19,6 +19,7 @@ class XlTaskCardModel {
     this.canAbort = false,
     this.canRetry = false,
     this.canCancel = false,
+    this.timeLabel,
   });
 
   final String title;
@@ -32,6 +33,7 @@ class XlTaskCardModel {
   final bool canAbort;
   final bool canRetry;
   final bool canCancel;
+  final String? timeLabel; // 完成态 meta 尾部时间，如 21:06
 }
 
 /// 268pt 任务卡：头部 22 / meta / 进度 / footer 36
@@ -267,7 +269,9 @@ class XlTaskCard extends StatelessWidget {
         }
         return '已用 $secs 秒';
       case XlTaskStatus.done:
-        return '用时 $secs 秒';
+        return model.timeLabel == null
+            ? '用时 $secs 秒'
+            : '用时 $secs 秒 · ${model.timeLabel}';
       case XlTaskStatus.failed:
         if (model.stepTotal > 0) {
           return '第 ${model.stepIndex} / ${model.stepTotal} 步 · 用时 $secs 秒';
