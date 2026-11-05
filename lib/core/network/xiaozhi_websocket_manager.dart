@@ -7,6 +7,8 @@ import 'package:logging/logging.dart';
 import 'package:web_socket_channel/io.dart'
     if (dart.library.html) 'package:web_socket_channel/html.dart';
 
+import '../service/keep_alive_service.dart';
+
 /// 小智WebSocket事件类型
 enum XiaozhiEventType { connected, disconnected, message, error, binaryMessage }
 
@@ -298,6 +300,7 @@ class XiaozhiWebSocketManager {
         if (_handshakeDone) return;
         logger.warning('[HANDSHAKE] ${HANDSHAKE_TIMEOUT.inSeconds}s 未收到服务器 hello，'
             '判定建连失败，主动关闭走重连');
+        KeepAliveCoordinator.instance.onConnectionChanged(false);
         _channel?.sink.close(status.goingAway);
       });
 
@@ -327,6 +330,8 @@ class XiaozhiWebSocketManager {
   Future<void> disconnect({String source = 'unknown'}) async {
     // v3.0.0：标记用户主动断开——之后任何 onDone 都不自动重连
     _manualClosed = true;
+    // v6.11.21（78 轮）：主动断开同样摘掉保活信号，避免服务常驻
+    KeepAliveCoordinator.instance.onConnectionChanged(false);
 
     // 取消重连
     _reconnectTimer?.cancel();
@@ -396,6 +401,10 @@ class XiaozhiWebSocketManager {
     _dispatchEvent(
       XiaozhiEvent(type: XiaozhiEventType.connected, data: null),
     );
+    // v6.11.21（78 轮）：真正连接成功的唯一判据也喂给保活协调器。
+    // 旧实现只挂在 xiaozhi_service.dart 的 onConnectionChanged，聊天页走的是
+    // 本管理器，导致 _connected 恒 false、前台服务从未起过。
+    KeepAliveCoordinator.instance.onConnectionChanged(true);
   }
 
   /// v6.11.8：hello 载荷（正常握手与心跳实验共用，含 device-id/版本/特性/音频参数）
@@ -714,6 +723,9 @@ class XiaozhiWebSocketManager {
   void _onDisconnected() {
     // v6.11.17：握手闸门复位（本次连接无论是否曾握手成功，都已结束）
     _handshakeDone = false;
+    // v6.11.21（78 轮）：socket 关闭即视为断开，先停保活服务再决定是否重连；
+    // 重连成功后 _completeHandshake() 会重新置 true。
+    KeepAliveCoordinator.instance.onConnectionChanged(false);
     _pendingIsReconnect = false;
     _helloTimer?.cancel();
     _helloTimer = null;
@@ -875,6 +887,8 @@ class XiaozhiWebSocketManager {
     if (_serverUrl == null || _token == null) return;
     if (isSocketOpen) {
       if (!dropStale) return; // 已有 socket（含等 hello），由握手闸门决定成败
+      // v6.11.21（78 轮）：僵死连接不算连接，先摘掉保活信号再重建
+      KeepAliveCoordinator.instance.onConnectionChanged(false);
       logger.warning('[LIFECYCLE] 判定连接僵死（静默=${silentSeconds ?? '-'}s），'
           '主动关闭并立即重建');
       unawaited(() async {
