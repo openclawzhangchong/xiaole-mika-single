@@ -1,19 +1,19 @@
-import 'package:flutter/material.dart';
+import 'dart:math' as math;
+
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/material.dart';
+
+import '../../../../app/themes/xl_tokens.dart';
 import '../../../../data/models/message_model.dart';
-import '../../../../app/themes/app_colors.dart';
-import '../../../../app/themes/app_text_styles.dart';
+import '../../../pages/task/xl_task_detail_page.dart';
 import '../../../widgets/agent_avatar.dart';
+import '../../../widgets/xl/xl_step_timeline.dart';
+import '../../../widgets/xl/xl_task_card.dart';
 
-/// 聊天消息气泡组件（微信风格 v7）
-///
-/// 对齐原型 v7：圆角方形头像、气泡宽度按屏宽 68% 自适应、
-/// 时间戳移至列表层居中分隔条（本组件不再渲染时间）。
+/// 聊天消息气泡（DESIGN §6 / §8.1）
+/// 16pt 页边 / 头像 36-5 / 气泡 8pt / 尾 6×10 顶部 12 /
+/// 正文 16-24 / 最大宽 min(245, 屏宽 66%) / 气泡间距 14。
 class MessageBubble extends StatelessWidget {
-  final MessageModel message;
-  final String? agentId;
-  final String? agentName;
-
   const MessageBubble({
     super.key,
     required this.message,
@@ -21,12 +21,23 @@ class MessageBubble extends StatelessWidget {
     this.agentName,
   });
 
+  final MessageModel message;
+  final String? agentId;
+  final String? agentName;
+
   bool get isUser => message.sender == MessageSender.user;
 
   @override
   Widget build(BuildContext context) {
+    final p = XlPalette.of(context);
+    final meta = message.metadata;
+    final isTaskCard = meta != null && meta['card'] == 'task';
+
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      padding: const EdgeInsets.symmetric(
+        horizontal: XlDims.pagePadding,
+        vertical: XlDims.bubbleGap / 2,
+      ),
       child: Row(
         mainAxisAlignment:
             isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
@@ -36,9 +47,23 @@ class MessageBubble extends StatelessWidget {
             _buildAvatar(),
             const SizedBox(width: 10),
           ],
-          Flexible(
-            child: _buildMessageContent(context),
-          ),
+          if (isTaskCard)
+            XlTaskCard(
+              model: _taskCardModel(meta['data']),
+              width: math.min(
+                XlDims.taskCardWidth,
+                MediaQuery.of(context).size.width -
+                    XlDims.pagePadding * 2 -
+                    XlDims.chatAvatar -
+                    10,
+              ),
+              onTap: () => _openTaskDetail(context, meta['data']),
+              onAbort: () => _taskActionHint(context, '中止'),
+              onCancel: () => _taskActionHint(context, '取消'),
+              onRetry: () => _taskActionHint(context, '重试'),
+            )
+          else
+            Flexible(child: _buildMessageContent(context, p)),
           if (isUser) ...[
             const SizedBox(width: 10),
             _buildAvatar(),
@@ -48,96 +73,76 @@ class MessageBubble extends StatelessWidget {
     );
   }
 
-  /// 头像（微信风格：圆角方形 40）
+  /// 头像 36 / 圆角 5
   Widget _buildAvatar() {
     if (isUser) {
-      return const UserAvatar(name: '我', size: 40);
+      return const UserAvatar(
+        name: '我',
+        size: XlDims.chatAvatar,
+        radius: XlDims.avatarChat,
+      );
     }
     return AgentAvatar(
       agentId: agentId,
       name: agentName,
-      size: 40,
+      size: XlDims.chatAvatar,
+      radius: XlDims.avatarChat,
     );
   }
 
-  /// 消息内容（微信气泡：绿色/白色，靠头像侧小圆角 + 小尖角）
-  Widget _buildMessageContent(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+  Widget _buildMessageContent(BuildContext context, XlPalette p) {
+    final bg = isUser ? p.bubbleSelfBg : p.bubbleOtherBg;
+    final fg = isUser ? p.bubbleSelfText : p.bubbleOtherText;
+    final radius = BorderRadius.circular(XlDims.rBubble);
 
-    final bubbleColor = isUser
-        ? (isDark ? AppColors.userMessageBgDark : AppColors.userMessageBg)
-        : (isDark ? AppColors.aiMessageBgDark : AppColors.aiMessageBg);
-
-    // 微信气泡圆角：靠头像一侧的上方圆角更小（对齐原型 v7 的 12px 圆角体系）
-    final borderRadius = isUser
-        ? const BorderRadius.only(
-            topLeft: Radius.circular(12),
-            bottomLeft: Radius.circular(12),
-            bottomRight: Radius.circular(12),
-            topRight: Radius.circular(2),
-          )
-        : const BorderRadius.only(
-            topRight: Radius.circular(12),
-            bottomLeft: Radius.circular(12),
-            bottomRight: Radius.circular(12),
-            topLeft: Radius.circular(2),
-          );
-
-    // 用户气泡文字：浅色模式黑字，深色模式白字（保证对比度）
-    final bubbleTextColor = isUser && isDark
-        ? Colors.white
-        : (isDark ? AppColors.textPrimaryDark : AppColors.textPrimary);
+    final maxWidth = math.min(
+      XlDims.bubbleMaxWidth,
+      MediaQuery.of(context).size.width * 0.66,
+    );
 
     final bubble = Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      constraints: BoxConstraints(
-        maxWidth: MediaQuery.of(context).size.width * 0.68,
+      constraints: BoxConstraints(maxWidth: maxWidth),
+      padding: const EdgeInsets.symmetric(
+        horizontal: XlDims.bubblePadX,
+        vertical: XlDims.bubblePadY,
       ),
-      decoration: BoxDecoration(
-        color: bubbleColor,
-        borderRadius: borderRadius,
-      ),
-      child: _buildContentByType(bubbleTextColor, context),
+      decoration: BoxDecoration(color: bg, borderRadius: radius),
+      child: _buildContentByType(fg, context),
     );
 
     return Stack(
       clipBehavior: Clip.none,
       children: [
         bubble,
-        // 靠头像侧的小尖角（对齐原型 v7 的 ::before 三角）
         Positioned(
-          top: 10,
-          left: isUser ? null : -5,
-          right: isUser ? -5 : null,
+          top: XlDims.bubbleTailTop,
+          left: isUser ? null : -XlDims.bubbleTailW + 1,
+          right: isUser ? -XlDims.bubbleTailW + 1 : null,
           child: CustomPaint(
-            size: const Size(6, 10),
-            painter: _BubbleTailPainter(
-              color: bubbleColor,
-              isUser: isUser,
-            ),
+            size: const Size(XlDims.bubbleTailW, XlDims.bubbleTailH),
+            painter: _BubbleTailPainter(color: bg, isUser: isUser),
           ),
         ),
       ],
     );
   }
 
-  /// 根据消息类型构建内容
-  Widget _buildContentByType(Color bubbleTextColor, BuildContext context) {
-    // v4.2.0：结构化卡片（申请书 7 号——设备状态卡片，AI 查状态时本地渲染）
+  Widget _buildContentByType(Color fg, BuildContext context) {
     final meta = message.metadata;
     if (meta != null && meta['card'] == 'device_status') {
       return _buildDeviceStatusCard(meta['data'], context);
     }
+
     switch (message.type) {
       case MessageType.text:
         return SelectableText(
           message.content,
-          style: AppTextStyles.body.copyWith(color: bubbleTextColor, height: 1.5),
+          style: XlType.body.copyWith(color: fg),
         );
 
       case MessageType.image:
         return ClipRRect(
-          borderRadius: BorderRadius.circular(4),
+          borderRadius: BorderRadius.circular(XlDims.rS),
           child: CachedNetworkImage(
             imageUrl: message.content,
             width: 200,
@@ -151,40 +156,34 @@ class MessageBubble extends StatelessWidget {
         );
 
       case MessageType.audio:
-        return Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.play_circle_outline,
-                size: 24, color: bubbleTextColor),
-            const SizedBox(width: 8),
-            Flexible(
-              child: SelectableText(
-                message.content,
-                style: AppTextStyles.body.copyWith(
-                    color: bubbleTextColor, height: 1.5),
+        final secs = meta?['duration'];
+        return SizedBox(
+          height: XlDims.voiceBubbleHeight,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _StaticWave(color: fg.withOpacity(0.7)),
+              const SizedBox(width: XlDims.s),
+              Text(
+                secs == null ? '语音' : '$secs″',
+                style: XlType.meta.copyWith(color: fg),
               ),
-            ),
-          ],
+            ],
+          ),
         );
 
       case MessageType.system:
-        // 系统消息由 MessageList 层居中渲染，此处兜底（不应到达）
         return Text(
           message.content,
-          style: AppTextStyles.caption.copyWith(
-            color: AppColors.systemText,
-          ),
+          style: XlType.meta.copyWith(color: XlPalette.of(context).systemText),
         );
     }
   }
-  /// v4.2.0 设备状态卡片（申请书 7 号）——音量/电量/主题/网络结构化展示
+
+  /// 设备状态卡（原 card=device_status，配色改为令牌）
   Widget _buildDeviceStatusCard(dynamic raw, BuildContext context) {
     final data = raw is Map ? raw : <String, dynamic>{};
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final textColor =
-        isDark ? AppColors.textPrimaryDark : AppColors.textPrimary;
-    final subColor = AppColors.textSecondary;
-
+    final p = XlPalette.of(context);
     final battery = data['battery'] is Map ? data['battery'] as Map : const {};
     final level = (battery['level'] as num?)?.toInt() ?? 100;
     final charging = battery['charging'] == true;
@@ -193,79 +192,215 @@ class MessageBubble extends StatelessWidget {
     final online = data['network'] == 'online';
 
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(vertical: 2),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text('📊 设备状态',
-              style: AppTextStyles.subtitle.copyWith(
-                  fontWeight: FontWeight.bold, color: textColor)),
-          const SizedBox(height: 8),
-          _statusRow(Icons.volume_up, '音量', '$volume%', textColor, subColor),
+          Text(
+            '设备状态',
+            style: XlType.cardTitle.copyWith(color: p.textPrimary),
+          ),
+          const SizedBox(height: XlDims.s),
+          _statusRow(Icons.volume_up_rounded, '音量', '$volume%', p),
           _statusRow(
             charging ? Icons.battery_charging_full : Icons.battery_std,
             '电量',
             charging ? '$level%（充电中）' : '$level%',
-            charging
-                ? AppColors.success
-                : (level < 20 ? AppColors.error : textColor),
-            subColor,
+            p,
+            valueColor: charging
+                ? p.brand
+                : (level < 20 ? p.danger : p.textPrimary),
           ),
-          _statusRow(Icons.palette_outlined, '主题', theme, textColor, subColor),
+          _statusRow(Icons.palette_outlined, '主题', theme, p),
           _statusRow(
             online ? Icons.wifi : Icons.wifi_off,
             '网络',
             online ? '在线' : '离线',
-            online ? AppColors.success : AppColors.error,
-            subColor,
+            p,
+            valueColor: online ? p.brand : p.danger,
           ),
         ],
       ),
     );
   }
 
-  Widget _statusRow(IconData icon, String label, String value,
-      Color valueColor, Color subColor) {
+  Widget _statusRow(
+    IconData icon,
+    String label,
+    String value,
+    XlPalette p, {
+    Color? valueColor,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 3),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 16, color: valueColor),
-          const SizedBox(width: 8),
-          Text(label, style: AppTextStyles.caption.copyWith(color: subColor)),
+          Icon(icon, size: 16, color: valueColor ?? p.textPrimary),
+          const SizedBox(width: XlDims.s),
+          Text(label, style: XlType.meta.copyWith(color: p.textSecondary)),
           const SizedBox(width: 10),
-          Text(value,
-              style: AppTextStyles.caption.copyWith(
-                  fontWeight: FontWeight.w600, color: valueColor)),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: XlType.meta.fontSize,
+              fontWeight: FontWeight.w600,
+              height: XlType.meta.height,
+              color: valueColor ?? p.textPrimary,
+            ),
+          ),
         ],
       ),
     );
   }
+
+  XlTaskCardModel _taskCardModel(dynamic raw) {
+    final data = raw is Map ? raw : <String, dynamic>{};
+    final status = _parseStatus(data['status']);
+    final elapsedMs = (data['elapsedMs'] as num?)?.toInt() ?? 0;
+    final progress = (data['progress'] as num?)?.toDouble();
+    return XlTaskCardModel(
+      title: (data['title'] ?? '任务').toString(),
+      status: status,
+      stepIndex: (data['stepIndex'] as num?)?.toInt() ?? 0,
+      stepTotal: (data['stepTotal'] as num?)?.toInt() ?? 0,
+      elapsed: Duration(milliseconds: elapsedMs),
+      progress: progress,
+      failReason: data['failReason']?.toString(),
+      canAbort: status == XlTaskStatus.running,
+      canCancel: status == XlTaskStatus.queued,
+      canRetry: status == XlTaskStatus.failed,
+      icon: _taskIcon(data['icon']),
+      timeLabel: message.timestamp == null
+          ? null
+          : _formatTime(message.timestamp!),
+    );
+  }
+
+  String _formatTime(DateTime t) {
+    final h = t.hour.toString().padLeft(2, '0');
+    final m = t.minute.toString().padLeft(2, '0');
+    return '$h:$m';
+  }
+
+  XlTaskStatus _parseStatus(dynamic raw) {
+    final name = raw?.toString();
+    for (final s in XlTaskStatus.values) {
+      if (s.name == name) return s;
+    }
+    return XlTaskStatus.running;
+  }
+
+  IconData _taskIcon(dynamic raw) {
+    switch (raw?.toString()) {
+      case 'screen':
+        return Icons.smartphone_rounded;
+      case 'bolt':
+        return Icons.bolt_rounded;
+      case 'clean':
+        return Icons.cleaning_services_rounded;
+      case 'list':
+        return Icons.checklist_rounded;
+      default:
+        return Icons.checklist_rounded;
+    }
+  }
+
+  void _openTaskDetail(BuildContext context, dynamic raw) {
+    final data = raw is Map ? raw : <String, dynamic>{};
+    final status = _parseStatus(data['status']);
+    final elapsedMs = (data['elapsedMs'] as num?)?.toInt() ?? 0;
+    final steps = _parseSteps(data['steps'], status, data);
+    final results = data['results'] is List
+        ? (data['results'] as List).map((e) => e.toString()).toList()
+        : <String>[];
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => XlTaskDetailPage(
+          data: XlTaskDetailData(
+            title: (data['title'] ?? '任务').toString(),
+            status: status,
+            elapsed: Duration(milliseconds: elapsedMs),
+            stepIndex: (data['stepIndex'] as num?)?.toInt() ?? 0,
+            stepTotal: (data['stepTotal'] as num?)?.toInt() ?? 0,
+            startedAt: (data['startedAt'] ?? '今天').toString(),
+            device: (data['device'] ?? '当前手机').toString(),
+            trigger: (data['trigger'] ?? '对话内指令').toString(),
+            steps: steps,
+            results: results,
+            icon: _taskIcon(data['icon']),
+          ),
+        ),
+      ),
+    );
+  }
+
+  List<XlTaskStep> _parseSteps(
+    dynamic raw,
+    XlTaskStatus status,
+    Map<dynamic, dynamic> data,
+  ) {
+    if (raw is List && raw.isNotEmpty) {
+      return raw.map((e) {
+        final m = e is Map ? e : <dynamic, dynamic>{};
+        final stateName = m['state']?.toString();
+        final state = switch (stateName) {
+          'done' => XlStepState.done,
+          'running' => XlStepState.running,
+          'failed' => XlStepState.failed,
+          _ => XlStepState.pending,
+        };
+        return XlTaskStep(
+          title: (m['title'] ?? '').toString(),
+          meta: m['meta']?.toString(),
+          state: state,
+        );
+      }).toList();
+    }
+    final state = switch (status) {
+      XlTaskStatus.done => XlStepState.done,
+      XlTaskStatus.running => XlStepState.running,
+      XlTaskStatus.failed => XlStepState.failed,
+      _ => XlStepState.pending,
+    };
+    return <XlTaskStep>[
+      XlTaskStep(
+        title: (data['title'] ?? '执行任务').toString(),
+        meta: status == XlTaskStatus.queued ? '等待执行' : null,
+        state: state,
+      ),
+    ];
+  }
+
+  void _taskActionHint(BuildContext context, String action) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('$action任务请在任务中心操作')),
+    );
+  }
 }
 
-/// 气泡小尖角（与气泡同色，靠头像侧）
+/// 气泡小尖角（6×10，与气泡同色，顶部 12 对齐首行）
 class _BubbleTailPainter extends CustomPainter {
+  const _BubbleTailPainter({required this.color, required this.isUser});
+
   final Color color;
   final bool isUser;
-
-  const _BubbleTailPainter({required this.color, required this.isUser});
 
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()..color = color;
     final path = Path();
     if (isUser) {
-      // 用户（右）：平边在左（贴气泡右缘），尖端向右
-      path.moveTo(0, 0);
-      path.lineTo(0, size.height);
-      path.lineTo(size.width, size.height / 2);
+      path
+        ..moveTo(0, 0)
+        ..lineTo(0, size.height)
+        ..lineTo(size.width, size.height / 2);
     } else {
-      // AI（左）：平边在右（贴气泡左缘），尖端向左
-      path.moveTo(size.width, 0);
-      path.lineTo(size.width, size.height);
-      path.lineTo(0, size.height / 2);
+      path
+        ..moveTo(size.width, 0)
+        ..lineTo(size.width, size.height)
+        ..lineTo(0, size.height / 2);
     }
     path.close();
     canvas.drawPath(path, paint);
@@ -274,4 +409,42 @@ class _BubbleTailPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _BubbleTailPainter old) =>
       old.color != color || old.isUser != isUser;
+}
+
+/// 历史语音消息的静态 11 根波形（§15 I5）
+class _StaticWave extends StatelessWidget {
+  const _StaticWave({required this.color});
+
+  final Color color;
+
+  static const List<double> _heights = <double>[
+    6, 10, 16, 12, 18, 18, 14, 18, 10, 12, 6,
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final bars = XlMotion.waveBarCount;
+    return SizedBox(
+      width: bars * XlDims.waveBarW + (bars - 1) * XlDims.waveBarGap,
+      height: XlDims.waveBarMaxH,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: List.generate(_heights.length, (i) {
+          return Padding(
+            padding: EdgeInsets.only(
+              right: i == _heights.length - 1 ? 0 : XlDims.waveBarGap,
+            ),
+            child: Container(
+              width: XlDims.waveBarW,
+              height: _heights[i],
+              decoration: BoxDecoration(
+                color: color,
+                borderRadius: BorderRadius.circular(XlDims.waveBarW / 2),
+              ),
+            ),
+          );
+        }),
+      ),
+    );
+  }
 }

@@ -1,171 +1,403 @@
 import 'dart:async';
 import 'dart:typed_data';
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:logging/logging.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:vibration/vibration.dart';
-import 'package:xiaozhi_client_flutter/core/utils/audio_util.dart';
-import '../../../../app/themes/app_colors.dart';
-import '../../../../app/themes/app_text_styles.dart';
-import 'voice_wave_visualizer.dart';
 
-/// 按住说话按钮组件
+import '../../../../app/themes/xl_tokens.dart';
+import '../../../../core/utils/audio_util.dart';
+import '../../../widgets/xl/xl_voice_overlay.dart';
+
+/// 供 ChatPage「更多」菜单调用持续监听（保留原功能，不丢入口）
+class VoiceRecordController {
+  VoidCallback? _toggle;
+  bool Function()? _active;
+
+  void attach({
+    required VoidCallback toggle,
+    required bool Function() active,
+  }) {
+    _toggle = toggle;
+    _active = active;
+  }
+
+  void detach() {
+    _toggle = null;
+    _active = null;
+  }
+
+  bool get isContinuousListening => _active?.call() ?? false;
+
+  void toggleContinuousListen() => _toggle?.call();
+}
+
+/// 按住说话按钮
+/// ------------------------------------------------------------
+/// §15 I10：系统 `onLongPressStart` 固定 500ms，无法做 120ms；
+/// 改用 `RawGestureDetector + LongPressGestureRecognizer(duration: 120ms)`。
+/// 上滑取消用 `details.offsetFromOrigin.dy`（相对按下点），80/72pt 迟滞。
 class VoiceRecordButton extends StatefulWidget {
-  final Function() onRecordStart;
-  final Function() onRecordEnd;
-  final Function() onRecordCancel;
-  final Function(Uint8List) onAudioSend;
-
-  /// 持续监听模式回调
-  final Function()? onContinuousListenStart;
-  final Function()? onContinuousListenStop;
-
   const VoiceRecordButton({
     super.key,
     required this.onRecordStart,
     required this.onRecordEnd,
     required this.onRecordCancel,
     required this.onAudioSend,
+    this.onRecordTooShort,
     this.onContinuousListenStart,
     this.onContinuousListenStop,
+    this.controller,
   });
+
+  final VoidCallback onRecordStart;
+  final VoidCallback onRecordEnd;
+  final VoidCallback onRecordCancel;
+  /// <800ms 误触：不发音频、不产生气泡，只提示；用于通知聊天页收束本轮 listen
+  final VoidCallback? onRecordTooShort;
+  final ValueChanged<Uint8List> onAudioSend;
+  final VoidCallback? onContinuousListenStart;
+  final VoidCallback? onContinuousListenStop;
+  final VoiceRecordController? controller;
 
   @override
   State<VoiceRecordButton> createState() => _VoiceRecordButtonState();
 }
 
 class _VoiceRecordButtonState extends State<VoiceRecordButton> {
+  final Logger _log = Logger('VoiceRecord');
   bool _isRecording = false;
-  bool _isCancelling = false;
-  bool _isContinuousListening = false; // 持续监听模式
+  bool _willCancel = false;
+  bool _pressEnded = false;
+  bool _closing = false;
+  bool _isContinuousListening = false;
 
-  StreamSubscription<Uint8List>? _audioStreamSubscription; // 音频流订阅
+  DateTime? _startAt;
+  Timer? _ticker;
+  StreamSubscription<Uint8List>? _audioSub;
+  OverlayEntry? _overlayEntry;
+
+  final ValueNotifier<_VoiceOverlayState> _overlayState =
+      ValueNotifier<_VoiceOverlayState>(
+    const _VoiceOverlayState(
+      visible: true,
+      willCancel: false,
+      elapsed: Duration.zero,
+      showLimitHint: false,
+    ),
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    widget.controller?.attach(
+      toggle: _toggleContinuousListen,
+      active: () => _isContinuousListening,
+    );
+  }
+
+  @override
+  void dispose() {
+    widget.controller?.detach();
+    _ticker?.cancel();
+    _audioSub?.cancel();
+    _overlayEntry?.remove();
+    _overlayEntry = null;
+    _overlayState.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final p = XlPalette.of(context);
+    final cancel = _isRecording && _willCancel;
+    final pressed = _isRecording && !_willCancel;
 
-    // 根据状态选择文字颜色（微信风格）
-    Color textColor;
-    if (_isRecording || _isContinuousListening) {
-      if (_isCancelling) {
-        textColor = AppColors.error;
-      } else {
-        textColor = AppColors.primary;
+    final bg = cancel
+        ? p.dangerSoft
+        : (pressed ? p.pressed : p.surface);
+    final fg = cancel ? p.dangerText : p.textPrimary;
+    final label = _isContinuousListening
+        ? '正在聆听…'
+        : (_isRecording
+            ? (cancel ? '松开 取消' : '松开 发送')
+            : '按住 说话');
+
+    final button = AnimatedContainer(
+      duration: XlMotion.instant,
+      curve: XlMotion.standard,
+      height: XlDims.voiceButtonHeight,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(XlDims.rField),
+      ),
+      child: Text(
+        label,
+        style: XlType.body.copyWith(
+          fontWeight: FontWeight.w500,
+          color: fg,
+        ),
+      ),
+    );
+
+    return Semantics(
+      label: '按住说话，上滑取消',
+      button: true,
+      onLongPress: _isContinuousListening ? null : _startFromSemantics,
+      child: _isContinuousListening
+          ? button
+          : RawGestureDetector(
+              behavior: HitTestBehavior.opaque,
+              gestures: <Type, GestureRecognizerFactory>{
+                LongPressGestureRecognizer:
+                    GestureRecognizerFactoryWithHandlers<
+                        LongPressGestureRecognizer>(
+                  () => LongPressGestureRecognizer(
+                    duration: const Duration(milliseconds: 120),
+                    debugOwner: this,
+                  ),
+                  (instance) {
+                    instance
+                      ..onLongPressStart = _onStart
+                      ..onLongPressMoveUpdate = _onMove
+                      ..onLongPressEnd = _onEnd
+                      ..onLongPressCancel = _onGestureCancel;
+                  },
+                ),
+              },
+              child: button,
+            ),
+    );
+  }
+
+  void _startFromSemantics() {
+    _pressEnded = false;
+    _onStart(null);
+  }
+
+  Future<void> _onStart(LongPressStartDetails? details) async {
+    if (_isRecording || _closing) return;
+    _pressEnded = false;
+    if (!await _ensureMic()) return;
+    if (_pressEnded) return;
+    await _startRecording();
+  }
+
+  void _onMove(LongPressMoveUpdateDetails details) {
+    if (!_isRecording) return;
+    final dy = details.offsetFromOrigin.dy;
+    if (!_willCancel && dy < -XlMotion.cancelThreshold) {
+      setState(() => _willCancel = true);
+      _overlayState.value = _overlayState.value.copyWith(willCancel: true);
+      _overlayEntry?.markNeedsBuild();
+      HapticFeedback.lightImpact();
+    } else if (_willCancel &&
+        dy > -(XlMotion.cancelThreshold - XlMotion.cancelHysteresis)) {
+      setState(() => _willCancel = false);
+      _overlayState.value = _overlayState.value.copyWith(willCancel: false);
+      _overlayEntry?.markNeedsBuild();
+    }
+  }
+
+  void _onEnd(LongPressEndDetails details) {
+    _pressEnded = true;
+    if (!_isRecording) return;
+    final elapsed = _startAt == null
+        ? Duration.zero
+        : DateTime.now().difference(_startAt!);
+    final tooShort = elapsed < const Duration(milliseconds: 800);
+    if (tooShort) {
+      // v6.11.18：误触拦截但不静默——先停上行，浮层给明确提示，再自动收回到待说话态
+      _finish(send: false, tooShortElapsed: elapsed);
+      return;
+    }
+    _finish(send: !_willCancel);
+  }
+
+  void _onGestureCancel() {
+    _pressEnded = true;
+    if (!_isRecording) return;
+    _finish(send: false, silent: true);
+  }
+
+  Future<void> _finish({
+    required bool send,
+    bool silent = false,
+    Duration? tooShortElapsed,
+  }) async {
+    if (!_isRecording || _closing) return;
+    _closing = true;
+    _ticker?.cancel();
+    _ticker = null;
+
+    // v6.11.18：<800ms 误触——先停上行（保证无音频发出），浮层提示 700ms，
+    // 再收起并回到待说话态；不调 onRecordEnd（无气泡），也不弹"已取消录音"混淆视听
+    if (tooShortElapsed != null) {
+      await _stopAudio();
+      _log.info('[RECORD] too-short elapsed=${tooShortElapsed.inMilliseconds}ms 已提示未发送');
+      _overlayState.value = _overlayState.value.copyWith(
+        visible: true,
+        willCancel: false,
+        elapsed: tooShortElapsed,
+        hintOverride: '说话时间太短，请按住再说',
+      );
+      _overlayEntry?.markNeedsBuild();
+      await Future<void>.delayed(const Duration(milliseconds: 700));
+      _overlayState.value = _overlayState.value.copyWith(visible: false);
+      await Future<void>.delayed(XlMotion.fast);
+      if (mounted) _removeOverlay();
+      if (mounted) {
+        setState(() {
+          _isRecording = false;
+          _willCancel = false;
+        });
       }
-    } else {
-      textColor = isDark ? Colors.grey[300]! : Colors.grey[700]!;
+      _closing = false;
+      // 通知聊天页收束本轮 listen start（不发音频、不产生气泡）
+      widget.onRecordTooShort?.call();
+      return;
     }
 
-    return Row(
-      children: [
-        // 🔥 按住说话按钮
-        Expanded(
-          child: GestureDetector(
-            onLongPressStart: _isContinuousListening ? null : _onLongPressStart,
-            onLongPressEnd: _isContinuousListening ? null : _onLongPressEnd,
-            onLongPressMoveUpdate: _isContinuousListening
-                ? null
-                : _onLongPressMoveUpdate,
-            child: Container(
-              height: 40,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              decoration: BoxDecoration(
-                color: (_isRecording || _isContinuousListening)
-                    ? (_isCancelling
-                          ? AppColors.error.withOpacity(0.12)
-                          : AppColors.primary.withOpacity(0.12))
-                    : (isDark
-                          ? AppColors.inputBackgroundDark
-                          : AppColors.inputBackground),
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: Center(
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    // 🔥 录音时显示波形，否则显示麦克风图标
-                    if (_isRecording || _isContinuousListening)
-                      VoiceWaveVisualizer(
-                        isRecording: _isRecording || _isContinuousListening,
-                        amplitudeStream: AudioUtil.amplitudeStream,
-                        isCancelling: _isCancelling,
-                        barCount: 5,
-                        width: 50,
-                        height: 24,
-                      )
-                    else
-                      Icon(Icons.mic_none, size: 20, color: textColor),
-                    const SizedBox(width: 8),
-                    Text(
-                      _isContinuousListening
-                          ? '正在聆听...'
-                          : (_isRecording
-                                ? (_isCancelling ? '松开取消' : '松开发送')
-                                : '按住说话'),
-                      style: AppTextStyles.body.copyWith(
-                        fontWeight: FontWeight.w500,
-                        color: textColor,
-                      ),
-                    ),
-                  ],
+    // 浮层 150ms 淡出（取消），发送 90ms 收起
+    _overlayState.value = _overlayState.value.copyWith(visible: false);
+    await Future<void>.delayed(
+      send ? const Duration(milliseconds: 90) : XlMotion.fast,
+    );
+    if (mounted) _removeOverlay();
+
+    await _stopAudio();
+    if (mounted) {
+      setState(() {
+        _isRecording = false;
+        _willCancel = false;
+      });
+    }
+    _closing = false;
+
+    if (send) {
+      HapticFeedback.lightImpact();
+      widget.onRecordEnd();
+    } else if (!silent) {
+      HapticFeedback.lightImpact();
+      widget.onRecordCancel();
+    }
+  }
+
+  Future<void> _startRecording() async {
+    try {
+      HapticFeedback.mediumImpact();
+      widget.onRecordStart.call();
+
+      _audioSub = AudioUtil.audioStream.listen(
+        (audio) {
+          if (_isRecording) widget.onAudioSend(audio);
+        },
+        onError: (Object e) {
+          _fail('录音失败，请稍后再试');
+        },
+      );
+      await AudioUtil.startRecording();
+
+      if (!mounted) return;
+      setState(() {
+        _isRecording = true;
+        _willCancel = false;
+        _startAt = DateTime.now();
+      });
+      _overlayState.value = const _VoiceOverlayState(
+        visible: true,
+        willCancel: false,
+        elapsed: Duration.zero,
+        showLimitHint: false,
+        hintOverride: null,
+      );
+      _showOverlay();
+      _ticker = Timer.periodic(
+        const Duration(milliseconds: 50),
+        (_) => _tick(),
+      );
+    } catch (e) {
+      _fail('麦克风被占用，请稍后再试');
+    }
+  }
+
+  void _tick() {
+    final start = _startAt;
+    if (start == null || !_isRecording) return;
+    final elapsed = DateTime.now().difference(start);
+    if (elapsed >= const Duration(seconds: 60)) {
+      // 60s 自动发送
+      _finish(send: !_willCancel);
+      return;
+    }
+    _overlayState.value = _overlayState.value.copyWith(
+      elapsed: elapsed,
+      showLimitHint: elapsed >= const Duration(seconds: 45),
+    );
+  }
+
+  Future<void> _stopAudio() async {
+    await _audioSub?.cancel();
+    _audioSub = null;
+    try {
+      await AudioUtil.stopRecording();
+    } catch (_) {}
+  }
+
+  Future<void> _fail(String message) async {
+    _ticker?.cancel();
+    _ticker = null;
+    await _stopAudio();
+    if (!mounted) return;
+    _removeOverlay();
+    setState(() {
+      _isRecording = false;
+      _willCancel = false;
+    });
+    _showError(message);
+  }
+
+  void _showOverlay() {
+    if (_overlayEntry != null) return;
+    final overlay = Overlay.of(context);
+    _overlayEntry = OverlayEntry(
+      builder: (ctx) {
+        final media = MediaQuery.of(ctx);
+        final bottom = XlDims.voiceOverlayBottom + media.viewInsets.bottom;
+        return Positioned(
+          left: (media.size.width - XlDims.voiceOverlayW) / 2,
+          bottom: bottom,
+          child: IgnorePointer(
+            child: ValueListenableBuilder<_VoiceOverlayState>(
+              valueListenable: _overlayState,
+              builder: (context, state, _) => AnimatedOpacity(
+                opacity: state.visible ? 1 : 0,
+                duration: XlMotion.fast,
+                curve: XlMotion.standard,
+                child: XlVoiceRecordOverlay(
+                  amplitudeStream: AudioUtil.amplitudeStream,
+                  elapsed: state.elapsed,
+                  willCancel: state.willCancel,
+                  showLimitHint: state.showLimitHint,
+                  hintOverride: state.hintOverride,
                 ),
               ),
             ),
           ),
-        ),
-        const SizedBox(width: 8),
-        // 🔥 持续监听按钮
-        _buildContinuousListenButton(isDark),
-      ],
+        );
+      },
     );
+    overlay.insert(_overlayEntry!);
   }
 
-  /// 构建持续监听按钮
-  Widget _buildContinuousListenButton(bool isDark) {
-    return GestureDetector(
-      onTap: _toggleContinuousListen,
-      child: Container(
-        width: 48,
-        height: 48,
-        decoration: BoxDecoration(
-          color: _isContinuousListening
-              ? (isDark ? Colors.red[700] : Colors.red[400])
-              : (isDark ? Colors.grey[800] : Colors.grey[100]),
-          shape: BoxShape.circle,
-          boxShadow: _isContinuousListening
-              ? [
-                  BoxShadow(
-                    color: Colors.red.withOpacity(0.3),
-                    blurRadius: 8,
-                    spreadRadius: 2,
-                  ),
-                ]
-              : null,
-        ),
-        child: Icon(
-          _isContinuousListening ? Icons.stop : Icons.fiber_manual_record,
-          size: 24,
-          color: _isContinuousListening
-              ? Colors.white
-              : (isDark ? Colors.grey[400] : Colors.grey[600]),
-        ),
-      ),
-    );
+  void _removeOverlay() {
+    _overlayEntry?.remove();
+    _overlayEntry = null;
   }
 
-  void _onLongPressStart(LongPressStartDetails details) async {
-    setState(() {
-      _isCancelling = false;
-    });
-    // 首次按住说话时才申请麦克风权限：不先过这一关，录音器会静默失败，
-    // 界面却停在"松开发送"，看起来像按了没反应。
-    if (!await _ensureMic()) return;
-    await _startRecording();
-  }
-
-  /// 麦克风权限闸门：未授予先申请；拒过（系统不再弹框）就直接给"去开启"的出口。
   Future<bool> _ensureMic() async {
     final status = await Permission.microphone.status;
     if (status.isGranted) return true;
@@ -183,96 +415,7 @@ class _VoiceRecordButtonState extends State<VoiceRecordButton> {
     return false;
   }
 
-  void _onLongPressEnd(LongPressEndDetails details) {
-    if (_isCancelling) {
-      widget.onRecordCancel();
-    } else {
-      widget.onRecordEnd();
-    }
-    _stopRecording();
-    setState(() {
-      _isCancelling = false;
-    });
-  }
-
-  // 监听手指滑动，判断是否取消
-  void _onLongPressMoveUpdate(LongPressMoveUpdateDetails details) {
-    // 向上滑动超过 100 像素则标记为取消，但不停止录音
-    final distance = details.localPosition.dy;
-    setState(() {
-      _isCancelling = distance < -100;
-    });
-  }
-
-  // 开始录音（收集数据）
-  Future<void> _startRecording() async {
-    try {
-      setState(() {
-        _isRecording = true;
-      });
-
-      if (await Vibration.hasVibrator()) {
-        Vibration.vibrate(duration: 20);
-      }
-
-      // 🔥 1. 先通知 chat_screen 准备录音
-      widget.onRecordStart.call();
-
-      // 🔥 2. 收集音频流数据，但不立即发送
-      _audioStreamSubscription = AudioUtil.audioStream.listen(
-        (audioData) {
-          if (_isRecording) {
-            // 立即发送每个音频数据块
-            widget.onAudioSend(audioData);
-          }
-        },
-        onError: (error) {
-          print('音频流错误: $error');
-          setState(() {
-            _isRecording = false;
-          });
-        },
-      );
-
-      // 开始录音
-      await AudioUtil.startRecording();
-
-      print('开始收集录音数据（按住模式）');
-    } catch (e) {
-      print('录音失败: $e');
-      setState(() {
-        _isRecording = false;
-      });
-      _showError('录音失败: $e');
-    }
-  }
-
-  // 停止录音并合成发送
-  Future<void> _stopRecording() async {
-    if (!_isRecording) return;
-
-    try {
-      // 1. 取消音频流订阅
-      await _audioStreamSubscription?.cancel();
-      _audioStreamSubscription = null;
-
-      // 2. 停止录音
-      await AudioUtil.stopRecording();
-
-      setState(() {
-        _isRecording = false;
-      });
-
-      print('停止录音完成');
-    } catch (e) {
-      print('停止录音失败: $e');
-      setState(() {
-        _isRecording = false;
-      });
-    }
-  }
-
-  /// 切换持续监听模式
+  /// 持续监听（原功能，入口移至「更多」菜单）
   Future<void> _toggleContinuousListen() async {
     if (_isContinuousListening) {
       await _stopContinuousListening();
@@ -281,79 +424,31 @@ class _VoiceRecordButtonState extends State<VoiceRecordButton> {
     }
   }
 
-  /// 开始持续监听
   Future<void> _startContinuousListening() async {
     if (!await _ensureMic()) return;
     try {
-      setState(() {
-        _isContinuousListening = true;
-      });
-
-      // 震动反馈
-      if (await Vibration.hasVibrator()) {
-        Vibration.vibrate(duration: 30);
-      }
-
-      // 1. 通知 chat_page 开始持续监听
+      setState(() => _isContinuousListening = true);
+      HapticFeedback.mediumImpact();
       widget.onContinuousListenStart?.call();
-
-      // 2. 订阅音频流
-      _audioStreamSubscription = AudioUtil.audioStream.listen(
-        (audioData) {
-          if (_isContinuousListening) {
-            widget.onAudioSend(audioData);
-          }
+      _audioSub = AudioUtil.audioStream.listen(
+        (audio) {
+          if (_isContinuousListening) widget.onAudioSend(audio);
         },
-        onError: (error) {
-          print('持续监听音频流错误: $error');
-          _stopContinuousListening();
-        },
+        onError: (_) => _stopContinuousListening(),
       );
-
-      // 3. 开始录音（启用 AEC 回声消除）
       await AudioUtil.startRecording(enableAEC: true);
-
-      print('开始持续监听模式（已启用 AEC 回声消除）');
     } catch (e) {
-      print('启动持续监听失败: $e');
-      setState(() {
-        _isContinuousListening = false;
-      });
+      setState(() => _isContinuousListening = false);
       _showError('启动持续监听失败: $e');
     }
   }
 
-  /// 停止持续监听
   Future<void> _stopContinuousListening() async {
     if (!_isContinuousListening) return;
-
-    try {
-      // 震动反馈
-      if (await Vibration.hasVibrator()) {
-        Vibration.vibrate(duration: 20);
-      }
-
-      // 1. 取消音频流订阅
-      await _audioStreamSubscription?.cancel();
-      _audioStreamSubscription = null;
-
-      // 2. 停止录音
-      await AudioUtil.stopRecording();
-
-      // 3. 通知 chat_page 停止持续监听
-      widget.onContinuousListenStop?.call();
-
-      setState(() {
-        _isContinuousListening = false;
-      });
-
-      print('停止持续监听模式');
-    } catch (e) {
-      print('停止持续监听失败: $e');
-      setState(() {
-        _isContinuousListening = false;
-      });
-    }
+    HapticFeedback.lightImpact();
+    await _stopAudio();
+    widget.onContinuousListenStop?.call();
+    if (mounted) setState(() => _isContinuousListening = false);
   }
 
   void _showMicGuide() {
@@ -372,9 +467,44 @@ class _VoiceRecordButtonState extends State<VoiceRecordButton> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: Colors.red,
+        backgroundColor: XlPalette.of(context).danger,
         duration: const Duration(seconds: 2),
       ),
+    );
+  }
+}
+
+@immutable
+class _VoiceOverlayState {
+  const _VoiceOverlayState({
+    required this.visible,
+    required this.willCancel,
+    required this.elapsed,
+    required this.showLimitHint,
+    this.hintOverride,
+  });
+
+  final bool visible;
+  final bool willCancel;
+  final Duration elapsed;
+  final bool showLimitHint;
+
+  /// v6.11.18：临时提示文案（如"说话时间太短"），为空则用默认提示
+  final String? hintOverride;
+
+  _VoiceOverlayState copyWith({
+    bool? visible,
+    bool? willCancel,
+    Duration? elapsed,
+    bool? showLimitHint,
+    String? hintOverride,
+  }) {
+    return _VoiceOverlayState(
+      visible: visible ?? this.visible,
+      willCancel: willCancel ?? this.willCancel,
+      elapsed: elapsed ?? this.elapsed,
+      showLimitHint: showLimitHint ?? this.showLimitHint,
+      hintOverride: hintOverride ?? this.hintOverride,
     );
   }
 }

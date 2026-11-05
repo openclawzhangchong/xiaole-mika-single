@@ -1,327 +1,221 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'app_colors.dart';
 
-/// 应用主题配置（微信风格）
+import 'xl_tokens.dart';
+
+/// 应用主题（微信风 · 用于 tokens.json 的 ThemeData 映射）
+/// ------------------------------------------------------------
+/// Material 3 关闭：避免自带抬升与胶囊圆角污染 IM 观感。
+/// 深色只换色不改布局；所有语义色通过 [XlPalette] 扩展下发。
 class AppTheme {
   AppTheme._();
 
-  /// 浅色主题
-  static ThemeData lightTheme() {
-    return ThemeData(
-      useMaterial3: true,
-      brightness: Brightness.light,
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: AppColors.primary,
-        brightness: Brightness.light,
-      ).copyWith(
-        primary: AppColors.primary,
-        secondary: AppColors.primary,
-        surface: AppColors.surface,
-        error: AppColors.error,
-      ),
-      scaffoldBackgroundColor: AppColors.background,
+  static ThemeData lightTheme() => _build(Brightness.light);
 
-      // AppBar 主题（微信：白底、黑字、底部细分割线）
-      appBarTheme: const AppBarTheme(
-        centerTitle: true,
-        elevation: 0,
-        backgroundColor: AppColors.surface,
-        surfaceTintColor: AppColors.surface,
-        foregroundColor: AppColors.textPrimary,
-        iconTheme: IconThemeData(color: AppColors.textPrimary),
-        titleTextStyle: TextStyle(
-          fontSize: 17,
-          fontWeight: FontWeight.w500,
-          color: AppColors.textPrimary,
-        ),
-        shape: Border(
-          bottom: BorderSide(color: AppColors.divider, width: 0.5),
-        ),
-        systemOverlayStyle: SystemUiOverlayStyle(
-          statusBarColor: Colors.transparent,
-          statusBarIconBrightness: Brightness.dark, // 浅色主题用深色图标
-          statusBarBrightness: Brightness.light,
-        ),
-      ),
+  static ThemeData darkTheme() => _build(Brightness.dark);
 
-      // Card 主题（微信：无阴影、白底）
-      cardTheme: CardThemeData(
-        elevation: 0,
-        color: AppColors.surface,
-        shadowColor: Colors.transparent,
-        margin: EdgeInsets.zero,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
-      ),
-
-      // 输入框主题（微信：灰底、无边框）
-      inputDecorationTheme: InputDecorationTheme(
-        filled: true,
-        fillColor: AppColors.inputBackground,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(4),
-          borderSide: BorderSide.none,
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(4),
-          borderSide: BorderSide.none,
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(4),
-          borderSide: const BorderSide(color: AppColors.primary, width: 1),
-        ),
-        hintStyle: const TextStyle(color: AppColors.textSecondary),
-        labelStyle: const TextStyle(color: AppColors.textSecondary),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-      ),
-
-      // 按钮主题（微信：绿底白字）
-      elevatedButtonTheme: ElevatedButtonThemeData(
-        style: ElevatedButton.styleFrom(
-          elevation: 0,
-          backgroundColor: AppColors.primary,
-          foregroundColor: Colors.white,
-          disabledBackgroundColor: AppColors.primary.withOpacity(0.4),
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(4),
-          ),
-        ),
-      ),
-
-      // TextButton 主题（微信：绿色文字）
-      textButtonTheme: TextButtonThemeData(
-        style: TextButton.styleFrom(
-          foregroundColor: AppColors.primary,
-        ),
-      ),
-
-      // FloatingActionButton 主题
-      floatingActionButtonTheme: const FloatingActionButtonThemeData(
-        elevation: 2,
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
-      ),
-
-      // 底部导航栏主题（微信：无指示器、绿色选中）
-      navigationBarTheme: NavigationBarThemeData(
-        height: 56,
-        elevation: 0,
-        backgroundColor: AppColors.navBarBackground,
-        indicatorColor: Colors.transparent,
-        surfaceTintColor: Colors.transparent,
-        labelTextStyle: WidgetStateProperty.resolveWith((states) {
-          if (states.contains(WidgetState.selected)) {
-            return const TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w500,
-              color: AppColors.primary,
-            );
-          }
-          return const TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.normal,
-            color: AppColors.navBarUnselected,
-          );
-        }),
-        iconTheme: WidgetStateProperty.resolveWith((states) {
-          if (states.contains(WidgetState.selected)) {
-            return const IconThemeData(color: AppColors.primary, size: 26);
-          }
-          return const IconThemeData(
-              color: AppColors.navBarUnselected, size: 26);
-        }),
-      ),
-
-      // 对话框主题
-      dialogTheme: DialogThemeData(
-        backgroundColor: AppColors.surface,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        titleTextStyle: const TextStyle(
-          fontSize: 17,
-          fontWeight: FontWeight.w500,
-          color: AppColors.textPrimary,
-        ),
-      ),
-
-      // 底部弹窗主题（微信 ActionSheet）
-      bottomSheetTheme: const BottomSheetThemeData(
-        backgroundColor: AppColors.background,
-        surfaceTintColor: Colors.transparent,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
-        ),
-      ),
-
-      // 分割线主题
-      dividerTheme: const DividerThemeData(
-        color: AppColors.divider,
-        thickness: 0.5,
-        space: 0.5,
-      ),
+  static ThemeData _build(Brightness brightness) {
+    final dark = brightness == Brightness.dark;
+    final p = dark ? XlPalette.dark : XlPalette.light;
+    final baseText = (dark
+            ? Typography.material2021(platform: TargetPlatform.android).white
+            : Typography.material2021(platform: TargetPlatform.android).black)
+        .apply(
+      fontFamilyFallback: xlFontFallback,
+      bodyColor: p.textPrimary,
+      displayColor: p.textPrimary,
     );
-  }
 
-  /// 深色主题
-  static ThemeData darkTheme() {
+    final textTheme = baseText.copyWith(
+      titleLarge: XlType.navTitle.copyWith(color: p.textPrimary),
+      titleMedium: XlType.listTitle.copyWith(color: p.textPrimary),
+      titleSmall: XlType.cardTitle.copyWith(color: p.textPrimary),
+      bodyLarge: XlType.body.copyWith(color: p.textPrimary),
+      bodyMedium: XlType.summary.copyWith(color: p.textPrimary),
+      bodySmall: XlType.meta.copyWith(color: p.textSecondary),
+      labelLarge: XlType.button.copyWith(color: p.textPrimary),
+      labelMedium: XlType.caption.copyWith(color: p.textSecondary),
+      labelSmall: XlType.tabLabel.copyWith(color: p.textSecondary),
+    );
+
+    final scheme = ColorScheme.fromSeed(
+      seedColor: XlColor.brandDeep,
+      brightness: brightness,
+    ).copyWith(
+      primary: p.brandDeep,
+      onPrimary: Colors.white,
+      secondary: p.brandDeep,
+      surface: p.surface,
+      onSurface: p.textPrimary,
+      error: p.danger,
+      onError: Colors.white,
+    );
+
     return ThemeData(
-      useMaterial3: true,
-      brightness: Brightness.dark,
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: AppColors.primary,
-        brightness: Brightness.dark,
-      ).copyWith(
-        primary: AppColors.primary,
-        secondary: AppColors.primary,
-        surface: AppColors.surfaceDark,
-        error: AppColors.error,
-      ),
-      scaffoldBackgroundColor: AppColors.backgroundDark,
+      useMaterial3: false,
+      brightness: brightness,
+      colorScheme: scheme,
+      fontFamilyFallback: xlFontFallback,
+      scaffoldBackgroundColor: p.canvas,
+      textTheme: textTheme,
+      primaryTextTheme: textTheme,
+      splashFactory: NoSplash.splashFactory,
+      highlightColor: Colors.transparent,
+      hoverColor: Colors.transparent,
+      dividerColor: p.hairline,
+      canvasColor: p.canvas,
+      cardColor: p.surface,
+      disabledColor: p.textQuaternary,
+      extensions: <ThemeExtension<dynamic>>[p],
 
-      // AppBar 主题
-      appBarTheme: const AppBarTheme(
+      appBarTheme: AppBarTheme(
         centerTitle: true,
         elevation: 0,
-        backgroundColor: AppColors.surfaceDark,
-        surfaceTintColor: AppColors.surfaceDark,
-        foregroundColor: AppColors.textPrimaryDark,
-        iconTheme: IconThemeData(color: AppColors.textPrimaryDark),
-        titleTextStyle: TextStyle(
-          fontSize: 17,
-          fontWeight: FontWeight.w500,
-          color: AppColors.textPrimaryDark,
-        ),
-        shape: Border(
-          bottom: BorderSide(color: AppColors.dividerDark, width: 0.5),
+        scrolledUnderElevation: 0,
+        toolbarHeight: XlDims.navHeight,
+        backgroundColor: p.canvas,
+        surfaceTintColor: Colors.transparent,
+        foregroundColor: p.textPrimary,
+        iconTheme: IconThemeData(color: p.textPrimary, size: 24),
+        titleTextStyle: XlType.navTitle.copyWith(
+          color: p.textPrimary,
+          fontFamilyFallback: xlFontFallback,
         ),
         systemOverlayStyle: SystemUiOverlayStyle(
           statusBarColor: Colors.transparent,
-          statusBarIconBrightness: Brightness.light, // 深色主题用浅色图标
-          statusBarBrightness: Brightness.dark,
+          statusBarIconBrightness: dark ? Brightness.light : Brightness.dark,
+          statusBarBrightness: dark ? Brightness.dark : Brightness.light,
         ),
       ),
 
-      // Card 主题
       cardTheme: CardThemeData(
         elevation: 0,
-        color: AppColors.surfaceDark,
+        color: p.surface,
         shadowColor: Colors.transparent,
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(XlDims.rCard),
         ),
       ),
 
-      // 输入框主题
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: AppColors.inputBackgroundDark,
+        fillColor: p.surface,
+        isDense: true,
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(4),
+          borderRadius: BorderRadius.circular(XlDims.rField),
           borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(4),
+          borderRadius: BorderRadius.circular(XlDims.rField),
           borderSide: BorderSide.none,
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(4),
-          borderSide: const BorderSide(color: AppColors.primary, width: 1),
+          borderRadius: BorderRadius.circular(XlDims.rField),
+          borderSide: BorderSide(color: p.hairlineStrong, width: 1),
         ),
-        hintStyle: const TextStyle(color: AppColors.textSecondaryDark),
-        labelStyle: const TextStyle(color: AppColors.textSecondaryDark),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        hintStyle: XlType.body.copyWith(color: p.placeholder),
+        labelStyle: XlType.body.copyWith(color: p.textSecondary),
       ),
 
-      // 按钮主题
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           elevation: 0,
-          backgroundColor: AppColors.primary,
+          backgroundColor: p.brandDeep,
           foregroundColor: Colors.white,
-          disabledBackgroundColor: AppColors.primary.withOpacity(0.4),
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          disabledBackgroundColor: p.brandDeep.withOpacity(0.4),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: BorderRadius.circular(XlDims.rButton),
           ),
+          textStyle: XlType.button,
         ),
       ),
 
-      // TextButton 主题
+      // 链接蓝承载"非主路径"动作（查看详情 / 复制结果）
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          foregroundColor: AppColors.primary,
+          foregroundColor: p.link,
+          textStyle: XlType.summary,
         ),
       ),
 
-      // FloatingActionButton 主题
-      floatingActionButtonTheme: const FloatingActionButtonThemeData(
-        elevation: 2,
-        backgroundColor: AppColors.primary,
+      floatingActionButtonTheme: FloatingActionButtonThemeData(
+        elevation: 0,
+        backgroundColor: p.brandDeep,
         foregroundColor: Colors.white,
       ),
 
-      // 底部导航栏主题
-      navigationBarTheme: NavigationBarThemeData(
-        height: 56,
-        elevation: 0,
-        backgroundColor: AppColors.navBarBackgroundDark,
-        indicatorColor: Colors.transparent,
-        surfaceTintColor: Colors.transparent,
-        labelTextStyle: WidgetStateProperty.resolveWith((states) {
-          if (states.contains(WidgetState.selected)) {
-            return const TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w500,
-              color: AppColors.primary,
-            );
+      // 开关：轨道色跟随主题（§15 I9：深色 #3A3A3C 不写死）
+      switchTheme: SwitchThemeData(
+        thumbColor: const MaterialStatePropertyAll<Color>(Colors.white),
+        trackColor: MaterialStateProperty.resolveWith<Color>((states) {
+          if (states.contains(MaterialState.selected)) {
+            return (dark ? XlColorDark.switchTrackOn : XlColor.switchTrackOn);
           }
-          return const TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.normal,
-            color: AppColors.navBarUnselectedDark,
-          );
+          return p.switchTrackOff;
         }),
-        iconTheme: WidgetStateProperty.resolveWith((states) {
-          if (states.contains(WidgetState.selected)) {
-            return const IconThemeData(color: AppColors.primary, size: 26);
-          }
-          return const IconThemeData(
-              color: AppColors.navBarUnselectedDark, size: 26);
-        }),
+        trackOutlineColor:
+            const MaterialStatePropertyAll<Color>(Colors.transparent),
       ),
 
-      // 对话框主题
       dialogTheme: DialogThemeData(
-        backgroundColor: AppColors.surfaceDark,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        titleTextStyle: const TextStyle(
-          fontSize: 17,
-          fontWeight: FontWeight.w500,
-          color: AppColors.textPrimaryDark,
-        ),
-      ),
-
-      // 底部弹窗主题
-      bottomSheetTheme: const BottomSheetThemeData(
-        backgroundColor: AppColors.backgroundDark,
+        backgroundColor: p.surface,
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
+          borderRadius: BorderRadius.circular(XlDims.rXl),
+        ),
+        titleTextStyle: XlType.navTitle.copyWith(color: p.textPrimary),
+        contentTextStyle: XlType.body.copyWith(color: p.textPrimary),
+      ),
+
+      bottomSheetTheme: BottomSheetThemeData(
+        backgroundColor: p.canvas,
+        modalBackgroundColor: p.canvas,
+        surfaceTintColor: Colors.transparent,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(XlDims.rXl)),
         ),
       ),
 
-      // 分割线主题
-      dividerTheme: const DividerThemeData(
-        color: AppColors.dividerDark,
+      dividerTheme: DividerThemeData(
+        color: p.hairline,
         thickness: 0.5,
         space: 0.5,
+      ),
+
+      iconTheme: IconThemeData(color: p.textPrimary, size: 24),
+      textSelectionTheme: TextSelectionThemeData(
+        cursorColor: p.brandDeep,
+        selectionColor: p.brandDeep.withOpacity(0.24),
+        selectionHandleColor: p.brandDeep,
+      ),
+
+      // iOS 横推（不用缩放/淡入）
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: <TargetPlatform, PageTransitionsBuilder>{
+          TargetPlatform.android: CupertinoPageTransitionsBuilder(),
+          TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+        },
+      ),
+
+      tooltipTheme: TooltipThemeData(
+        decoration: BoxDecoration(
+          color: const Color(0xFF191919).withOpacity(0.86),
+          borderRadius: BorderRadius.circular(XlDims.rM),
+        ),
+        textStyle: XlType.meta.copyWith(color: Colors.white),
+      ),
+
+      snackBarTheme: SnackBarThemeData(
+        backgroundColor: dark ? XlColorDark.subtle : Color(0xFF191919),
+        contentTextStyle: XlType.summary.copyWith(color: Colors.white),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(XlDims.rL),
+        ),
       ),
     );
   }

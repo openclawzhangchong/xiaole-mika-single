@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
-import '../../../app/themes/app_colors.dart';
-import '../conversation/conversation_page.dart';
-import '../settings/settings_page.dart';
-import '../mika/mika_task_page.dart';
 
-/// 主页面 - 包含底部导航栏（微信风格）
+import '../../widgets/xl/xl_tab_bar.dart';
+import '../conversation/conversation_page.dart';
+import '../device/device_page.dart';
+import '../mika/mika_task_page.dart';
+import '../settings/settings_page.dart';
+
+/// 主页面 - 底部 4 Tab（DESIGN §8.6：消息 / 任务 / 设备 / 我的）
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
 
@@ -15,57 +17,48 @@ class MainPage extends StatefulWidget {
 class _MainPageState extends State<MainPage> {
   int _currentIndex = 0;
 
-  final List<Widget> _pages = [
-    const ConversationPage(),
-    // 合并包新增：进程内 Mika 执行（不再经 adb forward / PC 网关）
-    const MikaTaskPage(),
-    const SettingsPage(),
+  static const List<XlTabItem> _tabs = <XlTabItem>[
+    XlTabItem(
+      icon: Icons.chat_bubble_outline_rounded,
+      activeIcon: Icons.chat_bubble_rounded,
+      label: '消息',
+    ),
+    XlTabItem(
+      icon: Icons.checklist_outlined,
+      activeIcon: Icons.checklist_rounded,
+      label: '任务',
+    ),
+    XlTabItem(
+      icon: Icons.smartphone_outlined,
+      activeIcon: Icons.smartphone_rounded,
+      label: '设备',
+    ),
+    XlTabItem(
+      icon: Icons.person_outline_rounded,
+      activeIcon: Icons.person_rounded,
+      label: '我的',
+    ),
+  ];
+
+  final List<Widget> _pages = const [
+    ConversationPage(),
+    // 合并包：进程内 Mika 执行（不再经 adb forward / PC 网关）
+    MikaTaskPage(),
+    DevicePage(),
+    SettingsPage(),
   ];
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     return Scaffold(
       body: IndexedStack(
         index: _currentIndex,
         children: _pages,
       ),
-      bottomNavigationBar: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // 顶部细分割线（微信底部栏样式）
-          Container(
-            height: 0.5,
-            color: isDark ? AppColors.dividerDark : AppColors.divider,
-          ),
-          NavigationBar(
-            height: 56,
-            selectedIndex: _currentIndex,
-            onDestinationSelected: (index) {
-              setState(() {
-                _currentIndex = index;
-              });
-            },
-            destinations: const [
-              NavigationDestination(
-                icon: Icon(Icons.chat_bubble_outline),
-                selectedIcon: Icon(Icons.chat_bubble),
-                label: '对话',
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.bolt_outlined),
-                selectedIcon: Icon(Icons.bolt),
-                label: '执行',
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.person_outline),
-                selectedIcon: Icon(Icons.person),
-                label: '我',
-              ),
-            ],
-          ),
-        ],
+      bottomNavigationBar: XlTabBar(
+        items: _tabs,
+        index: _currentIndex,
+        onTap: (index) => setState(() => _currentIndex = index),
       ),
     );
   }

@@ -25,11 +25,12 @@ class AppTextStyles {
     height: 1.4,
   );
 
-  /// 17px w500 — 导航栏标题
+  /// 17px w600 — 导航栏标题（tokens.typography.navTitle）
   static const TextStyle navTitle = TextStyle(
     fontSize: 17,
-    fontWeight: FontWeight.w500,
-    height: 1.3,
+    fontWeight: FontWeight.w600,
+    height: 22 / 17,
+    letterSpacing: 0.2,
   );
 
   /// 17px w400 — 正文 / 消息气泡 / 单元格标题（微信主字号）

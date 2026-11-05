@@ -4,7 +4,7 @@ name: Build Xiaole Single APK
 # 1. 检出本仓库(小乐 6.11.12 基线 + 嵌入改动)
 # 2. scripts/fetch-mika.sh 把 Mika 固定到 6661b9e9 并打 patches/mika-embed.patch
 # 3. android/settings.gradle.kts 以 include(":mika-core")/include(":mika-app") 并入
-# 4. 一次跑出两个包:universal(arm64+armv7) 与 arm64(主分发);两者 versionCode 同为 69
+# 4. 一次跑出两个包:universal(arm64+armv7) 与 arm64(主分发);两者 versionCode 同为 75
 on:
   workflow_dispatch:
   push:
@@ -108,7 +108,7 @@ jobs:
           set -o pipefail
           flutter build apk --release 2>&1 | tee build-universal.log
           mkdir -p dist
-          cp build/app/outputs/flutter-apk/app-release.apk dist/xiaole-6.11.17-mika1-universal.apk
+          cp build/app/outputs/flutter-apk/app-release.apk dist/xiaole-6.11.18-mika1-universal.apk
           ls -lh dist
 
       - name: flutter build apk (arm64-only, release)
@@ -117,14 +117,14 @@ jobs:
           # 主分发包：只打 arm64-v8a（真机 RMX3161 是 arm64）；versionCode 与 universal 相同
           echo "xiaole.abi=arm64-v8a" >> android/gradle.properties
           flutter build apk --release --target-platform android-arm64 2>&1 | tee build-arm64.log
-          cp build/app/outputs/flutter-apk/app-release.apk dist/xiaole-6.11.17-mika1-arm64.apk
+          cp build/app/outputs/flutter-apk/app-release.apk dist/xiaole-6.11.18-mika1-arm64.apk
           ls -lh dist
 
       - name: Slim assets (drop opus windows/web) + re-sign
         run: |
           SDK="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
           BUILD_TOOLS=$(ls -d "$SDK"/build-tools/* 2>/dev/null | sort -V | tail -1)
-          for APK in dist/xiaole-6.11.17-mika1-universal.apk dist/xiaole-6.11.17-mika1-arm64.apk; do
+          for APK in dist/xiaole-6.11.18-mika1-universal.apk dist/xiaole-6.11.18-mika1-arm64.apk; do
             # opus 的 Windows/Web 二进制由 pub 依赖带进 flutter_assets，Android 只用 libopus.so
             zip -q -d "$APK" 'assets/flutter_assets/packages/opus_flutter_web/*' \
               'assets/flutter_assets/packages/opus_flutter_windows/*'
@@ -137,11 +137,11 @@ jobs:
           done
           rm -f android/app/xiaole-release.p12
           echo "keystore removed from workspace"
-          if unzip -l dist/xiaole-6.11.17-mika1-universal.apk | grep -qE 'opus_flutter_(web|windows)'; then
+          if unzip -l dist/xiaole-6.11.18-mika1-universal.apk | grep -qE 'opus_flutter_(web|windows)'; then
             echo "::error::opus 桌面/Web 资产没排掉"
             exit 1
           fi
-          if unzip -l dist/xiaole-6.11.17-mika1-arm64.apk | grep -qE 'lib/armeabi-v7a'; then
+          if unzip -l dist/xiaole-6.11.18-mika1-arm64.apk | grep -qE 'lib/armeabi-v7a'; then
             echo "::error::arm64 包里仍含 armeabi-v7a"
             exit 1
           fi
@@ -150,7 +150,7 @@ jobs:
         run: |
           SDK="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
           BUILD_TOOLS=$(ls -d "$SDK"/build-tools/* 2>/dev/null | sort -V | tail -1)
-          for APK in dist/xiaole-6.11.17-mika1-universal.apk dist/xiaole-6.11.17-mika1-arm64.apk; do
+          for APK in dist/xiaole-6.11.18-mika1-universal.apk dist/xiaole-6.11.18-mika1-arm64.apk; do
             NAME=$(basename "$APK" .apk)
             echo "### $NAME" | tee -a "$GITHUB_STEP_SUMMARY"
             "$BUILD_TOOLS/aapt2" dump badging "$APK" | head -n 3 | tee -a "$GITHUB_STEP_SUMMARY" || true

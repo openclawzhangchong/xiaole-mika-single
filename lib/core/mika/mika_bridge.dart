@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/services.dart';
@@ -15,7 +16,22 @@ class MikaBridge {
   /// 任务状态变化（starting/running/queued/paused/done/failed/cancelled）。
   static void Function(Map<String, dynamic> event)? onTaskState;
 
+  /// 任务事件广播流：聊天页等任意页面都可订阅，不受 [onTaskState] 单回调互斥影响。
+  static final StreamController<Map<String, dynamic>> _taskEvents =
+      StreamController<Map<String, dynamic>>.broadcast();
+  static Stream<Map<String, dynamic>> get taskStates => _taskEvents.stream;
+
+  /// 正在执行的 goal：原生事件只带 task_id/status，这里补上目标让消费方可读。
+  static String? _activeGoal;
+
   static bool _listening = false;
+
+  static void _publish(Map<String, dynamic> event) {
+    final goal = _activeGoal;
+    if (goal != null) event.putIfAbsent('goal', () => goal);
+    onTaskState?.call(event);
+    if (!_taskEvents.isClosed) _taskEvents.add(event);
+  }
 
   /// 注册通道回调；页面初始化时调用一次即可。
   static void install() {
@@ -26,7 +42,7 @@ class MikaBridge {
         try {
           final event =
               Map<String, dynamic>.from(jsonDecode(call.arguments as String));
-          onTaskState?.call(event);
+          _publish(event);
         } catch (_) {
           // 忽略解析失败，避免影响任务本身
         }
@@ -43,9 +59,18 @@ class MikaBridge {
 
   /// 提交一条任务，阻塞到终态（最长 180s），返回与 Mika HTTP 接口一致的 JSON。
   static Future<Map<String, dynamic>> runTask(String goal) async {
-    final raw =
-        await _channel.invokeMethod<String>('runTask', {'goal': goal}) ?? '{}';
-    return Map<String, dynamic>.from(jsonDecode(raw));
+    _activeGoal = goal;
+    try {
+      final raw =
+          await _channel.invokeMethod<String>('runTask', {'goal': goal}) ?? '{}';
+      final result = Map<String, dynamic>.from(jsonDecode(raw));
+      result.putIfAbsent('goal', () => goal);
+      // 终态也广播：中途事件只带 id/status，终态 JSON 才含答案/失败原因/起始时间。
+      if (!_taskEvents.isClosed) _taskEvents.add(result);
+      return result;
+    } finally {
+      if (_activeGoal == goal) _activeGoal = null;
+    }
   }
 
   static Future<bool> cancel(String id) async =>
