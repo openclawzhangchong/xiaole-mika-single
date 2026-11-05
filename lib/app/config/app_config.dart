@@ -4,7 +4,7 @@ class AppConfig {
 
   // 应用信息
   static const String appName = '小乐'; // v4.0.0：品牌统一（默认智能体名前缀等）
-  static const String appVersion = '6.11.19'; // v6.11.19：UI 对照修复（阻断 1 + 重要 8）
+  static const String appVersion = '6.11.20'; // v6.11.20：后台保持连接前台服务（方案 B）
 
   /// v4.4.0 尾音保护：AI 播放结束后丢弃麦克风音频的时长（毫秒）
   static const int defaultTailGuardMs = 300;
@@ -24,6 +24,7 @@ class AppConfig {
   static const String keyThemeMode = 'theme_mode';
   static const String keyLanguage = 'language';
   static const String keyTtsVolume = 'tts_volume'; // v3.2.0：TTS 播放音量 0~100（抢话打断开关 v3.3 起归 AppFeats）
+  static const String keyKeepAlive = 'keep_alive_enabled'; // v6.11.20：后台保持连接开关（默认开）
 
   // 分页配置
   static const int pageSize = 20;

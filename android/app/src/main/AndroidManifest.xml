@@ -69,6 +69,17 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <!-- 后台保持连接（方案 B）：只在"有活跃连接且 App 在后台"时由 App 启动。
+             specialUse：自用包不走商店审核，且不受 Android 15 dataSync 6h/24h 限时。
+             服务内不跑业务，心跳仍是 Dart 侧 45s。 -->
+        <service
+            android:name=".KeepAliveService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android:foregroundServiceType"
+                android:value="specialUse" />
+        </service>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data

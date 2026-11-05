@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/config/app_config.dart';
 import '../../../app/themes/xl_tokens.dart';
 import '../../../core/providers/theme_provider.dart';
+import '../../../core/service/keep_alive_service.dart';
 import '../../../core/storage/storage_service.dart';
 import '../../../core/utils/audio_util.dart';
 import '../../widgets/wx_action_sheet.dart';
@@ -121,8 +122,8 @@ class _SettingsDetailPageState extends ConsumerState<SettingsDetailPage> {
               WxCell(
                 title: '操作记录保留',
                 trailingText: '仅本机',
-                showDivider: false,
               ),
+              _KeepAliveSwitch(),
             ],
           ),
           Padding(
@@ -242,6 +243,50 @@ class _AutoPlaySwitchState extends State<_AutoPlaySwitch> {
           onChanged: _toggle,
         ),
       ),
+    );
+  }
+}
+
+/// 后台保持连接（方案 B）：打开时先要通知权限，被拒则开关回弹并提示，
+/// 绝不出现"开关开着但服务没起"的状态；关掉立即停服务、撤通知。
+class _KeepAliveSwitch extends StatefulWidget {
+  @override
+  State<_KeepAliveSwitch> createState() => _KeepAliveSwitchState();
+}
+
+class _KeepAliveSwitchState extends State<_KeepAliveSwitch> {
+  bool _busy = false;
+
+  Future<void> _toggle(bool value) async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    final coordinator = KeepAliveCoordinator.instance;
+    if (value) {
+      final ok = await coordinator.enableWithPermission();
+      if (!ok && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('未获得通知权限，后台保持连接未开启')),
+        );
+      }
+    } else {
+      await coordinator.setEnabled(false);
+    }
+    if (mounted) setState(() => _busy = false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return WxCell(
+      title: '后台保持连接',
+      subtitle: '仅在后台且有活跃连接时生效，会显示一条常驻通知',
+      trailing: Semantics(
+        label: '后台保持连接',
+        child: Switch(
+          value: KeepAliveCoordinator.instance.enabled,
+          onChanged: _busy ? null : _toggle,
+        ),
+      ),
+      showDivider: false,
     );
   }
 }

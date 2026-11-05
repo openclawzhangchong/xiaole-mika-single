@@ -6,6 +6,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:logging/logging.dart';
 import 'package:xiaozhi_client_flutter/core/network/xiaozhi_websocket_manager.dart';
+import 'package:xiaozhi_client_flutter/core/service/keep_alive_service.dart';
 import 'package:xiaozhi_client_flutter/core/utils/audio_util.dart';
 
 /// 小智服务事件类型
@@ -530,6 +531,8 @@ class XiaozhiService {
     switch (event.type) {
       case XiaozhiEventType.connected:
         _isConnected = true;
+        // 有活跃连接才允许挂后台保活服务（是否真起由开关+前后台再判）
+        KeepAliveCoordinator.instance.onConnectionChanged(true);
         _dispatchEvent(
           XiaozhiServiceEvent(XiaozhiServiceEventType.connected, null),
         );
@@ -537,6 +540,8 @@ class XiaozhiService {
 
       case XiaozhiEventType.disconnected:
         _isConnected = false;
+        // 连接断了就收服务，避免白挂通知
+        KeepAliveCoordinator.instance.onConnectionChanged(false);
         _dispatchEvent(
           XiaozhiServiceEvent(XiaozhiServiceEventType.disconnected, null),
         );

@@ -12,6 +12,7 @@ import 'core/utils/log_buffer.dart';
 import 'core/utils/native_log.dart';
 import 'core/utils/audio_util.dart';
 import 'core/proactive/proactive_background.dart';
+import 'core/service/keep_alive_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -84,6 +85,12 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
     // 回到前台时检查"待处理来电"（后台命中触发、用户点通知回前台）
     if (state == AppLifecycleState.resumed) {
       ProactiveBackground.maybeShowPendingCallOnForeground();
+      // 回前台立刻收后台保活服务，不残留通知
+      KeepAliveCoordinator.instance.onForegroundChanged(true);
+    } else if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.detached) {
+      // 只在"将进入后台"瞬间起服务（Android 12+ 限制，起不来会打 start_denied）
+      KeepAliveCoordinator.instance.onForegroundChanged(false);
     }
     super.didChangeAppLifecycleState(state);
   }

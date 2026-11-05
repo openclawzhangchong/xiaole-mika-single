@@ -1,10 +1,15 @@
 package com.zcstudy.xiaole
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.os.PowerManager
 import android.os.SystemClock
 import android.util.Log
+import androidx.core.app.ActivityCompat
+import androidx.core.app.NotificationManagerCompat
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
@@ -20,6 +25,8 @@ class MainActivity : FlutterActivity() {
         private const val EXTRA_TEXT = "debug_send_text"
         private const val EXTRA_SEG_TEXTS = "debug_send_text_seg"
         private const val POWER_CHANNEL = "xiaole/power"
+        private const val KEEPALIVE_CHANNEL = "xiaole/keepalive"
+        private const val REQ_NOTIF = 7302
         private const val WAKE_LOCK_TAG = "XiaoLe:ws"
         // 上限 10 分钟：无论 Dart 侧是否来得及 release，系统到点自动释放，避免耗电失控
         private const val WAKE_LOCK_TIMEOUT_MS = 10 * 60 * 1000L
@@ -27,6 +34,9 @@ class MainActivity : FlutterActivity() {
 
     private var wakeLock: PowerManager.WakeLock? = null
     private var wakeLockAcquiredAt = 0L
+
+    /** Android 13+ 通知权限申请的挂起回调 */
+    private var pendingNotifResult: MethodChannel.Result? = null
 
     /** am start 时注入的文本（多条用 \n 分隔），由 Dart 侧一次性取走 */
     private var pendingDebugTexts: String? = null
@@ -160,6 +170,24 @@ class MainActivity : FlutterActivity() {
                 }
             }
 
+        // 后台保持连接（方案 B）：前台服务只做"保活"，业务仍在 Dart 侧
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, KEEPALIVE_CHANNEL)
+            .setMethodCallHandler { call, result ->
+                when (call.method) {
+                    "start" -> startKeepAlive(result)
+                    "stop" -> {
+                        KeepAliveService.stop(this)
+                        Log.i(LOG_TAG, "[KEEPALIVE] service_stop")
+                        result.success(true)
+                    }
+                    "isRunning" -> result.success(KeepAliveService.isRunning())
+                    "notificationsEnabled" ->
+                        result.success(NotificationManagerCompat.from(this).areNotificationsEnabled())
+                    "requestNotificationPermission" -> requestNotificationPermission(result)
+                    else -> result.notImplemented()
+                }
+            }
+
         // 开发者模式 adb 注入通道（[DEBUGINJECT]，仅 devAuthed 使用）
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL)
             .setMethodCallHandler { call, result ->
@@ -177,5 +205,56 @@ class MainActivity : FlutterActivity() {
                     else -> result.notImplemented()
                 }
             }
+    }
+
+    /** 起前台服务；被系统拒绝时把原因码打进 XiaoLe 日志，验收可直接 grep start_denied */
+    private fun startKeepAlive(result: MethodChannel.Result) {
+        try {
+            KeepAliveService.start(this)
+            Log.i(LOG_TAG, "[KEEPALIVE] service_start")
+            result.success(true)
+        } catch (e: Throwable) {
+            val code = when {
+                e.javaClass.simpleName == "ForegroundServiceStartNotAllowedException" ->
+                    "FGS_BACKGROUND_NOT_ALLOWED"
+                e is SecurityException -> "SECURITY_DENIED"
+                else -> e.javaClass.simpleName
+            }
+            Log.w(LOG_TAG, "[KEEPALIVE] start_denied code=$code msg=${e.message}")
+            result.error("start_denied", code, e.message)
+        }
+    }
+
+    /** Android 13+：设置页打开开关时弹系统通知授权框；13 以下/已授权直接返回 true */
+    private fun requestNotificationPermission(result: MethodChannel.Result) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
+            NotificationManagerCompat.from(this).areNotificationsEnabled()
+        ) {
+            result.success(true)
+            return
+        }
+        if (pendingNotifResult != null) {
+            result.error("busy", "已有一次通知授权在进行中", null)
+            return
+        }
+        pendingNotifResult = result
+        ActivityCompat.requestPermissions(
+            this,
+            arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+            REQ_NOTIF,
+        )
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray,
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode != REQ_NOTIF) return
+        val granted = grantResults.firstOrNull() == PackageManager.PERMISSION_GRANTED
+        Log.i(LOG_TAG, "[KEEPALIVE] notif_permission granted=$granted")
+        pendingNotifResult?.success(granted)
+        pendingNotifResult = null
     }
 }
