@@ -930,6 +930,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     final taskId = event['task_id']?.toString() ?? '';
     if (taskId.isEmpty) return;
     final rawStatus = event['status']?.toString() ?? '';
+    logger.info('任务卡事件原文 ${jsonEncode(event)}');
 
     if (rawStatus == 'refused' || rawStatus == 'unknown') {
       if (!_mikaTaskNoticeSent.add(taskId)) return;
@@ -999,6 +1000,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
   /// 同一 task_id 只占一条消息，状态原地刷新（不刷屏、不重复落库）。
   void _upsertMikaTaskCard(String taskId, Map<String, dynamic> data) {
     final metadata = <String, dynamic>{'card': 'task', 'data': data};
+    logger.info('任务卡 metadata=${jsonEncode(metadata)}');
     final existingId = _mikaTaskMessageIds[taskId];
     if (existingId != null) {
       final idx = _messages.indexWhere((m) => m.id == existingId);
