@@ -5,6 +5,23 @@
 > 本仓库是单包线（小乐 + Mika 合体）的正式源码基线。上游 Flutter 客户端为
 > [eiriksgata/xiaozhi-client-flutter](https://github.com/eiriksgata/xiaozhi-client-flutter)（微信风 UI 定制）。
 
+## 当前版本（默认分支）
+
+| 项 | 值 |
+|---|---|
+| versionName | `6.11.21-mika1` |
+| versionCode | `78` |
+| 产物 | `xiaole-6.11.21-mika1-arm64.apk` / `xiaole-6.11.21-mika1-universal.apk`（GitHub Actions artifact，不进仓库） |
+| 签名 | `C=CN, O=ZCStudy, CN=XiaoLe Release`，cert SHA-256 `9d2da8805e784801e13c54a635e8bf528db303a235adb5633745cadceb12a169` |
+
+78 轮包含两条线：
+
+1. **77 前台服务**：连接信号接进 `XiaozhiWebSocketManager`（`_completeHandshake` / 握手超时 / `_onDisconnected` / `forceReconnect` / `disconnect`）；服务仅在“已连接且退到后台”时启动，服务内自持 `PARTIAL_WAKE_LOCK`；Android 13+ 回前台补一次通知权限请求。
+2. **78 UI**：录音浮层改到聊天页 `Stack` 同层（`BackdropFilter` 能采到背后内容）、波形 11 根 3pt/3pt、深色导航 `#1A1A1A` 与时间分隔、会话列表品牌头像 + 未读红点、取消态胶囊 `r4` + `#FF8A8A` 圆标。
+
+README 不含截图资产；78 的真机截图在设备验收通过后补入。
+
+
 ## 架构分层
 
 ```
@@ -27,7 +44,7 @@
 
 ## 构建
 
-**云端 CI（推荐）**：`.github/workflows/build-merged-apk.yml`，手动触发或推 `feat/single-apk`。
+**云端 CI（推荐）**：`.github/workflows/build-merged-apk.yml`，在 `master` 分支手动触发（Actions → Run workflow）。
 
 一次产出两个包（versionCode 相同，仅文件名区分）：
 
