@@ -59,7 +59,8 @@ class ChatPage extends ConsumerStatefulWidget {
   ConsumerState<ChatPage> createState() => _ChatPageState();
 }
 
-class _ChatPageState extends ConsumerState<ChatPage> {
+class _ChatPageState extends ConsumerState<ChatPage>
+    with WidgetsBindingObserver {
   final Logger logger = Logger('ChatScreen');
   final TextEditingController _textController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
@@ -93,6 +94,13 @@ class _ChatPageState extends ConsumerState<ChatPage> {
   // v6.11.10：说话前预连接——2s 上限 + 失败提示，避免采音前丢第一句话
   Timer? _preconnectTimer;
   DateTime? _preconnectStartAt;
+  // v6.11.17：WS 初始化单飞——OTA 认证窗口内重复调用会建出第二个管理器
+  // （两个 manager 同一 device-id 两条 socket → 服务端 1005 自踢）
+  bool _wsInitInFlight = false;
+  // v6.11.17：气泡轮次边界（P2-1）——同角色只在同一轮内合并，
+  // 失败轮次等不到 AI 气泡时，下一轮文本不会再拼进上一条用户气泡
+  bool _sttMergeOpen = false;
+  bool _aiMergeOpen = false;
   /// 预连接期间缓存的 Opus 帧（上限 40 帧 ≈ 2.4s），连上后按序回灌
   final List<Uint8List> _preconnectAudio = <Uint8List>[];
   // v3.1.0：视觉识物（vision 接口从 MCP initialize 的 params.capabilities.vision 提取）
@@ -204,6 +212,21 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     AppFeats.wsProbeRevision.addListener(_onWsProbeChanged);
     // v6.11.14：调试注入通道（仅开发者模式已授权时生效）
     unawaited(_consumeDebugInjection());
+    // v6.11.17：回前台补连（P0-3 的 Dart 侧兜底）
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  /// v6.11.17：息屏期间 Dart Timer 会被系统冻结，心跳停摆后连接多半已被服务端
+  /// 判死（唤醒后 1002）。回前台时不再等下一拍看门狗，直接按静默时长决定是否重建。
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed) return;
+    final mgr = _wsManager;
+    if (mgr == null) return;
+    final silent = mgr.silentSeconds;
+    logger.info('[LIFECYCLE] 回到前台 连接=$_isConnected '
+        '静默=${silent == null ? '尚未收包' : '${silent}s'}');
+    mgr.forceReconnect(dropStale: silent != null && silent > 70);
   }
 
   /// v6.11.14：中文文本注入通道（仅开发者模式已授权时生效）。
@@ -359,6 +382,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     _otaReportTimer?.cancel();
     _reconnectUiTimer?.cancel();
     _preconnectTimer?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
     AppFeats.wsProbeRevision.removeListener(_onWsProbeChanged);
     _mqttPresence?.stop();
     for (final t in _mcpTimers) {
@@ -710,6 +734,9 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     // 若等发送流程走完再置位，"用户已开口 / 帧已在途"到置位之间就是一个
     // 保活可合法插入的窗口（45s 边界撞上就会把 listen stop 塞进对话）。
     final vetoAt = DateTime.now();
+    // v6.11.17：新的一轮开始，先关闭上一轮的气泡合并窗口（P2-1）
+    _sttMergeOpen = false;
+    _aiMergeOpen = false;
     _wsManager?.markConversationActive('发送文字');
     logger.info('[KEEPALIVE] 置位 来源=发送文字 耗时=${DateTime.now().difference(vetoAt).inMilliseconds}ms 顺序=发送前');
 
@@ -793,6 +820,16 @@ class _ChatPageState extends ConsumerState<ChatPage> {
       logger.warning('[PRECONNECT] 2s 内未连上（$label），丢弃缓存 $dropped 帧并提示稍候');
       ToastUtil.show('网络恢复中，请稍候');
     });
+    // v6.11.17：管理器已存在就绝不再新建——只让它立即补连，等 hello ACK 再执行 action。
+    // 旧实现在这里再走一遍 _initializeWebSocket，旧管理器不会被回收，
+    // 它自己的看门狗/退避定时器随后又会用同一 device-id 建第二条 socket，
+    // 服务端按重复会话把其中一条 1005 回收（P0-1）。
+    if (_wsManager != null) {
+      // 仅在确实没有 socket 时才提示一次，避免上行音频每一帧都弹提示
+      if (!_wsManager!.isSocketOpen) ToastUtil.show('连接中…连上后自动$label');
+      _wsManager!.forceReconnect();
+      return;
+    }
     if (_connectionStatus == '正在连接...') {
       ToastUtil.show('连接中…连上后自动$label');
       return;
@@ -849,7 +886,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
   }
 
   void _appendOrCreateChatMessage(MessageSender role, String content,
-      {Map<String, dynamic>? metadata}) {
+      {Map<String, dynamic>? metadata, bool merge = true}) {
     // v3.1.0：system 消息（MCP 工具调用记录/定时器提醒）真实入列——
     // 原实现对 system 直接 return，导致 v3.0.0 的 MCP 提醒全部不显示。
     // system 用 MessageType.system 独立成行（气泡有对应渲染分支），不参与合并。
@@ -876,8 +913,9 @@ class _ChatPageState extends ConsumerState<ChatPage> {
         ? MessageSender.ai
         : MessageSender.user;
 
-    // 检查最后一条消息是否与当前角色相同
-    if (_messages.isNotEmpty && _messages.last.sender == targetSender) {
+    // 检查最后一条消息是否与当前角色相同（v6.11.17：还要在同一轮次内，
+    // 由调用方用 merge 显式控制；否则失败轮次会把下一轮文本拼进旧气泡）
+    if (merge && _messages.isNotEmpty && _messages.last.sender == targetSender) {
       // 最后一条消息角色相同，追加内容
       setState(() {
         final lastMessage = _messages.last;
@@ -1168,14 +1206,31 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     }
   }
 
-  /// 初始化 WebSocket 连接
+  /// 初始化 WebSocket 连接（v6.11.17：单飞 + 先回收旧管理器）
   Future<void> _initializeWebSocket() async {
+    if (_wsInitInFlight) {
+      logger.info('WS 初始化已在进行中，忽略重复请求（单飞）');
+      return;
+    }
+    _wsInitInFlight = true;
+    try {
+      await _initializeWebSocketInner();
+    } finally {
+      _wsInitInFlight = false;
+    }
+  }
+
+  Future<void> _initializeWebSocketInner() async {
     if (_currentAgent == null) {
       logger.warning('当前智能体为空，无法初始化 WebSocket');
       return;
     }
     logger.info('WS 初始化开始 agentId=${widget.agentId}'
         ' url=${_currentAgent?.url}');
+
+    // v6.11.17：建新连接前必须先回收旧管理器。旧实现的旧管理器只被丢掉引用，
+    // 看门狗/退避定时器仍活着，会再建一条 socket 顶掉新会话（P0-1）。
+    await _cleanupWebSocket(source: 'reinit');
 
     try {
       // 第零步: 应用本智能体的独立设备身份（v1.1.5，避免多智能体串号；
@@ -2141,6 +2196,9 @@ class _ChatPageState extends ConsumerState<ChatPage> {
         break;
 
       case XiaozhiEventType.disconnected:
+        // v6.11.17：断线即本轮失败终结，关闭气泡合并窗口（P2-1）
+        _sttMergeOpen = false;
+        _aiMergeOpen = false;
         final codeInfo = event.data?.toString() ?? '';
         // 432x = 身份校验失败：重连无效，必须让用户看到真实原因与手动入口
         final fatalIdentity = codeInfo.startsWith('432');
@@ -2279,9 +2337,15 @@ class _ChatPageState extends ConsumerState<ChatPage> {
               final decorated =
                   _pendingEmotion.isEmpty ? filtered : '${_pendingEmotion} $filtered';
               _pendingEmotion = '';
-              _appendOrCreateChatMessage(MessageSender.ai, decorated);
+              // v6.11.17：同一轮回复的句子才合并；新一轮回复另起气泡
+              _appendOrCreateChatMessage(MessageSender.ai, decorated,
+                  merge: _aiMergeOpen);
+              _aiMergeOpen = true;
             }
           } else if (state == 'end' || state == 'stop') {
+            // v6.11.17：本轮终结——气泡合并窗口关闭（P2-1）
+            _sttMergeOpen = false;
+            _aiMergeOpen = false;
             // v6.11.9：TTS 结束 → 5s 后恢复保活
             _wsManager?.markConversationIdle('TTS $state');
             // v6.11.13：本轮结束 → 若还有超长文字的分段待发，立即续发下一段
@@ -2308,7 +2372,11 @@ class _ChatPageState extends ConsumerState<ChatPage> {
           final text = jsonData['text'] as String?;
           if (text != null && text.isNotEmpty) {
             logger.info('语音识别: $text');
-            _appendOrCreateChatMessage(MessageSender.user, text);
+            // v6.11.17：同一轮次的 stt 片段才合并；新轮次（发送前已关闭窗口）
+            // 一律新建气泡，避免"现在几点了现在几点了hello"（P2-1）
+            _appendOrCreateChatMessage(MessageSender.user, text,
+                merge: _sttMergeOpen);
+            _sttMergeOpen = true;
             _scrollToBottom();
           }
           break;
@@ -2562,6 +2630,9 @@ class _ChatPageState extends ConsumerState<ChatPage> {
       logger.info('通话进行中，忽略按键说话的 listen start（防 mode 交叉）');
       return;
     }
+    // v6.11.17：新的一轮说话开始，关闭上一轮气泡合并窗口（P2-1）
+    _sttMergeOpen = false;
+    _aiMergeOpen = false;
     // v6.11.12：**必须在 listen start 上行之前置位**。
     // 旧版靠 _handleAudioSend 的首帧音频才置位，"麦克风已开、置位未到"的
     // 几十~几百 ms 窗口里若撞上 45s 保活 tick，会把 listen stop 插到 start 之前/之后，

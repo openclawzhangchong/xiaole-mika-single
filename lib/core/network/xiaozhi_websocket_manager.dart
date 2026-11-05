@@ -87,6 +87,17 @@ class XiaozhiWebSocketManager {
   StreamSubscription? _streamSubscription;
   int _reconnectAttempts = 0;
 
+  // ===== v6.11.17：握手闸门（P0-2 根因修复）=====
+  // socket 打开 != 连接可用。只有收到服务器 hello ACK 才算握手完成；
+  // 在此之前对外 isConnected=false，页面不会再"成功即断"。
+  bool _handshakeDone = false;
+  bool _pendingIsReconnect = false;
+  Timer? _helloTimer;
+  Timer? _handshakeTimer;
+
+  /// hello ACK 等待上限。超时即判定本次建连失败，主动关闭走重连。
+  static const Duration HANDSHAKE_TIMEOUT = Duration(seconds: 8);
+
   // ===== v6.11.10：重连频率统计（回答"1 小时 50 次重连是否过频"）=====
   int _reconnectTotal = 0;        // 累计发起的重连次数
   int _reconnectSuccess = 0;      // 累计成功次数
@@ -197,6 +208,15 @@ class XiaozhiWebSocketManager {
     _manualClosed = false;
     if (!isReconnect) _reconnectAttempts = 0;
 
+    // v6.11.17：新 socket = 新握手。清掉上一条 socket 遗留的 hello/超时定时器，
+    // 保证"一条 socket 只发一次 hello"，也不把旧 socket 的 ACK 算到新连接上。
+    _helloTimer?.cancel();
+    _helloTimer = null;
+    _handshakeTimer?.cancel();
+    _handshakeTimer = null;
+    _handshakeDone = false;
+    _pendingIsReconnect = isReconnect;
+
     try {
       // 创建WebSocket连接
       Uri uri = Uri.parse(url);
@@ -268,26 +288,27 @@ class XiaozhiWebSocketManager {
         cancelOnError: false,
       );
 
-      // 连接成功后发送Hello消息
-      _dispatchEvent(
-        XiaozhiEvent(type: XiaozhiEventType.connected, data: null),
-      );
+      // v6.11.17：这里**不再** dispatch(connected)。socket 打开只代表 TCP/WS 建立，
+      // 服务器 hello ACK 才是会话可用（P0-2）。成功事件与 [RECONNECT] 成功日志
+      // 统一在 _completeHandshake() 里打。
+      //
+      // 握手超时闸门：8s 内没有 hello ACK 就主动关闭，交给 onDone 走重连，
+      // 避免"socket 还开着、但其实已经废了"的僵尸连接。
+      _handshakeTimer = Timer(HANDSHAKE_TIMEOUT, () {
+        if (_handshakeDone) return;
+        logger.warning('[HANDSHAKE] ${HANDSHAKE_TIMEOUT.inSeconds}s 未收到服务器 hello，'
+            '判定建连失败，主动关闭走重连');
+        _channel?.sink.close(status.goingAway);
+      });
 
-      // 在发送认证信息之后发送Hello消息
-      Timer(Duration(milliseconds: 200), () {
+      // 每条 socket 只发一次 hello（定时器句柄可取消，旧实现是匿名 Timer，
+      // 断连后仍会触发，可能把 hello 发到新 socket 上）
+      _helloTimer?.cancel();
+      _helloTimer = Timer(Duration(milliseconds: 200), () {
         _sendHelloMessage();
       });
 
-      logger.info('已连接到 $uri');
-      // v6.11.10：重连频率统计——成功计数 + 用时（用于评估 70s 回收下的重连压力）
-      if (isReconnect) {
-        _reconnectSuccess++;
-        final started = _lastReconnectAt;
-        final cost = started == null
-            ? '-'
-            : '${DateTime.now().difference(started).inSeconds}s';
-        logger.info('[RECONNECT] 成功 #$_reconnectSuccess/$_reconnectTotal 用时=$cost');
-      }
+      logger.info('socket 已建立 $uri（等待服务器 hello ACK 才算连接成功）');
       // v6.11.6：连接建立即启动看门狗（独立 Dart Timer，不需要生命周期回调）
       _startWatchdog();
       // v6.11.8：按实验配置启动业务保活探针（off/ping 时只打日志，不发业务消息）
@@ -318,6 +339,14 @@ class XiaozhiWebSocketManager {
     // v6.11.8：主动断开同时停掉心跳探针
     _stopProbe('App 主动断开');
 
+    // v6.11.17：握手闸门一起复位，避免旧 socket 的 hello/超时定时器打到新连接上
+    _helloTimer?.cancel();
+    _helloTimer = null;
+    _handshakeTimer?.cancel();
+    _handshakeTimer = null;
+    _handshakeDone = false;
+    _pendingIsReconnect = false;
+
     // 取消订阅
     await _streamSubscription?.cancel();
     _streamSubscription = null;
@@ -332,9 +361,41 @@ class XiaozhiWebSocketManager {
     }
   }
 
-  /// 发送Hello消息
+  /// 发送Hello消息（socket 已关就丢弃，绝不把 hello 发到新旧错位的连接上）
   void _sendHelloMessage() {
+    if (!isSocketOpen) {
+      logger.warning('hello 未发送：socket 已关闭');
+      return;
+    }
     sendMessage(jsonEncode(_helloPayload()));
+  }
+
+  /// v6.11.17：收到服务器 hello ACK → 本次连接才算"成功"。
+  /// 这里才 dispatch(connected)/打 [RECONNECT] 成功，页面 `_isConnected`
+  /// 也才会置真，彻底消除"成功 50ms 即断"的误报成功。
+  void _completeHandshake() {
+    if (_handshakeDone) return;
+    _handshakeDone = true;
+    _handshakeTimer?.cancel();
+    _handshakeTimer = null;
+    final opened = _probeStartAt;
+    final costMs = opened == null
+        ? '-'
+        : '${DateTime.now().difference(opened).inMilliseconds}ms';
+    logger.info('[HANDSHAKE] 收到服务器 hello ACK，握手完成（socket→ACK $costMs）');
+    if (_pendingIsReconnect) {
+      _reconnectSuccess++;
+      final started = _lastReconnectAt;
+      final cost = started == null
+          ? '-'
+          : '${DateTime.now().difference(started).inSeconds}s';
+      logger.info('[RECONNECT] 成功 #$_reconnectSuccess/$_reconnectTotal '
+          '用时=$cost（以 hello ACK 为准）');
+      _pendingIsReconnect = false;
+    }
+    _dispatchEvent(
+      XiaozhiEvent(type: XiaozhiEventType.connected, data: null),
+    );
   }
 
   /// v6.11.8：hello 载荷（正常握手与心跳实验共用，含 device-id/版本/特性/音频参数）
@@ -546,9 +607,9 @@ class XiaozhiWebSocketManager {
         .join();
   }
 
-  /// 发送文本消息
+  /// 发送文本消息（以 socket 是否存活为准；hello 本身必须在握手前就能发出去）
   void sendMessage(String message) {
-    if (_channel != null && isConnected) {
+    if (isSocketOpen) {
       try {
         _channel!.sink.add(message);
         _lastActivityAt = DateTime.now();
@@ -564,9 +625,9 @@ class XiaozhiWebSocketManager {
     }
   }
 
-  /// 发送二进制数据
+  /// 发送二进制数据（同上：以 socket 存活为准）
   void sendBinaryMessage(List<int> data) {
-    if (_channel != null && isConnected) {
+    if (isSocketOpen) {
       try {
         _channel!.sink.add(data);
         _lastActivityAt = DateTime.now();
@@ -605,6 +666,10 @@ class XiaozhiWebSocketManager {
   void _onMessage(dynamic message) {
     _lastRecvAt = DateTime.now(); // v4.3.3：记录最近收包时间（供静默/僵死判断）
     _lastActivityAt = _lastRecvAt;
+    // v6.11.17：服务器 hello ACK 是唯一的"连接成功"判据（P0-2）
+    if (!_handshakeDone && message is String && _typeOf(message) == 'hello') {
+      _completeHandshake();
+    }
     // v6.11.8/6.11.9：心跳实验记录点——服务器是否回过帧、回的是什么
     if (_probeMode != WsProbeMode.off) {
       _probeRecv++;
@@ -647,6 +712,13 @@ class XiaozhiWebSocketManager {
 
   /// 处理断开连接事件
   void _onDisconnected() {
+    // v6.11.17：握手闸门复位（本次连接无论是否曾握手成功，都已结束）
+    _handshakeDone = false;
+    _pendingIsReconnect = false;
+    _helloTimer?.cancel();
+    _helloTimer = null;
+    _handshakeTimer?.cancel();
+    _handshakeTimer = null;
     // v1.1.6: 采集服务器关闭码/原因，便于真机诊断（如 1006=异常断开）
     final code = _channel?.closeCode;
     final reason = _channel?.closeReason;
@@ -785,8 +857,39 @@ class XiaozhiWebSocketManager {
     );
   }
 
-  /// 判断是否已连接
-  bool get isConnected {
+  /// socket 是否处于打开状态（不看握手；仅供发送层与 hello 使用）
+  bool get isSocketOpen {
     return _channel != null && _streamSubscription != null;
+  }
+
+  /// 判断是否已连接（v6.11.17：必须是"socket 打开 + 收到服务器 hello ACK"）
+  bool get isConnected {
+    return isSocketOpen && _handshakeDone;
+  }
+
+  /// v6.11.17：页面侧"想打就打"不再新建管理器，而是让现有管理器立即补连。
+  /// 旧实现会再走一遍 _initializeWebSocket 建出第二个 manager，
+  /// 两个 manager 用同一 device-id 建两条 socket，服务端按重复会话 1005 回收其一。
+  /// [dropStale] 为 true 时，即使 socket 仍打开也强制重建（回前台后判定僵死用）。
+  void forceReconnect({bool dropStale = false}) {
+    if (_serverUrl == null || _token == null) return;
+    if (isSocketOpen) {
+      if (!dropStale) return; // 已有 socket（含等 hello），由握手闸门决定成败
+      logger.warning('[LIFECYCLE] 判定连接僵死（静默=${silentSeconds ?? '-'}s），'
+          '主动关闭并立即重建');
+      unawaited(() async {
+        await disconnect(source: 'stale_probe');
+        _manualClosed = false;
+        await connect(_serverUrl!, _token!, isReconnect: true);
+      }());
+      return;
+    }
+    if (_manualClosed) return;
+    _reconnectTimer?.cancel();
+    _reconnectTimer = null;
+    _isReconnecting = false;
+    _manualClosed = false;
+    logger.info('[RECONNECT] 页面请求立即补连（跳过退避）');
+    unawaited(connect(_serverUrl!, _token!, isReconnect: true));
   }
 }
