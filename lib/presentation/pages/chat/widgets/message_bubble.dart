@@ -19,11 +19,13 @@ class MessageBubble extends StatelessWidget {
     required this.message,
     this.agentId,
     this.agentName,
+    this.animateTaskPulse = true,
   });
 
   final MessageModel message;
   final String? agentId;
   final String? agentName;
+  final bool animateTaskPulse;
 
   bool get isUser => message.sender == MessageSender.user;
 
@@ -50,6 +52,7 @@ class MessageBubble extends StatelessWidget {
           if (isTaskCard)
             XlTaskCard(
               model: _taskCardModel(meta['data']),
+              animateStatusPulse: animateTaskPulse,
               width: math.min(
                 XlDims.taskCardWidth,
                 MediaQuery.of(context).size.width -
@@ -102,9 +105,10 @@ class MessageBubble extends StatelessWidget {
 
     final bubble = Container(
       constraints: BoxConstraints(maxWidth: maxWidth),
-      padding: const EdgeInsets.symmetric(
+      // 语音气泡固定 40pt 高：上下不留文本内边距（DESIGN §8.1）
+      padding: EdgeInsets.symmetric(
         horizontal: XlDims.bubblePadX,
-        vertical: XlDims.bubblePadY,
+        vertical: message.type == MessageType.audio ? 0 : XlDims.bubblePadY,
       ),
       decoration: BoxDecoration(color: bg, borderRadius: radius),
       child: _buildContentByType(fg, context),
@@ -162,11 +166,13 @@ class MessageBubble extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              _StaticWave(color: fg.withOpacity(0.7)),
+              _StaticWave(color: fg.withOpacity(XlDims.waveOpacity)),
               const SizedBox(width: XlDims.s),
               Text(
                 secs == null ? '语音' : '$secs″',
-                style: XlType.meta.copyWith(color: fg),
+                style: XlType.meta.copyWith(
+                  color: XlPalette.of(context).textSecondary,
+                ),
               ),
             ],
           ),
@@ -425,7 +431,7 @@ class _StaticWave extends StatelessWidget {
   Widget build(BuildContext context) {
     final bars = XlMotion.waveBarCount;
     return SizedBox(
-      width: bars * XlDims.waveBarW + (bars - 1) * XlDims.waveBarGap,
+      width: bars * XlDims.chatWaveBarW + (bars - 1) * XlDims.waveBarGap,
       height: XlDims.waveBarMaxH,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -435,11 +441,12 @@ class _StaticWave extends StatelessWidget {
               right: i == _heights.length - 1 ? 0 : XlDims.waveBarGap,
             ),
             child: Container(
-              width: XlDims.waveBarW,
+              width: XlDims.chatWaveBarW,
               height: _heights[i],
               decoration: BoxDecoration(
                 color: color,
-                borderRadius: BorderRadius.circular(XlDims.waveBarW / 2),
+                borderRadius:
+                    BorderRadius.circular(XlDims.chatWaveBarW / 2),
               ),
             ),
           );

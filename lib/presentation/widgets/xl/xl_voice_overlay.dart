@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math' as math;
+import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
 
@@ -179,7 +180,14 @@ class XlVoiceRecordOverlay extends StatelessWidget {
             : (showLimitHint ? '松开发送，最长 60 秒' : '手指上滑，取消发送'));
 
     return ExcludeSemantics(
-      child: Container(
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(XlDims.voiceOverlayRadius),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(
+            sigmaX: XlDims.overlayBlur,
+            sigmaY: XlDims.overlayBlur,
+          ),
+          child: Container(
         width: XlDims.voiceOverlayW,
         height: XlDims.voiceOverlayH,
         padding: const EdgeInsets.symmetric(
@@ -212,9 +220,9 @@ class XlVoiceRecordOverlay extends StatelessWidget {
                           amplitudeStream: amplitudeStream,
                           width: 53,
                           height: XlDims.voiceWaveSlot,
-                          maxBarHeight: 18,
-                          color: XlColor.brand,
-                          highlightColor: XlColor.brand,
+                          maxBarHeight: XlDims.voiceWaveBarMaxH,
+                          color: XlColor.mint,
+                          highlightColor: XlColor.mint,
                           highlightBars: 3,
                         ),
                 ),
@@ -253,6 +261,8 @@ class XlVoiceRecordOverlay extends StatelessWidget {
                     ),
             ),
           ],
+        ),
+          ),
         ),
       ),
     );

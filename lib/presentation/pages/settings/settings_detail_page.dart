@@ -312,14 +312,9 @@ class _Group extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final p = XlPalette.of(context);
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Material(
-        color: p.surface,
-        borderRadius: BorderRadius.circular(XlDims.rL),
-        clipBehavior: Clip.antiAlias,
-        child: Column(children: children),
-      ),
+    return Material(
+      color: p.surface,
+      child: Column(children: children),
     );
   }
 }

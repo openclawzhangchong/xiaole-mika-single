@@ -181,24 +181,21 @@ class XlTaskDetailStatus extends StatelessWidget {
       XlTaskStatus.failed => p.dangerText,
       XlTaskStatus.cancelled => p.textSecondary,
     };
+    final parts = text.split(' · ');
+    final statusStyle = TextStyle(
+      fontSize: 13,
+      fontWeight: FontWeight.w500,
+      height: 18 / 13,
+    );
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Container(
-          width: 6,
-          height: 6,
-          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-        ),
-        const SizedBox(width: 6),
-        Text(
-          text,
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w500,
-            height: 18 / 13,
-            color: color,
+        Text(parts.first, style: statusStyle.copyWith(color: color)),
+        if (parts.length > 1)
+          Text(
+            ' · ${parts.sublist(1).join(' · ')}',
+            style: statusStyle.copyWith(color: p.textSecondary),
           ),
-        ),
       ],
     );
   }

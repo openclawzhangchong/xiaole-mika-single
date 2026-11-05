@@ -53,6 +53,19 @@ class MessageList extends StatelessWidget {
     final itemCount = messages.length + (isTyping ? 1 : 0);
     final typingOffset = isTyping ? 1 : 0;
 
+    // 同屏只让"当前正在跑"的那张任务卡脉冲（DESIGN §8.2）
+    String? latestRunningTaskId;
+    for (final m in messages) {
+      final meta = m.metadata;
+      final data = meta?['data'];
+      if (meta != null &&
+          meta['card'] == 'task' &&
+          data is Map &&
+          data['status']?.toString() == 'running') {
+        latestRunningTaskId = m.id;
+      }
+    }
+
     if (isTyping) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (scrollController.hasClients) {
@@ -113,6 +126,7 @@ class MessageList extends StatelessWidget {
               message: msg,
               agentId: agentId,
               agentName: agentName,
+              animateTaskPulse: msg.id == latestRunningTaskId,
             ),
           ],
         );

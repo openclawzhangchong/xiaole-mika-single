@@ -342,7 +342,14 @@ class _ResultList extends StatelessWidget {
   Widget build(BuildContext context) {
     final p = XlPalette.of(context);
     return Column(
-      children: List.generate(results.length, (i) {
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '已整理 ${results.length} 条待办',
+          style: XlType.cardTitle.copyWith(color: p.textPrimary),
+        ),
+        const SizedBox(height: XlDims.m),
+        ...List.generate(results.length, (i) {
         return Padding(
           padding: EdgeInsets.only(
             bottom: i == results.length - 1 ? 0 : XlDims.m,
@@ -355,7 +362,7 @@ class _ResultList extends StatelessWidget {
                 height: XlDims.resultIndex,
                 decoration: BoxDecoration(
                   color: p.subtle,
-                  shape: BoxShape.circle,
+                  borderRadius: BorderRadius.circular(XlDims.rS),
                 ),
                 alignment: Alignment.center,
                 child: Text(
@@ -367,13 +374,14 @@ class _ResultList extends StatelessWidget {
               Expanded(
                 child: Text(
                   results[i],
-                  style: XlType.body.copyWith(color: p.textPrimary),
+                  style: XlType.summary.copyWith(color: p.textPrimary),
                 ),
               ),
             ],
           ),
         );
-      }),
+        }),
+      ],
     );
   }
 }

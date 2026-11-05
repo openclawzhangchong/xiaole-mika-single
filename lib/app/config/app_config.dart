@@ -4,7 +4,7 @@ class AppConfig {
 
   // 应用信息
   static const String appName = '小乐'; // v4.0.0：品牌统一（默认智能体名前缀等）
-  static const String appVersion = '6.11.18'; // v6.11.18：74 通信修复（P0-1 单连接/P0-2 hello ACK 闸门/P0-3 wakelock/P2-1 气泡边界）+ 73 UI（9 屏/任务卡/录音浮层）；v6.11.17：修 P0-1/P0-2/P2-1。详见 CHANGELOG.md
+  static const String appVersion = '6.11.19'; // v6.11.19：UI 对照修复（阻断 1 + 重要 8）
 
   /// v4.4.0 尾音保护：AI 播放结束后丢弃麦克风音频的时长（毫秒）
   static const int defaultTailGuardMs = 300;

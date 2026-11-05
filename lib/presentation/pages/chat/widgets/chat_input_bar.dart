@@ -112,11 +112,12 @@ class _ChatInputBarState extends State<ChatInputBar> {
                             enabledBorder: InputBorder.none,
                             focusedBorder: InputBorder.none,
                             isDense: true,
+                            // 6+24+6 = 36，加 14 内边距 = 50，加安全区 = 84（DESIGN §8.3）
                             contentPadding: const EdgeInsets.fromLTRB(
                               12,
-                              9,
+                              6,
                               4,
-                              9,
+                              6,
                             ),
                             filled: false,
                           ),

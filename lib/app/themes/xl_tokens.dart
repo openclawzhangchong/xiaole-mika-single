@@ -35,6 +35,7 @@ abstract final class XlColor {
   // brand
   static const brand = Color(0xFF07C160); // 仅状态点 / 开关 / 进度 / 波形
   static const brandDeep = Color(0xFF0B7F40); // 实心按钮 / Tab 选中 / 白字
+  static const mint = Color(0xFF8CF0AE); // 录音浮层 / 通话波形（ui.css）
   static const brandSoft = Color(0xFFEAF8EF);
   static const tabActive = Color(0xFF0B7F40); // §15 I7（实拍为准）
   static const switchTrackOn = Color(0xFF07C160);
@@ -69,11 +70,13 @@ abstract final class XlColor {
   static const callBgTop = Color(0xFF3C3C3C);
   static const callBgMid = Color(0xFF2B2B2B);
   static const callBgBottom = Color(0xFF1B1B1B);
-  static const callControl = Color(0xFFFFFFFF);
-  static const callControlIcon = Color(0xFF1A1A1A);
+  static const callControl = Color(0x1FFFFFFF); // 12% 白（DESIGN §8.7）
+  static const callControlIcon = Color(0xFFFFFFFF);
   static const callControlMuted = Color(0xFF555555);
   static const callRing = Color(0x33FFFFFF);
   static const callHintBg = Color(0x14FFFFFF);
+  static const callTranscriptBg = Color(0x0FFFFFFF); // 6% 白
+  static const callTextSoft = Color(0x9EFFFFFF); // 62% 白
   static const callTextDim = Color(0xB3FFFFFF); // 70% 白
 }
 
@@ -565,6 +568,13 @@ abstract final class XlType {
     fontWeight: FontWeight.w400,
     height: 18 / 13,
   );
+
+  /// 通话转写条正文（DESIGN §8.7 13/19）
+  static const callCaption = TextStyle(
+    fontSize: 13,
+    fontWeight: FontWeight.w400,
+    height: 19 / 13,
+  );
 }
 
 /// 间距 / 圆角 / 尺寸
@@ -620,8 +630,11 @@ abstract final class XlDims {
   static const bubbleTailTop = 12.0;
   static const voiceBubbleHeight = 40.0;
   static const waveBarW = 3.0;
+  static const chatWaveBarW = 2.0; // 聊天气泡波形 2pt（浮层仍 3pt）
   static const waveBarGap = 2.0;
   static const waveBarMaxH = 18.0;
+  static const voiceWaveBarMaxH = 34.0; // 录音浮层波形满槽高（ui.css 34 优先）
+  static const waveOpacity = 0.55;
   static const taskCardWidth = 268.0;
   static const taskCardPadding = 12.0;
   static const taskIcon = 22.0;
@@ -645,6 +658,7 @@ abstract final class XlDims {
   static const voiceOverlayPad = 14.0;
   static const cancelIcon = 30.0;
   static const voiceWaveSlot = 34.0;
+  static const overlayBlur = 12.0; // 浮层背景模糊（DESIGN §8.4）
 
   // call
   static const callAvatar = 96.0;
@@ -663,12 +677,15 @@ abstract final class XlDims {
   static const callTopTitleGap = 8.0;
   static const callHintGap = 12.0;
   static const callHintBottom = 20.0;
+  static const callTranscriptPadV = 10.0; // 转写条上下内边距
+  static const callTranscriptDot = 6.0; // 转写条状态点
 
   // task detail
   static const stepDot = 11.0; // §15 I6
   static const detailIcon = 40.0;
   static const detailIconRadius = 8.0;
-  static const resultIndex = 20.0;
+  static const resultIndex = 18.0;
+  static const statusDotSize = 6.0; // 状态 chip 静态点（非脉冲时）
   static const noteIcon = 16.0;
   static const hairlineWidth = 0.5;
   static const stepGapX = 12.0;

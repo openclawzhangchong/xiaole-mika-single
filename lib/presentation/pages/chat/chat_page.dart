@@ -3225,22 +3225,40 @@ class _ChatPageState extends ConsumerState<ChatPage>
                 highlightBars: XlDims.callHighlightBars,
               ),
               const SizedBox(height: XlDims.l),
+              // 转写条：6pt 绿点 + 13/19 正文（DESIGN §8.7）
               Container(
                 width: XlDims.callHintW,
-                height: XlDims.callHintH,
-                padding: const EdgeInsets.symmetric(horizontal: XlDims.m),
-                alignment: Alignment.center,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: XlDims.voiceOverlayPad,
+                  vertical: XlDims.callTranscriptPadV,
+                ),
                 decoration: BoxDecoration(
-                  color: XlColor.callHintBg,
+                  color: XlColor.callTranscriptBg,
                   borderRadius: BorderRadius.circular(XlDims.rL),
                 ),
-                child: Text(
-                  '语音通话中，请直接说话',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: XlType.meta.copyWith(
-                    color: XlColor.callTextDim,
-                  ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: XlDims.callTranscriptDot,
+                      height: XlDims.callTranscriptDot,
+                      decoration: const BoxDecoration(
+                        color: XlColor.mint,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: XlDims.s),
+                    Flexible(
+                      child: Text(
+                        '语音通话中，请直接说话',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: XlType.callCaption.copyWith(
+                          color: XlColor.callTextSoft,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
               const Spacer(flex: 3),
@@ -3310,8 +3328,8 @@ class _ChatPageState extends ConsumerState<ChatPage>
     required String label,
     required VoidCallback onTap,
     double size = XlDims.callControl,
-    Color circleColor = Colors.white,
-    Color iconColor = const Color(0xFF1A1A1A),
+    Color circleColor = XlColor.callControl,
+    Color iconColor = XlColor.callControlIcon,
   }) {
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -3333,7 +3351,7 @@ class _ChatPageState extends ConsumerState<ChatPage>
                 ),
               ],
             ),
-            child: Icon(icon, color: iconColor, size: size >= 72 ? 30 : 28),
+            child: Icon(icon, color: iconColor, size: size >= 72 ? 30 : 26),
           ),
         ),
         const SizedBox(height: XlDims.s),
@@ -3401,26 +3419,31 @@ class _CallPulseRingsState extends State<_CallPulseRings>
       child: Stack(
         alignment: Alignment.center,
         children: [
-          _ring(_a, XlDims.callPulseInner),
-          _ring(_b, XlDims.callPulseOuter),
+          _ring(_a, XlDims.callPulseInner, endScale: 1.18, baseOpacity: 0.28),
+          _ring(_b, XlDims.callPulseOuter, endScale: 1.34, baseOpacity: 0.14),
         ],
       ),
     );
   }
 
-  Widget _ring(AnimationController controller, double size) {
+  Widget _ring(
+    AnimationController controller,
+    double size, {
+    required double endScale,
+    required double baseOpacity,
+  }) {
     return AnimatedBuilder(
       animation: controller,
       builder: (context, child) {
         final t = controller.value;
         return Opacity(
-          opacity: (0.20 * (1 - t)).clamp(0.0, 1.0).toDouble(),
+          opacity: (baseOpacity * (1 - t)).clamp(0.0, 1.0).toDouble(),
           child: Container(
-            width: size * (1 + 0.22 * t),
-            height: size * (1 + 0.22 * t),
+            width: size * (1 + (endScale - 1) * t),
+            height: size * (1 + (endScale - 1) * t),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(color: Colors.white, width: 1),
+              border: Border.all(color: XlColor.brand, width: 1),
             ),
           ),
         );

@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 import '../../app/themes/app_colors.dart';
 import '../../app/themes/app_text_styles.dart';
 import '../../app/themes/app_dimens.dart';
+import '../../app/themes/xl_tokens.dart';
 
 class WxCell extends StatelessWidget {
   const WxCell({
@@ -64,8 +65,9 @@ class WxCell extends StatelessWidget {
         (trailingText != null
             ? Text(
                 trailingText!,
-                style: AppTextStyles.subtitle.copyWith(
-                  color: AppTextStyles.secondaryText(context),
+                style: AppTextStyles.body.copyWith(
+                  fontSize: 16,
+                  color: XlPalette.of(context).textTertiary,
                 ),
               )
             : null);
@@ -96,6 +98,7 @@ class WxCell extends StatelessWidget {
                     title!,
                     style: titleTextStyle ??
                         AppTextStyles.body.copyWith(
+                          fontWeight: FontWeight.w500,
                           color: AppTextStyles.primaryText(context),
                         ),
                     maxLines: 1,

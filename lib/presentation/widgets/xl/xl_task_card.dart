@@ -46,9 +46,11 @@ class XlTaskCard extends StatelessWidget {
     this.onCancel,
     this.onRetry,
     this.width = XlDims.taskCardWidth,
+    this.animateStatusPulse = true,
   });
 
   final XlTaskCardModel model;
+  final bool animateStatusPulse; // 同屏只允许当前卡为 true
   final VoidCallback? onTap;
   final VoidCallback? onAbort;
   final VoidCallback? onCancel;
@@ -108,6 +110,7 @@ class XlTaskCard extends StatelessWidget {
                       status: model.status,
                       colors: c,
                       accent: accent,
+                      animateStatusPulse: animateStatusPulse,
                     ),
                   ],
                 ),
@@ -139,10 +142,14 @@ class XlTaskCard extends StatelessWidget {
               ],
               if (showProgress) ...[
                 const SizedBox(height: XlDims.s),
-                _XlTaskProgress(
-                  value: model.progress!.clamp(0.0, 1.0).toDouble(),
-                  track: p.progressTrack,
-                  fill: p.progressFill,
+                Padding(
+                  // 与 meta 文案左对齐（DESIGN §8.2）
+                  padding: const EdgeInsets.only(left: XlDims.taskMetaIndent),
+                  child: _XlTaskProgress(
+                    value: model.progress!.clamp(0.0, 1.0).toDouble(),
+                    track: p.progressTrack,
+                    fill: p.progressFill,
+                  ),
                 ),
               ],
             ],
@@ -337,11 +344,13 @@ class XlTaskStatusChip extends StatelessWidget {
     required this.status,
     required this.colors,
     required this.accent,
+    this.animateStatusPulse = true,
   });
 
   final XlTaskStatus status;
   final XlTaskColors colors;
   final Color accent;
+  final bool animateStatusPulse;
 
   @override
   Widget build(BuildContext context) {
@@ -354,7 +363,13 @@ class XlTaskStatusChip extends StatelessWidget {
     };
 
     final mark = switch (status) {
-      XlTaskStatus.running => _PulseDot(color: accent),
+      XlTaskStatus.running => animateStatusPulse
+          ? _PulseDot(color: accent)
+          : Container(
+              width: XlDims.statusDotSize,
+              height: XlDims.statusDotSize,
+              decoration: BoxDecoration(color: accent, shape: BoxShape.circle),
+            ),
       XlTaskStatus.queued || XlTaskStatus.cancelled =>
         Container(
           width: 5,
