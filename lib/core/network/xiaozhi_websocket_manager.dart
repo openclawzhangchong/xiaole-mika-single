@@ -1020,6 +1020,7 @@ class XiaozhiWebSocketManager {
     if (isSocketOpen) {
       logger.info('[LIFECYCLE] 回前台 socket 仍打开 → 不重连（连接未死）');
       if (_probeTimer == null) _startProbe();
+      _startWatchdog(); // 后台停掉的看门狗同步恢复
       return;
     }
     logger.info('[LIFECYCLE] 回前台 socket 已死 → 立即补连一次（81 亮屏秒回）');
