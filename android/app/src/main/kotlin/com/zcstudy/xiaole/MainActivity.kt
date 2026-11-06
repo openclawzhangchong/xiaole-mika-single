@@ -5,6 +5,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
+import android.provider.Settings
 import android.os.Bundle
 import android.os.PowerManager
 import android.os.SystemClock
@@ -230,7 +231,7 @@ class MainActivity : FlutterActivity() {
         }
         try {
             startActivity(
-                Intent(Intent.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)
+                Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)
                     .setData(Uri.parse("package:$packageName"))
                     .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
             )
@@ -239,7 +240,7 @@ class MainActivity : FlutterActivity() {
         } catch (e: Exception) {
             try {
                 startActivity(
-                    Intent(Intent.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
+                    Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
                         .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
                 )
                 Log.i(LOG_TAG, "[KEEPALIVE] battery_exempt_request opened=settings")
