@@ -9,17 +9,23 @@
 
 | 项 | 值 |
 |---|---|
-| versionName | `6.11.21-mika1` |
-| versionCode | `78` |
-| 产物 | `xiaole-6.11.21-mika1-arm64.apk` / `xiaole-6.11.21-mika1-universal.apk`（GitHub Actions artifact，不进仓库） |
+| versionName | `6.11.22-mika1` |
+| versionCode | `79` |
+| 产物 | `xiaole-6.11.22-mika1-arm64.apk` / `xiaole-6.11.22-mika1-universal.apk`（GitHub Actions artifact，不进仓库） |
 | 签名 | `C=CN, O=ZCStudy, CN=XiaoLe Release`，cert SHA-256 `9d2da8805e784801e13c54a635e8bf528db303a235adb5633745cadceb12a169` |
 
-78 轮包含两条线：
+79 轮修复三条（在 78 之上）：
+
+1. **P0 息屏 tick 断流**：`_onDisconnected` 不再 `_stopProbe`（只结算统计），tick 定时器跨重连持续跑且 `tick#` 单调递增；原生 `KeepAliveService` 每 30s 打 `[KEEPALIVE] tick#N 来源=native` 并经 MethodChannel 唤醒 Dart，必要时补发 `listen:stop`；回前台僵死判定改为"下行 + 上行双静默 >70s"才重建（不再每次回前台误杀）。
+2. **P1 03 录音浮层**：底色改半透明 `rgba(27,27,27,.72)` + `BackdropFilter` blur 14；根因是 `ListView` 默认 `addRepaintBoundaries:true` 把每个气泡放进独立合成层、模糊采不到，已关闭。
+3. **P2 版本号**：`AppConfig.appVersion` 改为 `String.fromEnvironment('APP_VERSION')`，CI 从 `pubspec.yaml` 注入，设置页"关于"与 APK `versionName` 单一来源。
+
+78 轮（历史）：
 
 1. **77 前台服务**：连接信号接进 `XiaozhiWebSocketManager`（`_completeHandshake` / 握手超时 / `_onDisconnected` / `forceReconnect` / `disconnect`）；服务仅在“已连接且退到后台”时启动，服务内自持 `PARTIAL_WAKE_LOCK`；Android 13+ 回前台补一次通知权限请求。
 2. **78 UI**：录音浮层改到聊天页 `Stack` 同层（`BackdropFilter` 能采到背后内容）、波形 11 根 3pt/3pt、深色导航 `#1A1A1A` 与时间分隔、会话列表品牌头像 + 未读红点、取消态胶囊 `r4` + `#FF8A8A` 圆标。
 
-README 不含截图资产；78 的真机截图在设备验收通过后补入。
+README 不含截图资产；79 的真机截图在设备验收通过后补入。
 
 
 ## 架构分层

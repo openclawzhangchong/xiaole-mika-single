@@ -21,6 +21,7 @@ import 'package:xiaozhi_client_flutter/core/network/xiaozhi_mqtt_presence.dart';
 import 'package:xiaozhi_client_flutter/core/network/xiaozhi_websocket_manager.dart';
 import 'package:xiaozhi_client_flutter/app/config/app_config.dart';
 import 'package:xiaozhi_client_flutter/core/providers/agent_provider.dart';
+import 'package:xiaozhi_client_flutter/core/service/keep_alive_service.dart';
 import 'package:xiaozhi_client_flutter/core/storage/storage_service.dart';
 import 'package:xiaozhi_client_flutter/core/providers/theme_provider.dart';
 import 'package:xiaozhi_client_flutter/core/utils/audio_util.dart';
@@ -234,6 +235,8 @@ class _ChatPageState extends ConsumerState<ChatPage>
     unawaited(_consumeDebugInjection());
     // v6.11.17：回前台补连（P0-3 的 Dart 侧兜底）
     WidgetsBinding.instance.addObserver(this);
+    // 79 轮 P0：原生 KeepAliveService 每 30s 唤醒 → 当前 WS 管理器补一拍心跳
+    KeepAliveService.onNativeWakeup = () => _wsManager?.onNativeWakeup();
     // 任务卡：订阅 Mika 进程内任务事件，把真实状态写进聊天流
     MikaBridge.install();
     _mikaTaskSub = MikaBridge.taskStates.listen(_onMikaTaskState);
@@ -245,6 +248,10 @@ class _ChatPageState extends ConsumerState<ChatPage>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.paused) {
       unawaited(_acquireWakeLock());
+      // 79 轮 P0：paused 只加锁，**绝不 cancel tick**——
+      // 保活开关开启且前台服务存活时，心跳必须继续跑（78 真机这里断流）。
+      logger.info('[LIFECYCLE] paused 保活开关=${KeepAliveCoordinator.instance.enabled} '
+          '→ tick 继续（不清定时器）');
       return;
     }
     if (state != AppLifecycleState.resumed) return;
@@ -252,9 +259,16 @@ class _ChatPageState extends ConsumerState<ChatPage>
     final mgr = _wsManager;
     if (mgr == null) return;
     final silent = mgr.silentSeconds;
+    final uplinkSilent = mgr.uplinkSilentSeconds;
     logger.info('[LIFECYCLE] 回到前台 连接=$_isConnected '
-        '静默=${silent == null ? '尚未收包' : '${silent}s'}');
-    mgr.forceReconnect(dropStale: silent != null && silent > 70);
+        '静默=${silent == null ? '尚未收包' : '${silent}s'} '
+        '上行静默=${uplinkSilent == null ? '尚未上行' : '${uplinkSilent}s'}');
+    // 79 轮：判僵死必须"下行静默 + 上行静默"双条件。
+    // 保活发 listen:stop 服务端不回包，只看下行会把健康连接误杀（78 每次回前台重建一次）。
+    final stale = silent != null &&
+        silent > 70 &&
+        (uplinkSilent == null || uplinkSilent > 70);
+    mgr.forceReconnect(dropStale: stale);
   }
 
   Future<void> _acquireWakeLock() async {
@@ -451,6 +465,7 @@ class _ChatPageState extends ConsumerState<ChatPage>
     _preconnectTimer?.cancel();
     // v6.11.17（P0-3）：页面销毁必须放锁，避免后台持锁泄漏
     unawaited(_releaseWakeLock('dispose'));
+    KeepAliveService.onNativeWakeup = null;
     WidgetsBinding.instance.removeObserver(this);
     AppFeats.wsProbeRevision.removeListener(_onWsProbeChanged);
     _mqttPresence?.stop();

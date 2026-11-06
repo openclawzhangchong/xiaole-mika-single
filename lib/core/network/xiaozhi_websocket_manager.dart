@@ -116,11 +116,13 @@ class XiaozhiWebSocketManager {
   final WsProbeMode _probeMode;
   final Duration _probeInterval;
   Timer? _probeTimer;
-  int _probeSeq = 0; // tick 尝试次数（含被跳过的 tick）
-  int _probeSent = 0; // 实际发出的保活消息数
+  int _probeSeq = 0; // tick 累计次数（79 轮起跨重连单调递增，供"连续增长"取证）
+  int _probeSent = 0; // 本段实际发出的保活消息数
   int _probeRecv = 0;
+  int _segTicks = 0; // 本段 tick 次数（用于"跳过"统计）
   DateTime? _probeStartAt;
   DateTime? _lastUplinkAt; // 上次保活上行的时刻（用于日志"距上次上行"）
+  DateTime? _lastTickAt; // 上一次 tick 时刻（原生唤醒据此判"是否停摆"）
 
   /// 日志前缀：生产保活用 [KEEPALIVE]，诊断 detect 用 [PROBE]
   String get _tag => _probeMode == WsProbeMode.auto ? 'KEEPALIVE' : 'PROBE';
@@ -147,6 +149,15 @@ class XiaozhiWebSocketManager {
   /// 距最近一次收到服务器消息的秒数（从未收到返回 null）
   int? get silentSeconds {
     final t = _lastRecvAt;
+    if (t == null) return null;
+    return DateTime.now().difference(t).inSeconds;
+  }
+
+  /// 距最近一次保活上行的秒数（从未上行返回 null）。
+  /// 79 轮：回前台判僵死必须同时看上行——保活发 `listen:stop` 服务端不回包，
+  /// 只凭下行静默会把健康连接误杀（78 真机每次回前台都误判"连接僵死"并重建）。
+  int? get uplinkSilentSeconds {
+    final t = _lastUplinkAt;
     if (t == null) return null;
     return DateTime.now().difference(t).inSeconds;
   }
@@ -498,15 +509,14 @@ class XiaozhiWebSocketManager {
   }
 
   /// 连接建立后按配置启动探针。
-  /// 日志前缀 `[PROBE]` 便于 `adb logcat | findstr PROBE` 单线取证。
+  /// 日志前缀 `[KEEPALIVE]` 便于 `adb logcat -s XiaoLe | findstr KEEPALIVE` 单线取证。
+  ///
+  /// 79 轮 P0：tick 定时器是"心跳是否还在跑"的唯一取证点，
+  /// **绝不因为掉线（`_onDisconnected`）而 cancel**；只有主动断开 / 关闭保活才停。
   void _startProbe() {
-    _stopProbe('新连接');
-    _probeSeq = 0;
-    _probeSent = 0;
-    _probeRecv = 0;
-    _probeDownText = 0;
-    _probeDownBinary = 0;
-    _probeTypes.clear();
+    final mode = _probeMode;
+    // 结算上一段统计（不断 timer、不清 _probeSeq：tick 号要跨重连单调递增）
+    _settleProbe('新连接');
     _probeStartAt = DateTime.now();
     _lastUplinkAt = null;
     // 新连接 = 新 session，旧会话标记作废
@@ -515,46 +525,70 @@ class XiaozhiWebSocketManager {
     _conversationStaleTimer?.cancel();
     _conversationStaleTimer = null;
 
-    final mode = _probeMode;
     if (mode == WsProbeMode.off) {
+      _stopProbe('模式=off');
       logger.info('[KEEPALIVE] 关闭（不发保活消息；仅 WS ping=${PING_INTERVAL.inSeconds}s + 无感重连）');
       return;
     }
-    final iv = _probeInterval.inSeconds;
-    logger.info('[$_tag] 启动 mode=${mode.name} interval=${iv}s '
+    if (_probeTimer != null) {
+      logger.info('[$_tag] 连接已重建 mode=${mode.name} interval=${_probeInterval.inSeconds}s '
+          '→ tick 续跑（tick#$_probeSeq，不重建定时器）');
+      return;
+    }
+    logger.info('[$_tag] 启动 mode=${mode.name} interval=${_probeInterval.inSeconds}s '
         '条件=已连接且无会话中；对话结束 ${PROBE_RESUME_DELAY.inSeconds}s 后恢复');
-    _probeTimer = Timer.periodic(_probeInterval, (_) {
-      _probeSeq++;
-      final now = DateTime.now();
-      if (_manualClosed || !isConnected) {
-        logger.info('[$_tag] tick#$_probeSeq t=${_probeElapsedSec}s 发送=否 原因=未连接');
-        return;
-      }
-      // v6.11.13：会话过期统一交给独立定时器（_expireConversationIfStale），
-      // 这里只做一次兜底调用，避免 tick 与定时器两套判定漂移。
-      if (_conversationActive) {
-        _expireConversationIfStale();
-      }
-      if (_conversationActive) {
-        logger.info('[$_tag] tick#$_probeSeq t=${_probeElapsedSec}s 发送=否 原因=会话中');
-        return;
-      }
-      final end = _conversationEndAt;
-      if (end != null && now.difference(end) < PROBE_RESUME_DELAY) {
-        logger.info('[$_tag] tick#$_probeSeq t=${_probeElapsedSec}s 发送=否 '
-            '原因=会话刚结束 ${now.difference(end).inSeconds}s<${PROBE_RESUME_DELAY.inSeconds}s');
-        return;
-      }
-      final gap =
-          _lastUplinkAt == null ? '首次' : '${now.difference(_lastUplinkAt!).inSeconds}s';
-      for (final payload in _probePayloads()) {
-        sendMessage(payload);
-      }
-      _probeSent++;
-      _lastUplinkAt = now;
-      logger.info('[$_tag] tick#$_probeSeq t=${_probeElapsedSec}s 发送=是 距上次上行=$gap '
-          'payload=${mode == WsProbeMode.auto ? 'listen:stop' : 'listen:detect'} recv=$_probeRecv');
-    });
+    _probeTimer = Timer.periodic(_probeInterval, (_) => _tick('dart'));
+  }
+
+  /// 一拍心跳。[source] 只用于日志：`dart` = 配置间隔（默认 45s）定时器，
+  /// `native` = 原生 KeepAliveService 每 30s 唤醒补拍。
+  void _tick(String source) {
+    _probeSeq++;
+    _segTicks++;
+    _lastTickAt = DateTime.now();
+    final from = source == 'native' ? ' 来源=native唤醒' : '';
+    if (_manualClosed || !isConnected) {
+      logger.info('[$_tag] tick#$_probeSeq t=${_probeElapsedSec}s 发送=否 原因=未连接$from');
+      return;
+    }
+    // v6.11.13：会话过期统一交给独立定时器（_expireConversationIfStale），
+    // 这里只做一次兜底调用，避免 tick 与定时器两套判定漂移。
+    if (_conversationActive) {
+      _expireConversationIfStale();
+    }
+    if (_conversationActive) {
+      logger.info('[$_tag] tick#$_probeSeq t=${_probeElapsedSec}s 发送=否 原因=会话中$from');
+      return;
+    }
+    final now = DateTime.now();
+    final end = _conversationEndAt;
+    if (end != null && now.difference(end) < PROBE_RESUME_DELAY) {
+      logger.info('[$_tag] tick#$_probeSeq t=${_probeElapsedSec}s 发送=否 '
+          '原因=会话刚结束 ${now.difference(end).inSeconds}s<${PROBE_RESUME_DELAY.inSeconds}s$from');
+      return;
+    }
+    final gap =
+        _lastUplinkAt == null ? '首次' : '${now.difference(_lastUplinkAt!).inSeconds}s';
+    for (final payload in _probePayloads()) {
+      sendMessage(payload);
+    }
+    _probeSent++;
+    _lastUplinkAt = now;
+    logger.info('[$_tag] tick#$_probeSeq t=${_probeElapsedSec}s 发送=是 距上次上行=$gap '
+        'payload=${_probeMode == WsProbeMode.auto ? 'listen:stop' : 'listen:detect'} '
+        'recv=$_probeRecv$from');
+  }
+
+  /// 79 轮 P0 兜底：原生 KeepAliveService 每 30s 调一次 `wakeup`。
+  /// Dart 定时器正常时直接返回（绝不重复发包）；真停摆才补一拍，
+  /// 由 `_tick` 落下"发送=是 + 来源=native唤醒"，用来证明心跳真的发到了服务端。
+  void onNativeWakeup() {
+    if (_manualClosed) return;
+    final last = _lastTickAt;
+    if (last != null && DateTime.now().difference(last) < _probeInterval) return;
+    logger.info('[$_tag] 原生唤醒：Dart tick 已停 '
+        '${last == null ? '（从未启动）' : '${DateTime.now().difference(last).inSeconds}s'}，补一拍');
+    _tick('native');
   }
 
   /// 各模式的保活载荷（v6.11.11：生产只剩 auto / off，detect 仅诊断）
@@ -571,25 +605,35 @@ class XiaozhiWebSocketManager {
     }
   }
 
-  void _stopProbe(String why) {
+  /// 只结算本段统计并打汇总日志，**不取消定时器**。
+  /// 79 轮 P0：`_onDisconnected` 走这里，保证息屏掉线后 tick 仍在跑。
+  void _settleProbe(String why) {
     if (_probeTimer != null || _probeStartAt != null) {
       final types = _probeTypes.entries
           .map((e) => '${e.key}=${e.value}')
           .join(',');
-      logger.info('[$_tag] 停止（$why）mode=${_probeMode.name} '
-          '存活=${_probeElapsedSec}s tick=$_probeSeq 发送=$_probeSent '
-          '跳过=${_probeSeq - _probeSent} 收到帧=$_probeRecv '
+      logger.info('[$_tag] 结算（$why）mode=${_probeMode.name} '
+          '存活=${_probeElapsedSec}s tick=$_probeSeq 本段tick=$_segTicks 发送=$_probeSent '
+          '跳过=${_segTicks - _probeSent} 收到帧=$_probeRecv '
           '文本=$_probeDownText 音频=$_probeDownBinary'
           '${types.isEmpty ? '' : ' types={$types}'}');
     }
+    _probeSent = 0;
+    _probeRecv = 0;
+    _segTicks = 0;
+    _probeDownText = 0;
+    _probeDownBinary = 0;
+    _probeTypes.clear();
+  }
+
+  /// 彻底停表：只有「用户主动断开」「关闭保活」「页面销毁」才走这里。
+  void _stopProbe(String why) {
+    _settleProbe(why);
     _probeTimer?.cancel();
     _probeTimer = null;
     _conversationStaleTimer?.cancel();
     _conversationStaleTimer = null;
     _probeStartAt = null;
-    _probeDownText = 0;
-    _probeDownBinary = 0;
-    _probeTypes.clear();
   }
 
   /// v6.11.9：从下行 JSON 提取 type（失败返回 unknown）
@@ -735,7 +779,9 @@ class XiaozhiWebSocketManager {
     final code = _channel?.closeCode;
     final reason = _channel?.closeReason;
     // v6.11.8：先结算本次探针（候选名 / 存活秒数 / 发送数 / 收到帧 / close code）
-    _stopProbe('服务器断开 code=${code ?? '-'}');
+    // 79 轮 P0：**只结算、不 cancel**——息屏掉线后 tick 必须继续跑，
+    // 否则又回到"进程活着但心跳不跑"（78 真机 0 条 tick#2+ 的直接原因）。
+    _settleProbe('服务器断开 code=${code ?? '-'}');
     // v6.11.10：记录关闭码与断开时刻，供重连频率评估使用
     _closeCodes.add(code ?? -1);
     if (_closeCodes.length > 20) _closeCodes.removeAt(0);

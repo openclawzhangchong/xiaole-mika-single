@@ -61,6 +61,8 @@ class MainActivity : FlutterActivity() {
     override fun onDestroy() {
         // 进程/页面退出兜底：绝不允许 wakelock 泄漏
         releaseWakeLock(null)
+        // 79 轮：引擎即将销毁，服务侧不能再往这条通道发唤醒
+        KeepAliveService.dartChannel = null
         super.onDestroy()
     }
 
@@ -171,7 +173,11 @@ class MainActivity : FlutterActivity() {
             }
 
         // 后台保持连接（方案 B）：前台服务只做"保活"，业务仍在 Dart 侧
-        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, KEEPALIVE_CHANNEL)
+        val keepAliveChannel =
+            MethodChannel(flutterEngine.dartExecutor.binaryMessenger, KEEPALIVE_CHANNEL)
+        // 79 轮 P0：把通道交给服务，让它能每 30s 唤醒 Dart 补一拍心跳
+        KeepAliveService.dartChannel = keepAliveChannel
+        keepAliveChannel
             .setMethodCallHandler { call, result ->
                 when (call.method) {
                     "start" -> startKeepAlive(result)

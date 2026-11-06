@@ -4,7 +4,13 @@ class AppConfig {
 
   // 应用信息
   static const String appName = '小乐'; // v4.0.0：品牌统一（默认智能体名前缀等）
-  static const String appVersion = '6.11.20'; // v6.11.20：后台保持连接前台服务（方案 B）
+
+  /// 79 轮 P2：版本号不再手写死。CI 用 `--dart-define=APP_VERSION=<pubspec 版本>`
+  /// 注入（见 build-merged-apk.yml），本地直接 run 时回落默认值（与 pubspec 对齐）。
+  static const String appVersion = String.fromEnvironment(
+    'APP_VERSION',
+    defaultValue: '6.11.22',
+  );
 
   /// v4.4.0 尾音保护：AI 播放结束后丢弃麦克风音频的时长（毫秒）
   static const int defaultTailGuardMs = 300;

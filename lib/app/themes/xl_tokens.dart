@@ -15,6 +15,11 @@ abstract final class XlColor {
   static const mask = Color(0x73000000);
   static const overlay = Color(0xC7141414); // rgba(20,20,20,.78)
 
+  /// 79 轮 P1：录音浮层玻璃底。必须半透明，BackdropFilter 才能把下方气泡
+  /// 的块状轮廓透出来（78 实拍 #1B1B1B 近实心就是被 0.82 的旧底色盖死的）。
+  /// rgba(27,27,27,.72)
+  static const overlayGlass = Color(0xB81B1B1B);
+
   // text
   static const text1 = Color(0xFF191919);
   static const text2 = Color(0xFF6E6E6E);
@@ -676,7 +681,7 @@ abstract final class XlDims {
   static const voiceOverlayPad = 14.0;
   static const cancelIcon = 30.0;
   static const voiceWaveSlot = 34.0;
-  static const overlayBlur = 12.0; // 浮层背景模糊（DESIGN §8.4）
+  static const overlayBlur = 14.0; // 浮层背景模糊（DESIGN §8.4；79 轮 12→14）
 
   // call
   static const callAvatar = 96.0;

@@ -77,6 +77,9 @@ class MessageList extends StatelessWidget {
     return ListView.builder(
       controller: scrollController,
       reverse: true,
+      // 79 轮 P1：默认 true 会给每个气泡套 RepaintBoundary（独立合成层），
+      // 录音浮层的 BackdropFilter 就采不到下方内容 → 实拍成"近实心遮挡"。
+      addRepaintBoundaries: false,
       padding: const EdgeInsets.symmetric(vertical: 6),
       itemCount: itemCount,
       itemBuilder: (context, index) {

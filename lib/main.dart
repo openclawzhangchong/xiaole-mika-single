@@ -43,6 +43,9 @@ void main() async {
     );
   });
 
+  // 79 轮 P0：注册原生 KeepAliveService 的 30s 唤醒回调（补 Dart tick 的兜底）
+  KeepAliveService.init();
+
   // 初始化 Hive（日程映射存储）
   await Hive.initFlutter();
 

@@ -11,6 +11,18 @@ class KeepAliveService {
 
   static const MethodChannel _channel = MethodChannel('xiaole/keepalive');
 
+  /// 79 轮 P0：原生 KeepAliveService 每 30s 调一次 `wakeup`，用来把可能被
+  /// OEM 降权的 Dart 定时器补一拍。由聊天页在 initState 里挂上 WS 管理器。
+  static void Function()? onNativeWakeup;
+
+  /// 在 main 里调用一次：注册"原生 → Dart"的唤醒回调（MethodChannel 天然回主 isolate）。
+  static void init() {
+    _channel.setMethodCallHandler((MethodCall call) async {
+      if (call.method == 'wakeup') onNativeWakeup?.call();
+      return null;
+    });
+  }
+
   /// 起服务；系统拒绝（如 API 31+ 后台启动限制）返回 false，并落 [KEEPALIVE] start_denied
   static Future<bool> start() async {
     try {

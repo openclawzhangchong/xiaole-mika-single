@@ -8,15 +8,19 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import android.os.Handler
 import android.os.IBinder
+import android.os.Looper
 import android.os.PowerManager
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
+import io.flutter.plugin.common.MethodChannel
 
 /**
- * 后台保持连接（方案 B）：只负责让进程在后台时不被系统冻结，服务内不跑任何业务。
- * 心跳仍然是 Dart 侧 45s 那套，服务本身不发包、不判活，只贴一条低调的常驻通知。
+ * 后台保持连接（方案 B）：负责让进程在后台时不被系统冻结，并做原生心跳兜底。
+ * 业务与发包仍在 Dart 侧：这里每 30s 打一拍 `[KEEPALIVE] tick#N 来源=native`
+ * 并经 MethodChannel 唤醒 Dart（Dart 按需补发 `listen:stop` 到服务端）。
  */
 class KeepAliveService : Service() {
 
@@ -33,6 +37,14 @@ class KeepAliveService : Service() {
         // 上限 30 分钟：服务随回前台必停，超时只是兜底，避免长期耗电。
         private const val WAKE_LOCK_TIMEOUT_MS = 30 * 60 * 1000L
         private const val WAKE_LOCK_TAG = "XiaoLe:keepalive"
+
+        // v6.11.22（79 轮 P0）：原生心跳。只靠 Dart 定时器一旦被 OEM 降权就毫无证据；
+        // 这里每 30s 打一拍日志并唤醒 Dart（Dart 侧按需补发 listen:stop 到服务端）。
+        private const val TICK_INTERVAL_MS = 30_000L
+
+        /** 由 MainActivity 在 configureFlutterEngine 里注入，onDestroy 置空 */
+        @Volatile
+        var dartChannel: MethodChannel? = null
 
         @Volatile
         private var running = false
@@ -55,6 +67,40 @@ class KeepAliveService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
 
     private var wakeLock: PowerManager.WakeLock? = null
+
+    private val handler = Handler(Looper.getMainLooper())
+    private var tickSeq = 0
+    private var ticking = false
+    private val tickRunnable = object : Runnable {
+        override fun run() {
+            tickSeq++
+            val ch = dartChannel
+            Log.i(
+                TAG,
+                "[KEEPALIVE] tick#$tickSeq 来源=native 间隔=${TICK_INTERVAL_MS / 1000}s " +
+                    "唤醒Dart=${if (ch == null) "否(无回调)" else "是"}",
+            )
+            try {
+                ch?.invokeMethod("wakeup", null)
+            } catch (_: Exception) {
+                // Dart 已销毁/引擎 detached：不能影响下一拍
+            }
+            handler.postDelayed(this, TICK_INTERVAL_MS)
+        }
+    }
+
+    private fun startTicking() {
+        if (ticking) return
+        ticking = true
+        tickSeq = 0
+        handler.post(tickRunnable)
+    }
+
+    private fun stopTicking() {
+        if (!ticking) return
+        ticking = false
+        handler.removeCallbacks(tickRunnable)
+    }
 
     private fun acquireWakeLock() {
         if (wakeLock?.isHeld == true) return
@@ -87,6 +133,7 @@ class KeepAliveService : Service() {
         if (intent?.action == ACTION_STOP) {
             // 通知栏「停止」：用户点一下就必须真停
             Log.i(TAG, "[KEEPALIVE] stop_action")
+            stopTicking()
             releaseWakeLock()
             stopSelf()
             return START_NOT_STICKY
@@ -94,6 +141,7 @@ class KeepAliveService : Service() {
         startForeground(NOTIFICATION_ID, buildNotification())
         acquireWakeLock()
         running = true
+        startTicking()
         Log.i(TAG, "[KEEPALIVE] foreground_on id=$NOTIFICATION_ID")
         // 不自动重启：只在"有连接且进后台"时由 App 启动，避免常驻白挂
         return START_NOT_STICKY
@@ -101,6 +149,7 @@ class KeepAliveService : Service() {
 
     override fun onDestroy() {
         running = false
+        stopTicking()
         releaseWakeLock()
         Log.i(TAG, "[KEEPALIVE] service_destroyed")
         super.onDestroy()

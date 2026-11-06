@@ -200,7 +200,9 @@ class XlVoiceRecordOverlay extends StatelessWidget {
           vertical: 10,
         ),
         decoration: BoxDecoration(
-          color: p.overlay,
+          // 79 轮 P1：半透明玻璃底（不能再用 p.overlay 的 .82 近实心色，
+          // 否则 BackdropFilter 的模糊会被底色完全盖死）
+          color: XlColor.overlayGlass,
           borderRadius: BorderRadius.circular(XlDims.voiceOverlayRadius),
           boxShadow: const [
             BoxShadow(
