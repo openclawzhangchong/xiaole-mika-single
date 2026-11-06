@@ -3,6 +3,7 @@ package com.zcstudy.xiaole
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.PowerManager
@@ -190,6 +191,9 @@ class MainActivity : FlutterActivity() {
                     "notificationsEnabled" ->
                         result.success(NotificationManagerCompat.from(this).areNotificationsEnabled())
                     "requestNotificationPermission" -> requestNotificationPermission(result)
+                    // v6.11.23（80 轮）：ColorOS HANS 冻结进程，唯一可靠解法是电池优化白名单
+                    "batteryExempt" -> result.success(isIgnoringBatteryOptimizations())
+                    "requestBatteryExempt" -> requestBatteryExempt(result)
                     else -> result.notImplemented()
                 }
             }
@@ -211,6 +215,40 @@ class MainActivity : FlutterActivity() {
                     else -> result.notImplemented()
                 }
             }
+    }
+
+    private fun isIgnoringBatteryOptimizations(): Boolean {
+        val pm = getSystemService(POWER_SERVICE) as PowerManager
+        return pm.isIgnoringBatteryOptimizations(packageName)
+    }
+
+    /** 一键申请"忽略电池优化"；ROM 拦截直跳时回退到电池优化列表页 */
+    private fun requestBatteryExempt(result: MethodChannel.Result) {
+        if (isIgnoringBatteryOptimizations()) {
+            result.success(true)
+            return
+        }
+        try {
+            startActivity(
+                Intent(Intent.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)
+                    .setData(Uri.parse("package:$packageName"))
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+            )
+            Log.i(LOG_TAG, "[KEEPALIVE] battery_exempt_request opened=direct")
+            result.success(true)
+        } catch (e: Exception) {
+            try {
+                startActivity(
+                    Intent(Intent.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+                )
+                Log.i(LOG_TAG, "[KEEPALIVE] battery_exempt_request opened=settings")
+                result.success(true)
+            } catch (e2: Exception) {
+                Log.w(LOG_TAG, "[KEEPALIVE] battery_exempt_request failed=$e2")
+                result.error("request_failed", e2.message, null)
+            }
+        }
     }
 
     /** 起前台服务；被系统拒绝时把原因码打进 XiaoLe 日志，验收可直接 grep start_denied */

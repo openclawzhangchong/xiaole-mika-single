@@ -162,6 +162,9 @@ class XiaozhiWebSocketManager {
     return DateTime.now().difference(t).inSeconds;
   }
 
+  /// 最近一次服务端关闭码（null = 本段还没断过），回前台日志用它区分"真断"与"误杀"
+  int? get lastCloseCode => _closeCodes.isEmpty ? null : _closeCodes.last;
+
   /// 构造函数
   /// [clientId] 真实设备 ClientID（UUID）。官方协议中 client-id 头应传该值；
   /// 不传时保持旧行为（client-id = deviceId），完全向后兼容。
@@ -584,6 +587,12 @@ class XiaozhiWebSocketManager {
   /// 由 `_tick` 落下"发送=是 + 来源=native唤醒"，用来证明心跳真的发到了服务端。
   void onNativeWakeup() {
     if (_manualClosed) return;
+    // 80 轮：ColorOS 息屏会主动 Close socket（cause=App bg），唤醒时先补连再补拍
+    if (!isSocketOpen) {
+      logger.info('[$_tag] 原生唤醒：socket 已关（最近 close=${lastCloseCode ?? '-'}），触发重连');
+      forceReconnect();
+      return;
+    }
     final last = _lastTickAt;
     if (last != null && DateTime.now().difference(last) < _probeInterval) return;
     logger.info('[$_tag] 原生唤醒：Dart tick 已停 '
@@ -928,22 +937,11 @@ class XiaozhiWebSocketManager {
   /// v6.11.17：页面侧"想打就打"不再新建管理器，而是让现有管理器立即补连。
   /// 旧实现会再走一遍 _initializeWebSocket 建出第二个 manager，
   /// 两个 manager 用同一 device-id 建两条 socket，服务端按重复会话 1005 回收其一。
-  /// [dropStale] 为 true 时，即使 socket 仍打开也强制重建（回前台后判定僵死用）。
-  void forceReconnect({bool dropStale = false}) {
+  /// 80 轮：socket 仍打开时一律不重建——回前台只看 socket 实际状态，
+  /// 1002/1005 属于服务端先断，由 `_onDisconnected` 的正常重连处理，不再叠二次。
+  void forceReconnect() {
     if (_serverUrl == null || _token == null) return;
-    if (isSocketOpen) {
-      if (!dropStale) return; // 已有 socket（含等 hello），由握手闸门决定成败
-      // v6.11.21（78 轮）：僵死连接不算连接，先摘掉保活信号再重建
-      KeepAliveCoordinator.instance.onConnectionChanged(false);
-      logger.warning('[LIFECYCLE] 判定连接僵死（静默=${silentSeconds ?? '-'}s），'
-          '主动关闭并立即重建');
-      unawaited(() async {
-        await disconnect(source: 'stale_probe');
-        _manualClosed = false;
-        await connect(_serverUrl!, _token!, isReconnect: true);
-      }());
-      return;
-    }
+    if (isSocketOpen) return; // 已有 socket（含等 hello），由握手闸门决定成败
     if (_manualClosed) return;
     _reconnectTimer?.cancel();
     _reconnectTimer = null;

@@ -9,6 +9,7 @@ import '../../../core/storage/storage_service.dart';
 import '../../../core/utils/audio_util.dart';
 import '../../widgets/wx_action_sheet.dart';
 import '../../widgets/wx_cell.dart';
+import '../background_guide_page.dart';
 import '../cloud_sync_page.dart';
 import '../export_chat_page.dart';
 import '../privacy_policy_page.dart';
@@ -124,6 +125,7 @@ class _SettingsDetailPageState extends ConsumerState<SettingsDetailPage> {
                 trailingText: '仅本机',
               ),
               _KeepAliveSwitch(),
+              _BatteryExemptCell(),
             ],
           ),
           Padding(
@@ -262,6 +264,33 @@ class _KeepAliveSwitchState extends State<_KeepAliveSwitch> {
     setState(() => _busy = true);
     final coordinator = KeepAliveCoordinator.instance;
     if (value) {
+      // 80 轮：ColorOS 会在息屏约 30s 后冻结进程，先引导加入电池优化白名单
+      final exempt = await KeepAliveService.batteryExempt();
+      if (!exempt && mounted) {
+        final go = await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text('允许小乐后台运行'),
+            content: const Text(
+              '小乐还不在电池优化白名单。ColorOS 会在息屏约 30 秒后冻结进程并断开连接，'
+              '后台心跳会完全停止。请允许小乐忽略电池优化。',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('稍后'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                child: const Text('去允许'),
+              ),
+            ],
+          ),
+        );
+        if (go == true) {
+          await KeepAliveService.requestBatteryExempt();
+        }
+      }
       final ok = await coordinator.enableWithPermission();
       if (!ok && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -286,7 +315,63 @@ class _KeepAliveSwitchState extends State<_KeepAliveSwitch> {
           onChanged: _busy ? null : _toggle,
         ),
       ),
+    );
+  }
+}
+
+/// 80 轮：电池优化白名单状态 + 系统授权入口（ColorOS 冻结进程的唯一可靠解法）
+class _BatteryExemptCell extends StatefulWidget {
+  const _BatteryExemptCell();
+
+  @override
+  State<_BatteryExemptCell> createState() => _BatteryExemptCellState();
+}
+
+class _BatteryExemptCellState extends State<_BatteryExemptCell>
+    with WidgetsBindingObserver {
+  bool? _exempt;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _refresh();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) _refresh();
+  }
+
+  Future<void> _refresh() async {
+    final v = await KeepAliveService.batteryExempt();
+    if (mounted) setState(() => _exempt = v);
+  }
+
+  Future<void> _open() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const BackgroundGuidePage()),
+    );
+    if (mounted) _refresh();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final text = _exempt == null ? '检测中' : (_exempt! ? '已允许' : '未允许');
+    return WxCell(
+      title: '电池优化白名单',
+      subtitle: 'ColorOS 会在息屏后冻结后台连接，需允许小乐后台运行',
+      trailingText: text,
+      showArrow: true,
       showDivider: false,
+      onTap: _open,
     );
   }
 }

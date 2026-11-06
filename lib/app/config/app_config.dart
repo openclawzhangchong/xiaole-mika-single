@@ -9,7 +9,7 @@ class AppConfig {
   /// 注入（见 build-merged-apk.yml），本地直接 run 时回落默认值（与 pubspec 对齐）。
   static const String appVersion = String.fromEnvironment(
     'APP_VERSION',
-    defaultValue: '6.11.22',
+    defaultValue: '6.11.23',
   );
 
   /// v4.4.0 尾音保护：AI 播放结束后丢弃麦克风音频的时长（毫秒）

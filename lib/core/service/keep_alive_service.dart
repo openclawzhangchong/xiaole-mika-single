@@ -69,6 +69,24 @@ class KeepAliveService {
       return false;
     }
   }
+
+  /// 80 轮：是否已在电池优化白名单（ColorOS 用这个状态决定是否冻结进程）
+  static Future<bool> batteryExempt() async {
+    try {
+      return await _channel.invokeMethod<bool>('batteryExempt') ?? false;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// 80 轮：打开系统"忽略电池优化"授权；被 ROM 拦截时回退到电池优化列表页
+  static Future<bool> requestBatteryExempt() async {
+    try {
+      return await _channel.invokeMethod<bool>('requestBatteryExempt') ?? false;
+    } catch (_) {
+      return false;
+    }
+  }
 }
 
 /// 统一裁决"什么时候挂服务"：开关开 + 有活跃连接 + App 在后台。

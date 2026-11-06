@@ -243,7 +243,8 @@ class _ChatPageState extends ConsumerState<ChatPage>
   }
 
   /// v6.11.17（P0-3 方案 A）：后台/息屏持 PARTIAL_WAKE_LOCK，回前台立刻释放。
-  /// 另外回前台时按静默时长判定僵死并立即重建，不再等下一拍看门狗。
+  /// 80 轮：回前台只看 socket 实际状态——socket 还开着就不重建；
+  /// 1002/1005 是服务端先断，交给 `_onDisconnected` 的正常重连，不再叠二次。
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.paused) {
@@ -260,15 +261,19 @@ class _ChatPageState extends ConsumerState<ChatPage>
     if (mgr == null) return;
     final silent = mgr.silentSeconds;
     final uplinkSilent = mgr.uplinkSilentSeconds;
-    logger.info('[LIFECYCLE] 回到前台 连接=$_isConnected '
-        '静默=${silent == null ? '尚未收包' : '${silent}s'} '
+    final socketOpen = mgr.isSocketOpen;
+    logger.info('[LIFECYCLE] 回到前台 连接=$_isConnected socket=$socketOpen '
+        '握手=${mgr.isConnected} 最近close=${mgr.lastCloseCode ?? '-'} '
+        '下行静默=${silent == null ? '尚未收包' : '${silent}s'} '
         '上行静默=${uplinkSilent == null ? '尚未上行' : '${uplinkSilent}s'}');
-    // 79 轮：判僵死必须"下行静默 + 上行静默"双条件。
-    // 保活发 listen:stop 服务端不回包，只看下行会把健康连接误杀（78 每次回前台重建一次）。
-    final stale = silent != null &&
-        silent > 70 &&
-        (uplinkSilent == null || uplinkSilent > 70);
-    mgr.forceReconnect(dropStale: stale);
+    if (!socketOpen) {
+      // 真断（含 1002/1005 服务端先断）：立即补连，跳过退避
+      logger.info('[LIFECYCLE] socket 已关 → 请求立即补连');
+      mgr.forceReconnect();
+    } else {
+      // 连接还活着：静默多久都不重建，避免把健康连接误杀
+      logger.info('[LIFECYCLE] socket 仍打开 → 不重连（连接未死）');
+    }
   }
 
   Future<void> _acquireWakeLock() async {

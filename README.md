@@ -9,12 +9,25 @@
 
 | 项 | 值 |
 |---|---|
-| versionName | `6.11.22-mika1` |
-| versionCode | `79` |
-| 产物 | `xiaole-6.11.22-mika1-arm64.apk` / `xiaole-6.11.22-mika1-universal.apk`（GitHub Actions artifact，不进仓库） |
+| versionName | `6.11.23-mika1` |
+| versionCode | `80` |
+| 产物 | `xiaole-6.11.23-mika1-arm64.apk` / `xiaole-6.11.23-mika1-universal.apk`（GitHub Actions artifact，不进仓库） |
 | 签名 | `C=CN, O=ZCStudy, CN=XiaoLe Release`，cert SHA-256 `9d2da8805e784801e13c54a635e8bf528db303a235adb5633745cadceb12a169` |
 
-79 轮修复三条（在 78 之上）：
+80 轮修复三条（在 79 之上）：
+
+1. **ColorOS 息屏冻结（P0）**：真机 logcat 证实 `OplusProxyWakeLock` 强摘服务 wakelock、`OAppNetControlService` 以 `App bg(IMMEDIATELY)` 关闭 socket、`OplusHansManager` 把进程整体冻结。80 加原生 `AlarmManager` 60s 兜底（`setExactAndAllowWhileIdle`，未授权时 `setAndAllowWhileIdle`）、每拍自愈 wakelock；设置页新增「电池优化白名单」状态行与一键申请（复用 `BackgroundGuidePage`）。
+2. **回前台误杀**：不再按静默秒数重建，改为只看 socket 实际状态；`1002/1005` 属服务端先断，交给正常重连，不叠二次。
+3. **05/06 mock 入口**：入口是聊天页标题长按（需先开发者鉴权），本轮已查清并写成可复现步骤，未改业务。
+
+05/06 mock 注入复现步骤：
+
+1. 「我」页 → 点「开发者选项」→ 输入密码 `zc19901111`；
+2. 返回聊天页；
+3. **长按顶部智能体名字 1.2s**（不是消息气泡）；
+4. 出现 4 条 mock 任务卡（queued / running / done / failed），日志 `[MOCK] 已注入 4 条 mock 任务卡`。
+
+79 轮修复三条（历史）：
 
 1. **P0 息屏 tick 断流**：`_onDisconnected` 不再 `_stopProbe`（只结算统计），tick 定时器跨重连持续跑且 `tick#` 单调递增；原生 `KeepAliveService` 每 30s 打 `[KEEPALIVE] tick#N 来源=native` 并经 MethodChannel 唤醒 Dart，必要时补发 `listen:stop`；回前台僵死判定改为"下行 + 上行双静默 >70s"才重建（不再每次回前台误杀）。
 2. **P1 03 录音浮层**：底色改半透明 `rgba(27,27,27,.72)` + `BackdropFilter` blur 14；根因是 `ListView` 默认 `addRepaintBoundaries:true` 把每个气泡放进独立合成层、模糊采不到，已关闭。
@@ -25,7 +38,7 @@
 1. **77 前台服务**：连接信号接进 `XiaozhiWebSocketManager`（`_completeHandshake` / 握手超时 / `_onDisconnected` / `forceReconnect` / `disconnect`）；服务仅在“已连接且退到后台”时启动，服务内自持 `PARTIAL_WAKE_LOCK`；Android 13+ 回前台补一次通知权限请求。
 2. **78 UI**：录音浮层改到聊天页 `Stack` 同层（`BackdropFilter` 能采到背后内容）、波形 11 根 3pt/3pt、深色导航 `#1A1A1A` 与时间分隔、会话列表品牌头像 + 未读红点、取消态胶囊 `r4` + `#FF8A8A` 圆标。
 
-README 不含截图资产；79 的真机截图在设备验收通过后补入。
+README 不含截图资产；80 的真机截图在设备验收通过后补入。
 
 
 ## 架构分层
