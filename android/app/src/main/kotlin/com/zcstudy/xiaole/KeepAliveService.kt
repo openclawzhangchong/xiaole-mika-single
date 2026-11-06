@@ -9,9 +9,7 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.os.Build
-import android.os.Handler
 import android.os.IBinder
-import android.os.Looper
 import android.os.PowerManager
 import android.os.SystemClock
 import android.util.Log
@@ -20,9 +18,9 @@ import androidx.core.content.ContextCompat
 import io.flutter.plugin.common.MethodChannel
 
 /**
- * 后台保持连接（方案 B）：负责让进程在后台时不被系统冻结，并做原生心跳兜底。
- * 业务与发包仍在 Dart 侧：这里每 30s 打一拍 `[KEEPALIVE] tick#N 来源=native`
- * 并经 MethodChannel 唤醒 Dart（Dart 按需补发 `listen:stop` 到服务端）。
+ * 后台保持连接（方案 B）：负责让进程在后台时不被系统冻结。
+ * 81 起原生只做两件事：自愈被 ColorOS 强摘的 wakelock、检查 socket 是否已死。
+ * 不补拍心跳、不推动重连——息屏期间宁可断开，亮屏由 Dart 侧秒回。
  */
 class KeepAliveService : Service() {
 
@@ -34,19 +32,15 @@ class KeepAliveService : Service() {
         private const val CHANNEL_NAME = "后台保持连接"
         private const val NOTIFICATION_ID = 7301
         private const val STOP_ACTION_ID = 1
-        // v6.11.21（78 轮）：服务自己也要持锁——只靠 Activity 侧
-        // chat_page 的 acquire，一旦页面不在栈顶/删路径漏调，息屏照样冻结。
+        // v6.11.21（78 轮）：服务自己持锁，页面不在栈顶也能撑住。
+        // 81 起页面侧不再为 tick 持锁，这里的锁只用于"后台通知与快速恢复"。
         // 上限 30 分钟：服务随回前台必停，超时只是兜底，避免长期耗电。
         private const val WAKE_LOCK_TIMEOUT_MS = 30 * 60 * 1000L
         private const val WAKE_LOCK_TAG = "XiaoLe:keepalive"
 
-        // v6.11.22（79 轮 P0）：原生心跳。只靠 Dart 定时器一旦被 OEM 降权就毫无证据；
-        // 这里每 30s 打一拍日志并唤醒 Dart（Dart 侧按需补发 listen:stop 到服务端）。
-        private const val TICK_INTERVAL_MS = 30_000L
-
-        // v6.11.23（80 轮）：ColorOS HANS 会连进程一起冻结，Handler 也停。
-        // 加 AlarmManager 闹钟兜底：即使 Handler 停摆，系统闹钟仍有机会唤醒进程。
-        // 注意：深度 doze 下不保证 60s 一发，闹钟只是"被冻结后仍有一次唤醒机会"。
+        // v6.11.22（79 轮）：原生兜底唤醒。
+        // 81：不再用 Handler 周期 tick，只保留 AlarmManager 闹钟（60s）——
+        // 到点做两件事：重取被 ColorOS 强摘的 wakelock、唤醒 Dart 检查 socket 是否已死。
         private const val ACTION_ALARM = "com.zcstudy.xiaole.KEEPALIVE_ALARM"
         private const val ALARM_INTERVAL_MS = 60_000L
         private const val ALARM_REQUEST_CODE = 7303
@@ -76,31 +70,26 @@ class KeepAliveService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
 
     private var wakeLock: PowerManager.WakeLock? = null
+    private var wakeSeq = 0
 
-    private val handler = Handler(Looper.getMainLooper())
-    private var tickSeq = 0
-    private var ticking = false
-    private val tickRunnable = object : Runnable {
-        override fun run() {
-            emitTick("native", TICK_INTERVAL_MS / 1000)
-            handler.postDelayed(this, TICK_INTERVAL_MS)
-        }
-    }
-
-    /** 同一拍逻辑：自愈 wakelock（ColorOS 会强摘）→ 打日志 → 唤醒 Dart */
-    private fun emitTick(source: String, intervalSec: Long) {
-        tickSeq++
+    /**
+     * 81：原生闹钟只做两件事——自愈 wakelock、让 Dart 检查 socket。
+     * Dart 侧 `onNativeWakeup` 只打状态日志，不补拍心跳、不强制重连
+     * （80 的"每次唤醒都重连"正是 1005/1006 风暴的根源）。
+     */
+    private fun emitWakeup(source: String, intervalSec: Long) {
+        wakeSeq++
         ensureWakeLock()
         val ch = dartChannel
         Log.i(
             TAG,
-            "[KEEPALIVE] tick#$tickSeq 来源=$source 间隔=${intervalSec}s " +
-                "唤醒Dart=${if (ch == null) "否(无回调)" else "是"}",
+            "[KEEPALIVE] wakeup#$wakeSeq 来源=$source 间隔=${intervalSec}s " +
+                "用途=重取wakelock+检查socket 唤醒Dart=${if (ch == null) "否(无回调)" else "是"}",
         )
         try {
             ch?.invokeMethod("wakeup", null)
         } catch (_: Exception) {
-            // Dart 已销毁/引擎 detached：不能影响下一拍
+            // Dart 已销毁/引擎 detached：不能影响下一次闹钟
         }
     }
 
@@ -110,19 +99,6 @@ class KeepAliveService : Service() {
         Log.w(TAG, "[KEEPALIVE] wakelock_reacquire 原因=系统已释放")
         wakeLock = null
         acquireWakeLock()
-    }
-
-    private fun startTicking() {
-        if (ticking) return
-        ticking = true
-        tickSeq = 0
-        handler.post(tickRunnable)
-    }
-
-    private fun stopTicking() {
-        if (!ticking) return
-        ticking = false
-        handler.removeCallbacks(tickRunnable)
     }
 
     private fun acquireWakeLock() {
@@ -194,19 +170,19 @@ class KeepAliveService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent?.action == ACTION_ALARM) {
-            // 闹钟到达：服务还活着才补拍；不在这里强行 startForeground
+            // 81：闹钟到达 = 唯一唤醒点。服务活着才做 wakelock 自愈 + socket 检查，
+            // 不补拍心跳、不强制重连；也不在这里强行 startForeground。
             if (!running) {
                 Log.w(TAG, "[KEEPALIVE] alarm_ignored service_not_running")
                 return START_NOT_STICKY
             }
-            emitTick("alarm", ALARM_INTERVAL_MS / 1000)
+            emitWakeup("alarm", ALARM_INTERVAL_MS / 1000)
             scheduleNextAlarm()
             return START_NOT_STICKY
         }
         if (intent?.action == ACTION_STOP) {
             // 通知栏「停止」：用户点一下就必须真停
             Log.i(TAG, "[KEEPALIVE] stop_action")
-            stopTicking()
             cancelAlarm()
             releaseWakeLock()
             stopSelf()
@@ -215,7 +191,6 @@ class KeepAliveService : Service() {
         startForeground(NOTIFICATION_ID, buildNotification())
         acquireWakeLock()
         running = true
-        startTicking()
         scheduleNextAlarm()
         val pm = getSystemService(POWER_SERVICE) as PowerManager
         val exempt = pm.isIgnoringBatteryOptimizations(packageName)
@@ -230,7 +205,6 @@ class KeepAliveService : Service() {
 
     override fun onDestroy() {
         running = false
-        stopTicking()
         cancelAlarm()
         releaseWakeLock()
         Log.i(TAG, "[KEEPALIVE] service_destroyed")
@@ -247,7 +221,7 @@ class KeepAliveService : Service() {
             // 低调：无声音、无震动、无横幅
             NotificationManager.IMPORTANCE_LOW,
         ).apply {
-            description = "小乐在后台时保持与云端的连接"
+            description = "锁屏后系统可能限制后台连接，亮屏会自动恢复"
             setShowBadge(false)
             enableVibration(false)
             setSound(null, null)
@@ -273,7 +247,7 @@ class KeepAliveService : Service() {
         return NotificationCompat.Builder(this, CHANNEL_ID)
             // 单色小图标：状态栏不出现彩色方块
             .setSmallIcon(R.drawable.ic_stat_keepalive)
-            .setContentTitle("小乐正在保持连接")
+            .setContentTitle("小乐在后台运行")
             .setContentText("点按返回小乐")
             .setContentIntent(openApp)
             .addAction(0, "停止", stopService)

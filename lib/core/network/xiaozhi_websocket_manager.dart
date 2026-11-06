@@ -49,12 +49,21 @@ typedef XiaozhiWebSocketListener = void Function(XiaozhiEvent event);
 class XiaozhiWebSocketManager {
   final Logger logger = Logger('XiaozhiWebSocketManager');
 
-  // v3.0.0 重连策略（对齐网页版实测经验，见 xiaoleweb.md §2.6）：
-  // 指数退避 1s→2s→4s…封顶 30s，最多 12 次；1005=服务器静默回收(正常)静默重连；
-  // 432x=身份校验失败(重连无效)停止并明确提示；用户主动断开(_manualClosed)永不重连。
-  static const int RECONNECT_BASE_MS = 1000;
-  static const int RECONNECT_MAX_MS = 30000;
+  // 81 重连策略：固定阶梯退避 2s→5s→15s→30s→60s 封顶。
+  // 前台最多 12 次；后台（息屏/切后台）最多 3 次即停手，等亮屏后由 onReturnToForeground 秒回。
+  // 1005=服务器静默回收(正常)静默重连；432x=身份校验失败(重连无效)停止；
+  // 用户主动断开(_manualClosed)永不重连。
+  static const List<int> RECONNECT_DELAYS_MS = <int>[
+    2000,
+    5000,
+    15000,
+    30000,
+    60000,
+  ];
   static const int RECONNECT_MAX_TRIES = 12;
+
+  /// 81：后台连续失败上限。ColorOS 息屏下宁可断开，也不许 1005/1006 风暴。
+  static const int RECONNECT_BG_MAX_TRIES = 3;
 
   /// v6.11.6：WS 保活间隔。云端会把空闲长连接约 60s 回收（真机日志实证：
   /// 16:07:53.809 连上 → 16:08:54.071 code=1006，时长 60.26s），
@@ -108,6 +117,12 @@ class XiaozhiWebSocketManager {
   final List<int> _reconnectGapsSec = <int>[]; // 相邻两次重连的间隔（秒）
   final List<int> _closeCodes = <int>[];       // 最近收到的关闭码（含 null 记为 -1）
   bool _manualClosed = false;
+
+  // ===== v6.11.24（81）：前后台策略 =====
+  // 81 产品定义：息屏/后台不再要求 tick、不再要求 45s 心跳。
+  // 后台只做"断开等亮屏"——不跑业务保活探针、不跑看门狗、重连最多 3 次即停。
+  bool _appForeground = true;
+  bool get appForeground => _appForeground;
 
   /// v4.3.3：最近一次收到服务器消息的时间（供上层判断连接是否已僵死）
   DateTime? _lastRecvAt;
@@ -402,6 +417,8 @@ class XiaozhiWebSocketManager {
         ? '-'
         : '${DateTime.now().difference(opened).inMilliseconds}ms';
     logger.info('[HANDSHAKE] 收到服务器 hello ACK，握手完成（socket→ACK $costMs）');
+    // 81：握手成功即健康，退避计数归零，后续再断从 2s 档重新开始
+    _reconnectAttempts = 0;
     if (_pendingIsReconnect) {
       _reconnectSuccess++;
       final started = _lastReconnectAt;
@@ -517,6 +534,13 @@ class XiaozhiWebSocketManager {
   /// 79 轮 P0：tick 定时器是"心跳是否还在跑"的唯一取证点，
   /// **绝不因为掉线（`_onDisconnected`）而 cancel**；只有主动断开 / 关闭保活才停。
   void _startProbe() {
+    // 81：后台/息屏不发业务保活。Dart isolate 被 ColorOS 冻结，45s tick 不可能成立，
+    // 强制保活只会变成"每次唤醒都新建连接"的 1005/1006 风暴。
+    if (!_appForeground) {
+      _stopProbe('后台（81：不启业务保活）');
+      logger.info('[KEEPALIVE] 后台不启动保活探针（81 产品定义：锁屏可断、亮屏秒回）');
+      return;
+    }
     final mode = _probeMode;
     // 结算上一段统计（不断 timer、不清 _probeSeq：tick 号要跨重连单调递增）
     _settleProbe('新连接');
@@ -582,22 +606,22 @@ class XiaozhiWebSocketManager {
         'recv=$_probeRecv$from');
   }
 
-  /// 79 轮 P0 兜底：原生 KeepAliveService 每 30s 调一次 `wakeup`。
-  /// Dart 定时器正常时直接返回（绝不重复发包）；真停摆才补一拍，
-  /// 由 `_tick` 落下"发送=是 + 来源=native唤醒"，用来证明心跳真的发到了服务端。
+  /// 81：原生闹钟（60s）唤醒后调用。只做状态检查与日志，
+  /// **不补拍心跳、不强制重连**——后台/息屏不追求 tick，亮屏由 onReturnToForeground 秒回。
   void onNativeWakeup() {
-    if (_manualClosed) return;
-    // 80 轮：ColorOS 息屏会主动 Close socket（cause=App bg），唤醒时先补连再补拍
-    if (!isSocketOpen) {
-      logger.info('[$_tag] 原生唤醒：socket 已关（最近 close=${lastCloseCode ?? '-'}），触发重连');
-      forceReconnect();
-      return;
-    }
+    // 81：原生闹钟只负责"唤醒进程 + 检查 socket"。绝不 _tick、绝不 forceReconnect——
+    // 80 的"每次唤醒都重连"正是 1005/1006 风暴的根源。
     final last = _lastTickAt;
-    if (last != null && DateTime.now().difference(last) < _probeInterval) return;
-    logger.info('[$_tag] 原生唤醒：Dart tick 已停 '
-        '${last == null ? '（从未启动）' : '${DateTime.now().difference(last).inSeconds}s'}，补一拍');
-    _tick('native');
+    final sinceTick = last == null
+        ? '从未启动'
+        : '${DateTime.now().difference(last).inSeconds}s 前';
+    logger.info('[$_tag] 原生唤醒：前台=$_appForeground '
+        'socket=${isSocketOpen ? '开' : '关'} connected=$isConnected '
+        '最近tick=$sinceTick 最近close=${lastCloseCode ?? '-'}'
+        '（81：不再唤醒即重连）');
+    if (!_appForeground || _manualClosed) return;
+    // 前台且 socket 已死：只安排一次退避重连（不跳过退避、不叠二次）
+    if (!isSocketOpen) _scheduleReconnect();
   }
 
   /// 各模式的保活载荷（v6.11.11：生产只剩 auto / off，detect 仅诊断）
@@ -615,7 +639,7 @@ class XiaozhiWebSocketManager {
   }
 
   /// 只结算本段统计并打汇总日志，**不取消定时器**。
-  /// 79 轮 P0：`_onDisconnected` 走这里，保证息屏掉线后 tick 仍在跑。
+  /// 81：后台不跑探针；断线结算用于取证，不代表还要补拍心跳。
   void _settleProbe(String why) {
     if (_probeTimer != null || _probeStartAt != null) {
       final types = _probeTypes.entries
@@ -808,7 +832,10 @@ class XiaozhiWebSocketManager {
       codeInfo = (codeInfo == null || codeInfo.isEmpty) ? '1005' : codeInfo;
       logger.info('1005=服务器回收连接（多为静默超时，属正常），自动重连');
     } else if (code == 1006) {
-      logger.warning('1006=握手/协议被拒（检查 device-id/client-id 头）');
+      // 81 结论：重连与首连共用同一 header 构造路径（device-id/client-id 均来自
+      // final 字段），不存在"重连头不一致"；1006 多为 ColorOS 冻结/重复会话所致。
+      logger.warning('1006=握手/协议被拒（81 已核对：重连 header 与首连一致，'
+          '非头不一致；多为冻结/重复会话）');
     } else if (code == 4326 || code == 4327 || code == 4328) {
       logger.severe('432x=身份校验失败，重连无效。核对 MAC/ClientID 或重新激活');
       _dispatchEvent(
@@ -839,6 +866,11 @@ class XiaozhiWebSocketManager {
     }
     if (_serverUrl == null || _token == null) return;
     if (_isReconnecting) return;
+    // 81：后台最多 3 次即停手，把"熄屏期间的重连风暴"压到 0。
+    if (!_appForeground && _reconnectAttempts >= RECONNECT_BG_MAX_TRIES) {
+      logger.info('[RECONNECT] 后台已连续失败 $_reconnectAttempts 次 → 停手，等亮屏恢复（81）');
+      return;
+    }
     if (_reconnectAttempts >= RECONNECT_MAX_TRIES) {
       logger.severe(
           '自动重连已达上限($RECONNECT_MAX_TRIES 次)，停止。请手动重连');
@@ -851,10 +883,9 @@ class XiaozhiWebSocketManager {
     }
     _isReconnecting = true;
     _reconnectAttempts++;
-    final delay = _reconnectAttempts <= 1
-        ? RECONNECT_BASE_MS
-        : (RECONNECT_BASE_MS * (1 << (_reconnectAttempts - 1)))
-            .clamp(RECONNECT_BASE_MS, RECONNECT_MAX_MS);
+    // 81：固定阶梯 2s→5s→15s→30s→60s（超出封顶 60s）
+    final idx = (_reconnectAttempts - 1).clamp(0, RECONNECT_DELAYS_MS.length - 1);
+    final delay = RECONNECT_DELAYS_MS[idx];
     // v6.11.10：累计重连统计（次数 / 相邻间隔 / 最近关闭码）
     _reconnectTotal++;
     final now = DateTime.now();
@@ -906,6 +937,9 @@ class XiaozhiWebSocketManager {
   /// _onDisconnected，这里不再重复判定（云端空闲时不下发消息，用消息静默判僵死会误杀）。
   void _startWatchdog() {
     _watchdogTimer?.cancel();
+    _watchdogTimer = null;
+    // 81：后台不跑看门狗——不能让定时器在冻结边缘反复安排重连
+    if (!_appForeground) return;
     _watchdogTimer = Timer.periodic(WATCHDOG_INTERVAL, (_) {
       if (_manualClosed) return;
       if (!isConnected && !_isReconnecting) {
@@ -939,7 +973,8 @@ class XiaozhiWebSocketManager {
   /// 两个 manager 用同一 device-id 建两条 socket，服务端按重复会话 1005 回收其一。
   /// 80 轮：socket 仍打开时一律不重建——回前台只看 socket 实际状态，
   /// 1002/1005 属于服务端先断，由 `_onDisconnected` 的正常重连处理，不再叠二次。
-  void forceReconnect() {
+  /// 81：亮屏/用户点击的"立即恢复"入口——清零退避计数，只补连一次。
+  void forceReconnect({String reason = '页面请求'}) {
     if (_serverUrl == null || _token == null) return;
     if (isSocketOpen) return; // 已有 socket（含等 hello），由握手闸门决定成败
     if (_manualClosed) return;
@@ -947,7 +982,47 @@ class XiaozhiWebSocketManager {
     _reconnectTimer = null;
     _isReconnecting = false;
     _manualClosed = false;
-    logger.info('[RECONNECT] 页面请求立即补连（跳过退避）');
+    _reconnectAttempts = 0;
+    logger.info('[RECONNECT] $reason：立即补连（跳过退避，1 次）');
     unawaited(connect(_serverUrl!, _token!, isReconnect: true));
+  }
+
+  /// 81：前后台切换入口。后台停业务保活/看门狗/待执行重连；
+  /// 前台只恢复探针，真正的立即补连交给 [onReturnToForeground]。
+  void setAppForeground(bool foreground) {
+    if (_appForeground == foreground) return;
+    _appForeground = foreground;
+    if (!foreground) {
+      _stopProbe('进入后台（81：后台不发业务保活）');
+      _watchdogTimer?.cancel();
+      _watchdogTimer = null;
+      _reconnectTimer?.cancel();
+      _reconnectTimer = null;
+      _isReconnecting = false;
+      logger.info('[LIFECYCLE] 进入后台：已停保活探针/看门狗/待执行重连 '
+          'connected=$isConnected socket=$isSocketOpen attempts=$_reconnectAttempts');
+      return;
+    }
+    logger.info('[LIFECYCLE] 回到前台：恢复保活探针（81：前台才发 45s listen:stop）');
+    if (isSocketOpen) _startProbe();
+  }
+
+  /// 81：亮屏秒回。取消待执行退避、清零计数：
+  /// - socket 还开 → 不重连（避免误杀健康连接）；
+  /// - socket 已死 → 立即补连一次，不等退避。
+  void onReturnToForeground() {
+    _appForeground = true;
+    _reconnectTimer?.cancel();
+    _reconnectTimer = null;
+    _isReconnecting = false;
+    _reconnectAttempts = 0;
+    if (_manualClosed) return;
+    if (isSocketOpen) {
+      logger.info('[LIFECYCLE] 回前台 socket 仍打开 → 不重连（连接未死）');
+      if (_probeTimer == null) _startProbe();
+      return;
+    }
+    logger.info('[LIFECYCLE] 回前台 socket 已死 → 立即补连一次（81 亮屏秒回）');
+    forceReconnect(reason: '回前台');
   }
 }

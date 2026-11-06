@@ -5,14 +5,14 @@ import '../storage/storage_service.dart';
 import '../utils/native_log.dart';
 
 /// 后台保持连接（方案 B）通道：前台服务只负责"不被系统冻结"，
-/// 心跳仍由 Dart 侧 45s 逻辑负责，服务里不跑业务。
+/// 81 起原生闹钟只做 wakelock 自愈 + 唤醒 Dart 检查 socket，不再补拍心跳。
 class KeepAliveService {
   KeepAliveService._();
 
   static const MethodChannel _channel = MethodChannel('xiaole/keepalive');
 
-  /// 79 轮 P0：原生 KeepAliveService 每 30s 调一次 `wakeup`，用来把可能被
-  /// OEM 降权的 Dart 定时器补一拍。由聊天页在 initState 里挂上 WS 管理器。
+  /// 81：原生闹钟（60s）唤醒后调用。只应做状态检查，**不得补拍心跳、不得强制重连**——
+  /// 息屏期间宁可断开，亮屏由 `onReturnToForeground` 秒回。
   static void Function()? onNativeWakeup;
 
   /// 在 main 里调用一次：注册"原生 → Dart"的唤醒回调（MethodChannel 天然回主 isolate）。

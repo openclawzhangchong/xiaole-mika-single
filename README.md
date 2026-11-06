@@ -9,27 +9,43 @@
 
 | 项 | 值 |
 |---|---|
-| versionName | `6.11.23-mika1` |
-| versionCode | `80` |
-| 产物 | `xiaole-6.11.23-mika1-arm64.apk` / `xiaole-6.11.23-mika1-universal.apk`（GitHub Actions artifact，不进仓库） |
+| versionName | `6.11.24-mika1` |
+| versionCode | `81` |
+| 产物 | `xiaole-6.11.24-mika1-arm64.apk` / `xiaole-6.11.24-mika1-universal.apk`（GitHub Actions artifact，不进仓库） |
 | 签名 | `C=CN, O=ZCStudy, CN=XiaoLe Release`，cert SHA-256 `9d2da8805e784801e13c54a635e8bf528db303a235adb5633745cadceb12a169` |
 
-80 轮修复三条（在 79 之上）：
+81 产品定义（收口）：**锁屏可断，亮屏秒回。**
 
-1. **ColorOS 息屏冻结（P0）**：真机 logcat 证实 `OplusProxyWakeLock` 强摘服务 wakelock、`OAppNetControlService` 以 `App bg(IMMEDIATELY)` 关闭 socket、`OplusHansManager` 把进程整体冻结。80 加原生 `AlarmManager` 60s 兜底（`setExactAndAllowWhileIdle`，未授权时 `setAndAllowWhileIdle`）、每拍自愈 wakelock；设置页新增「电池优化白名单」状态行与一键申请（复用 `BackgroundGuidePage`）。
-2. **回前台误杀**：不再按静默秒数重建，改为只看 socket 实际状态；`1002/1005` 属服务端先断，交给正常重连，不叠二次。
-3. **05/06 mock 入口**：入口是聊天页标题长按（需先开发者鉴权），本轮已查清并写成可复现步骤，未改业务。
+真机已实测确认：ColorOS 息屏会冻结进程与 Dart isolate；native 闹钟能短暂唤醒进程，但唤不醒 Dart。因此「息屏期间 Dart 每 45s 发 `listen{stop}` 保活」在架构上不成立，本项目不再追求"后台不断线"，也不再修"息屏 tick 不断"。
 
-05/06 mock 注入复现步骤：
+81 改动五条（在 80 之上）：
 
-1. 「我」页 → 点「开发者选项」→ 输入密码 `zc19901111`；
-2. 返回聊天页；
-3. **长按顶部智能体名字 1.2s**（不是消息气泡）；
-4. 出现 4 条 mock 任务卡（queued / running / done / failed），日志 `[MOCK] 已注入 4 条 mock 任务卡`。
+1. **删掉息屏保活假设**：后台/息屏不要求 tick、不要求 45s 心跳；WS 业务保活探针只在前台运行。原生闹钟只做 wakelock 自愈 + 检查 socket，不再推动重连。
+2. **重连风暴清零**：断线统一退避 `2s → 5s → 15s → 30s → 60s` 封顶；后台连续失败 3 次即停手等亮屏，息屏期间宁可断开，也不制造 1005/1006 风暴。
+3. **亮屏秒回**：`onResume` 若 socket 已死立即补连一次，UI 显示「正在恢复连接…」过渡态，不弹错误提示。
+4. **文案诚实**：设置页「后台保持连接」说明改为"锁屏后系统可能限制后台连接，亮屏会自动恢复；此开关管后台通知与快速恢复"。
+5. **任务卡演示真接上**：开发者中心新增「UI 演示 → 任务卡演示」，一键注入 queued / running / done / failed 四态卡与详情，可清除。
 
-79 轮修复三条（历史）：
+81 验收判据：
 
-1. **P0 息屏 tick 断流**：`_onDisconnected` 不再 `_stopProbe`（只结算统计），tick 定时器跨重连持续跑且 `tick#` 单调递增；原生 `KeepAliveService` 每 30s 打 `[KEEPALIVE] tick#N 来源=native` 并经 MethodChannel 唤醒 Dart，必要时补发 `listen:stop`；回前台僵死判定改为"下行 + 上行双静默 >70s"才重建（不再每次回前台误杀）。
+- 息屏 3 分钟：无 `1005`、无 `1006`、`[RECONNECT]` ≤1（0 次更好）；允许 0 tick（这是设计，不是缺陷）。
+- 亮屏后 ≤3 秒回到已连接，期间不出现"连接僵死"误杀、不弹错误。
+- 后台通知仍在、`isForeground=true`。
+- 开发者中心「任务卡演示」能注入四态，截图文件名带 `mock`。
+
+05/06 mock 注入步骤（81 起的唯一入口）：
+
+1. 「我」页 → 「开发者选项」→ 输入密码 `zc19901111`；
+2. 进「UI 演示」→「任务卡演示」，提示"已注入"；
+3. 返回聊天页（若聊天页本来就在前台则立即出现；否则下次进入时消费排队指令）；
+4. 出现 4 条 mock 任务卡（queued / running / done / failed），日志 `[MOCK] 已注入 4 条 mock 任务卡`；
+5. 截图命名 `05-mock-task-cards.png` / `06-mock-task-detail.png`；清除用「UI 演示 → 清除任务卡演示」。
+
+1006 结论：`XiaozhiWebSocketManager.connect()` 的 headers 只有一处构造路径（`device-id`/`client-id` 均来自 `final` 字段），首连与重连完全同值 → **不是重连头不一致**；1006 是 ColorOS 冻结 + 每次唤醒强制新建连接造成的重复会话/握手中断。81 通过"后台不重连 + 退避封顶"消除该路径。
+
+79 轮修复（历史，其中息屏 tick 方案已被 81 废止）：
+
+1. ~~息屏 tick 保活~~（**81 已废止**：ColorOS 冻结 Dart isolate，该方案不可行）；保留部分：`_onDisconnected` 只结算统计、回前台僵死判定改为"下行 + 上行双静默 >70s"才重建。
 2. **P1 03 录音浮层**：底色改半透明 `rgba(27,27,27,.72)` + `BackdropFilter` blur 14；根因是 `ListView` 默认 `addRepaintBoundaries:true` 把每个气泡放进独立合成层、模糊采不到，已关闭。
 3. **P2 版本号**：`AppConfig.appVersion` 改为 `String.fromEnvironment('APP_VERSION')`，CI 从 `pubspec.yaml` 注入，设置页"关于"与 APK `versionName` 单一来源。
 
@@ -38,7 +54,7 @@
 1. **77 前台服务**：连接信号接进 `XiaozhiWebSocketManager`（`_completeHandshake` / 握手超时 / `_onDisconnected` / `forceReconnect` / `disconnect`）；服务仅在“已连接且退到后台”时启动，服务内自持 `PARTIAL_WAKE_LOCK`；Android 13+ 回前台补一次通知权限请求。
 2. **78 UI**：录音浮层改到聊天页 `Stack` 同层（`BackdropFilter` 能采到背后内容）、波形 11 根 3pt/3pt、深色导航 `#1A1A1A` 与时间分隔、会话列表品牌头像 + 未读红点、取消态胶囊 `r4` + `#FF8A8A` 圆标。
 
-README 不含截图资产；80 的真机截图在设备验收通过后补入。
+README 不含截图资产；81 的真机截图在设备验收通过后补入。
 
 
 ## 架构分层
@@ -96,7 +112,7 @@ flutter build apk --release --target-platform android-arm64   # arm64
 ## 已知限制
 
 1. **云端对文字消息有加权长度预算**：汉字/中英混排约 12 字/段，纯 ASCII 33 字，emoji 10 个。客户端按"码点 + UTF-8 字节"双口径累加切段（先到者为准），超长自动分段发送并在界面提示。
-2. **云端 60–70s 空闲回收**：靠 45s 一次的 `listen{state:"stop"}` 保活续命；语音/文字发送前会把保活置位前置，避免把 `listen stop` 插进本轮识别。
+2. **云端 60–70s 空闲回收**：靠 45s 一次的 `listen{state:"stop"}` 保活续命（81 起**仅前台生效**，后台/息屏不再发）；语音/文字发送前会把保活置位前置，避免把 `listen stop` 插进本轮识别。
 3. **内部标识与外部品牌分离**：界面一律叫"小乐"，但包名、模块名、类名、MCP 工具名（`mika_submit_goal` 等）、日志 TAG 保留 `mika` 字样。这是设计决定，不是遗留命名。
 
 ## 目录

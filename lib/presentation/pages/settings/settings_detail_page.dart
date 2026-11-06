@@ -309,7 +309,7 @@ class _KeepAliveSwitchState extends State<_KeepAliveSwitch> {
   Widget build(BuildContext context) {
     return WxCell(
       title: '后台保持连接',
-      subtitle: '仅在后台且有活跃连接时生效，会显示一条常驻通知',
+      subtitle: '锁屏后系统可能限制后台连接，亮屏会自动恢复；此开关管后台通知与快速恢复',
       trailing: Semantics(
         label: '后台保持连接',
         child: Switch(

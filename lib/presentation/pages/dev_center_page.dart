@@ -268,6 +268,31 @@ class _DevCenterPageState extends State<DevCenterPage> {
               showDivider: false,
             ),
           ]),
+          // 81：任务卡四态演示（05/06 截图唯一入口；指令跨路由交给聊天页消费）
+          _section(isDark, 'UI 演示', [
+            WxCell(
+              leading: _iconTile(Icons.slideshow, AppColors.primary),
+              title: '任务卡演示',
+              subtitle: '注入 queued / running / done / failed 四态卡与详情'
+                  '（仅 UI 演示，不进历史）',
+              trailingText: '四态',
+              showArrow: true,
+              onTap: () {
+                AppFeats.requestMockTask(AppFeats.mockTaskActionInject);
+                ToastUtil.show('已注入，回聊天页可见四态卡');
+              },
+            ),
+            WxCell(
+              leading: _iconTile(Icons.delete_sweep, AppColors.info),
+              title: '清除任务卡演示',
+              subtitle: '移除聊天页中的 mock 演示卡',
+              onTap: () {
+                AppFeats.requestMockTask(AppFeats.mockTaskActionClear);
+                ToastUtil.show('已清除演示卡');
+              },
+              showDivider: false,
+            ),
+          ]),
           // v6.7.0：原「安全」+「危险操作」合并为「管理」
           _section(isDark, '管理', [
             WxCell(

@@ -218,7 +218,8 @@ class _ChatPageState extends ConsumerState<ChatPage>
     // v4.3.0：全局设备型号矫正——手机型号 fallback / xiaole-voice-v1 旧值
     // 幂等归一为 m5stack-core-s3（OTA 识别层早已统一，此为展示/存储层残留清理）
     AgentIdentityStore.normalizeGlobalModel();
-    _loadHistory();
+    // 81：历史加载完再消费待注入的 mock 指令，避免 mock 抢先导致历史被跳过
+    unawaited(_loadHistory().then((_) => _onMockTaskRequested()));
     _loadAgent();
     // 78：进入会话即清未读红点（preview-01）
     UnreadStore.clear(widget.agentId);
@@ -231,6 +232,8 @@ class _ChatPageState extends ConsumerState<ChatPage>
     _syncProactiveService();
     // v6.11.8：心跳实验——开发者中心切换候选后立即重建连接以生效
     AppFeats.wsProbeRevision.addListener(_onWsProbeChanged);
+    // 81：开发者中心「任务卡演示」→ 聊天页注入/清除（跨路由排队消费）
+    AppFeats.mockTaskRevision.addListener(_onMockTaskRequested);
     // v6.11.14：调试注入通道（仅开发者模式已授权时生效）
     unawaited(_consumeDebugInjection());
     // v6.11.17：回前台补连（P0-3 的 Dart 侧兜底）
@@ -242,17 +245,16 @@ class _ChatPageState extends ConsumerState<ChatPage>
     _mikaTaskSub = MikaBridge.taskStates.listen(_onMikaTaskState);
   }
 
-  /// v6.11.17（P0-3 方案 A）：后台/息屏持 PARTIAL_WAKE_LOCK，回前台立刻释放。
+  /// v6.11.17（P0-3 方案 A）：后台/息屏持 PARTIAL_WAKE_LOCK，回前台立刻释放（81 已停用：持锁对 tick 无意义）。
   /// 80 轮：回前台只看 socket 实际状态——socket 还开着就不重建；
   /// 1002/1005 是服务端先断，交给 `_onDisconnected` 的正常重连，不再叠二次。
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.paused) {
-      unawaited(_acquireWakeLock());
-      // 79 轮 P0：paused 只加锁，**绝不 cancel tick**——
-      // 保活开关开启且前台服务存活时，心跳必须继续跑（78 真机这里断流）。
-      logger.info('[LIFECYCLE] paused 保活开关=${KeepAliveCoordinator.instance.enabled} '
-          '→ tick 继续（不清定时器）');
+      // 81：后台/息屏不再要求 tick，也不再为 tick 持 wakelock；
+      // 通知 WS 管理器停止业务保活/看门狗并取消待执行重连。
+      _wsManager?.setAppForeground(false);
+      logger.info('[LIFECYCLE] paused → 后台断开策略（81：不要求 tick，重连退避且最多 3 次）');
       return;
     }
     if (state != AppLifecycleState.resumed) return;
@@ -266,30 +268,25 @@ class _ChatPageState extends ConsumerState<ChatPage>
         '握手=${mgr.isConnected} 最近close=${mgr.lastCloseCode ?? '-'} '
         '下行静默=${silent == null ? '尚未收包' : '${silent}s'} '
         '上行静默=${uplinkSilent == null ? '尚未上行' : '${uplinkSilent}s'}');
+    // 81：先标记前台（恢复探针），再让管理器决定是否需要立即补连一次
+    mgr.setAppForeground(true);
+    mgr.onReturnToForeground();
     if (!socketOpen) {
-      // 真断（含 1002/1005 服务端先断）：立即补连，跳过退避
-      logger.info('[LIFECYCLE] socket 已关 → 请求立即补连');
-      mgr.forceReconnect();
-    } else {
-      // 连接还活着：静默多久都不重建，避免把健康连接误杀
-      logger.info('[LIFECYCLE] socket 仍打开 → 不重连（连接未死）');
-    }
-  }
-
-  Future<void> _acquireWakeLock() async {
-    if (!Platform.isAndroid) return;
-    if (_wakeLockBeganAt != null) return; // 幂等：已持有
-    if (_wsManager == null) {
-      logger.info('[POWER] 跳过 acquire：当前没有 WS 会话');
-      return;
-    }
-    _wakeLockBeganAt = DateTime.now();
-    try {
-      await _powerChannel.invokeMethod('acquire');
-      logger.info('[LIFECYCLE] [POWER] acquire wakelock 已请求（息屏保心跳）');
-    } catch (e) {
-      _wakeLockBeganAt = null;
-      logger.warning('[POWER] acquire wakelock 失败: $e');
+      // 亮屏恢复过渡态：琥珀色、无错误弹窗；8s 未恢复才交还手动重连按钮
+      setState(() {
+        _isConnected = false;
+        _connectionStatus = '正在恢复连接…';
+        _showReconnectBar = true;
+      });
+      _reconnectUiTimer?.cancel();
+      _reconnectUiTimer = Timer(const Duration(seconds: 8), () {
+        if (!mounted || _isConnected) return;
+        logger.warning('亮屏 8s 仍未恢复连接，显示手动重连按钮');
+        setState(() {
+          _connectionStatus = '连接已断开';
+          _showReconnectBar = true;
+        });
+      });
     }
   }
 
@@ -473,6 +470,7 @@ class _ChatPageState extends ConsumerState<ChatPage>
     KeepAliveService.onNativeWakeup = null;
     WidgetsBinding.instance.removeObserver(this);
     AppFeats.wsProbeRevision.removeListener(_onWsProbeChanged);
+    AppFeats.mockTaskRevision.removeListener(_onMockTaskRequested);
     _mqttPresence?.stop();
     for (final t in _mcpTimers) {
       (t['timer'] as Timer?)?.cancel();
@@ -616,6 +614,7 @@ class _ChatPageState extends ConsumerState<ChatPage>
       statusIcon = Icons.check_circle;
     } else if (_connectionStatus == '正在连接...' ||
         _connectionStatus == '正在认证...' ||
+        _connectionStatus == '正在恢复连接…' ||
         _isAutoReconnecting) {
       statusColor = AppColors.warning;
       statusIcon = Icons.sync;
@@ -652,7 +651,8 @@ class _ChatPageState extends ConsumerState<ChatPage>
           // 断线时显示重连按钮
           if (!_isConnected && 
               _connectionStatus != '正在连接...' && 
-              _connectionStatus != '正在认证...')
+              _connectionStatus != '正在认证...' &&
+              _connectionStatus != '正在恢复连接…')
             TextButton.icon(
               onPressed: _reconnect,
               icon: const Icon(Icons.refresh, size: 16),
@@ -671,8 +671,10 @@ class _ChatPageState extends ConsumerState<ChatPage>
 
   /// 重新连接
   Future<void> _reconnect() async {
-    if (_connectionStatus == '正在连接...' || _connectionStatus == '正在认证...') {
-      return; // 正在连接中，不重复连接
+    if (_connectionStatus == '正在连接...' ||
+        _connectionStatus == '正在认证...' ||
+        _connectionStatus == '正在恢复连接…') {
+      return; // 正在连接/恢复中，不重复连接
     }
 
     ToastUtil.show('正在重新连接...');
@@ -1158,6 +1160,8 @@ class _ChatPageState extends ConsumerState<ChatPage>
   /// `openai-fast`（pollinations 免费接口）不支持 tool calling。
   void _injectMockTaskCards() {
     if (!AppFeats.devAuthed) return;
+    // 81：重复点不叠加——先清掉上一轮演示卡
+    _clearMockTaskCards(silent: true);
     final clock = _formatMikaClock(DateTime.now());
     final base = <String, dynamic>{
       'stepTotal': 4,
@@ -1244,6 +1248,37 @@ class _ChatPageState extends ConsumerState<ChatPage>
     });
     _scrollToBottom();
     logger.info('[MOCK] 已注入 4 条 mock 任务卡（仅 UI 视觉验证）');
+  }
+
+  /// 81：开发者中心「任务卡演示」指令消费。
+  /// 聊天页在栈顶时立即执行；不在栈顶时由下次进入聊天页的 initState 消费。
+  void _onMockTaskRequested() {
+    if (!mounted) return; // 页面已销毁：指令保留，等下次进入再消费
+    final action = AppFeats.takeMockTaskAction();
+    if (action.isEmpty) return;
+    if (action == AppFeats.mockTaskActionInject) {
+      _injectMockTaskCards();
+    } else if (action == AppFeats.mockTaskActionClear) {
+      _clearMockTaskCards();
+    }
+  }
+
+  /// 81：清掉演示卡（只动 `mock_*`，不影响真实任务卡与历史）
+  void _clearMockTaskCards({bool silent = false}) {
+    final before = _messages.length;
+    _messages.removeWhere((m) {
+      if (m.metadata == null || m.metadata!['card'] != 'task') return false;
+      final raw = m.metadata!['data'];
+      if (raw is! Map) return false;
+      final id = raw['task_id']?.toString() ?? '';
+      return id.startsWith('mock_');
+    });
+    _mikaTaskMessageIds.removeWhere((k, _) => k.startsWith('mock_'));
+    final removed = before - _messages.length;
+    if (removed <= 0) return;
+    setState(() {});
+    logger.info('[MOCK] 已清除 $removed 条 mock 任务卡');
+    if (!silent) ToastUtil.show('已清除演示任务卡');
   }
 
   /// 同一 task_id 只占一条消息，状态原地刷新（不刷屏、不重复落库）。
@@ -1500,6 +1535,7 @@ class _ChatPageState extends ConsumerState<ChatPage>
   bool get _isAutoReconnecting =>
       !_isConnected &&
       (_connectionStatus == '重连中…' ||
+          _connectionStatus == '正在恢复连接…' ||
           _connectionStatus == '网络异常，正在自动重连…');
 
   /// v6.11.7：断线后延迟 GRACE 秒再亮状态条——绝大多数回收在 1–4s 内已重连成功，
@@ -2636,6 +2672,11 @@ class _ChatPageState extends ConsumerState<ChatPage>
       case XiaozhiEventType.error:
         final errText = event.data?.toString() ?? '';
         logger.severe('WebSocket 错误: $errText');
+        // 81：亮屏恢复期只记日志，不弹错误提示（交给退避或 8s 后的手动重连入口）
+        if (_connectionStatus == '正在恢复连接…') {
+          logger.warning('恢复连接期间出错（静默）：$errText');
+          break;
+        }
         // v6.2.1：瞬时网络错误（DNS 解析失败 / 连接超时 / 连接被拒等）由 WS 管理器
         // 自动重连兜底，不再弹红条打扰；仅刷新顶部状态栏 + 记日志。
         // 需用户处理的错误（身份拒绝 432x、重连超限、认证失败等）仍弹红条。

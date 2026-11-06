@@ -202,4 +202,24 @@ class AppFeats {
   static String get wsKeepaliveLabel => wsKeepaliveMode == 'off'
       ? '关闭（仅 ping + 无感重连）'
       : '自动（${wsKeepaliveIntervalSec}s · listen stop）';
+
+  // ---------- v6.11.24（81）：任务卡演示（开发者中心 → 聊天页） ----------
+  /// 聊天页通常是独立路由，开发者中心打开时它可能不在栈顶，
+  /// 因此用指令总线排队：下次进入聊天页 initState 时消费，保证"点一下就注入"。
+  static const String mockTaskActionInject = 'inject';
+  static const String mockTaskActionClear = 'clear';
+  static String _mockTaskAction = '';
+  static final ValueNotifier<int> mockTaskRevision = ValueNotifier<int>(0);
+
+  static void requestMockTask(String action) {
+    _mockTaskAction = action;
+    mockTaskRevision.value++;
+  }
+
+  /// 取走一次指令（聊天页消费后清空，避免重复注入）
+  static String takeMockTaskAction() {
+    final a = _mockTaskAction;
+    _mockTaskAction = '';
+    return a;
+  }
 }
