@@ -264,38 +264,40 @@ class _KeepAliveSwitchState extends State<_KeepAliveSwitch> {
     setState(() => _busy = true);
     final coordinator = KeepAliveCoordinator.instance;
     if (value) {
-      // 80 轮：ColorOS 会在息屏约 30s 后冻结进程，先引导加入电池优化白名单
-      final exempt = await KeepAliveService.batteryExempt();
-      if (!exempt && mounted) {
-        final go = await showDialog<bool>(
-          context: context,
-          builder: (ctx) => AlertDialog(
-            title: const Text('允许小乐后台运行'),
-            content: const Text(
-              '小乐还不在电池优化白名单。ColorOS 会在息屏约 30 秒后冻结进程并断开连接，'
-              '后台心跳会完全停止。请允许小乐忽略电池优化。',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx, false),
-                child: const Text('稍后'),
-              ),
-              FilledButton(
-                onPressed: () => Navigator.pop(ctx, true),
-                child: const Text('去允许'),
-              ),
-            ],
-          ),
-        );
-        if (go == true) {
-          await KeepAliveService.requestBatteryExempt();
-        }
-      }
+      // 先在前台把通知权限走完，再引导白名单（避免系统设置页抢焦点）
       final ok = await coordinator.enableWithPermission();
       if (!ok && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('未获得通知权限，后台保持连接未开启')),
         );
+      } else if (ok && mounted) {
+        // 80 轮：ColorOS 会在息屏约 30s 后冻结进程，引导加入电池优化白名单
+        final exempt = await KeepAliveService.batteryExempt();
+        if (!exempt && mounted) {
+          final go = await showDialog<bool>(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              title: const Text('允许小乐后台运行'),
+              content: const Text(
+                '小乐还不在电池优化白名单。ColorOS 会在息屏约 30 秒后冻结进程并断开连接，'
+                '后台心跳会完全停止。请允许小乐忽略电池优化。',
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx, false),
+                  child: const Text('稍后'),
+                ),
+                FilledButton(
+                  onPressed: () => Navigator.pop(ctx, true),
+                  child: const Text('去允许'),
+                ),
+              ],
+            ),
+          );
+          if (go == true) {
+            await KeepAliveService.requestBatteryExempt();
+          }
+        }
       }
     } else {
       await coordinator.setEnabled(false);
