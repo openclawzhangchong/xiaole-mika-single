@@ -5,22 +5,16 @@ import '../storage/storage_service.dart';
 import '../utils/native_log.dart';
 
 /// 后台保持连接（方案 B）通道：前台服务只负责"不被系统冻结"，
-/// 81 起原生闹钟只做 wakelock 自愈 + 唤醒 Dart 检查 socket，不再补拍心跳。
+/// 81 起原生闹钟只做 wakelock 自愈；82 起原生不再唤醒 Dart（只打 `wakeup#` 日志）。
 class KeepAliveService {
   KeepAliveService._();
 
   static const MethodChannel _channel = MethodChannel('xiaole/keepalive');
 
-  /// 81：原生闹钟（60s）唤醒后调用。只应做状态检查，**不得补拍心跳、不得强制重连**——
-  /// 息屏期间宁可断开，亮屏由 `onReturnToForeground` 秒回。
-  static void Function()? onNativeWakeup;
-
-  /// 在 main 里调用一次：注册"原生 → Dart"的唤醒回调（MethodChannel 天然回主 isolate）。
+  /// 82：原生闹钟（60s）只自愈 wakelock，不再 `invokeMethod("wakeup")`。
+  /// 保留通道注册，但任何 method call 都不触发任何连接动作。
   static void init() {
-    _channel.setMethodCallHandler((MethodCall call) async {
-      if (call.method == 'wakeup') onNativeWakeup?.call();
-      return null;
-    });
+    _channel.setMethodCallHandler((MethodCall call) async => null);
   }
 
   /// 起服务；系统拒绝（如 API 31+ 后台启动限制）返回 false，并落 [KEEPALIVE] start_denied
@@ -103,8 +97,11 @@ class KeepAliveCoordinator {
   bool _serviceRunning = false;
   bool _notifAsked = false;
 
+  /// 82：服务/通知的存活只看前后台：后台断线也必须留着通知与前台服务
+  /// （81 的 "-> 断线即 stopService" 会让息屏被回收后通知消失，验收判 FAIL）。
   void onConnectionChanged(bool connected) {
     _connected = connected;
+    if (!_foreground) return; // 后台：无论连没连都保持服务，变化留给回前台时 sync
     sync();
   }
 
@@ -126,7 +123,11 @@ class KeepAliveCoordinator {
   }
 
   Future<void> sync() async {
-    final want = enabled && _connected && !_foreground;
+    // 82：服务/通知的存活只看前后台，不看 socket——后台断线也必须留着那条通知，
+    // 否则息屏被服务端回收后通知消失，82 验收「后台通知在」直接 FAIL。
+    final want = enabled && !_foreground;
+    NativeLog.write('[KEEPALIVE] sync want=$want running=$_serviceRunning '
+        'conn=$_connected fg=$_foreground enabled=$enabled');
     if (want == _serviceRunning) return;
     if (want) {
       _serviceRunning = await KeepAliveService.start();

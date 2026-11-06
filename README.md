@@ -9,39 +9,40 @@
 
 | 项 | 值 |
 |---|---|
-| versionName | `6.11.24-mika1` |
-| versionCode | `81` |
-| 产物 | `xiaole-6.11.24-mika1-arm64.apk` / `xiaole-6.11.24-mika1-universal.apk`（GitHub Actions artifact，不进仓库） |
+| versionName | `6.11.25-mika1` |
+| versionCode | `82` |
+| 产物 | `xiaole-6.11.25-mika1-arm64.apk` / `xiaole-6.11.25-mika1-universal.apk`（GitHub Actions artifact，不进仓库） |
 | 签名 | `C=CN, O=ZCStudy, CN=XiaoLe Release`，cert SHA-256 `9d2da8805e784801e13c54a635e8bf528db303a235adb5633745cadceb12a169` |
 
-81 产品定义（收口）：**锁屏可断，亮屏秒回。**
+82 产品定义（收口）：**锁屏可断，亮屏秒回；后台一次都不许重连。**
 
-真机已实测确认：ColorOS 息屏会冻结进程与 Dart isolate；native 闹钟能短暂唤醒进程，但唤不醒 Dart。因此「息屏期间 Dart 每 45s 发 `listen{stop}` 保活」在架构上不成立，本项目不再追求"后台不断线"，也不再修"息屏 tick 不断"。
+81 验收暴露了"风暴"的真正根因：不是退避没生效，而是**退避每一步都"成功"**。息屏日志里 `1006` 稳定出现在 16:05:54 / 16:06:58 / 16:08:02，间隔精确 62 秒——正好是服务端 60–70s 空闲回收的节奏。81 去掉后台 `listen{stop}` 后，服务端每 62s 掐一次连接，客户端立刻重连、握手成功、`_completeHandshake` 把退避计数清零，62s 后再被掐：**死循环，退避永远从 2s 重新开始**。因此 81 不是"没压住频率"，而是"后台仍然在主动重连"。
 
-81 改动五条（在 80 之上）：
+82 改动（在 81 之上）：
 
-1. **删掉息屏保活假设**：后台/息屏不要求 tick、不要求 45s 心跳；WS 业务保活探针只在前台运行。原生闹钟只做 wakelock 自愈 + 检查 socket，不再推动重连。
-2. **重连风暴清零**：断线统一退避 `2s → 5s → 15s → 30s → 60s` 封顶；后台连续失败 3 次即停手等亮屏，息屏期间宁可断开，也不制造 1005/1006 风暴。
-3. **亮屏秒回**：`onResume` 若 socket 已死立即补连一次，UI 显示「正在恢复连接…」过渡态，不弹错误提示。
-4. **文案诚实**：设置页「后台保持连接」说明改为"锁屏后系统可能限制后台连接，亮屏会自动恢复；此开关管后台通知与快速恢复"。
-5. **任务卡演示真接上**：开发者中心新增「UI 演示 → 任务卡演示」，一键注入 queued / running / done / failed 四态卡与详情，可清除。
+1. **后台彻底不重连**：进入 `paused` 后断线一律不重连、不排重试、不建退避定时器，只置"后台已断开"状态并写 `[KEEPALIVE] 后台断开，等待亮屏（82 口径）`。断就断到底。
+2. **亮屏恢复有上限**：`resumed` 时 socket 已死立即补连 1 次；这一轮失败才走 `2s → 5s → 15s`，最多 3 次；仍失败就停手，UI 亮出手动「重新连接」按钮（不再永久后台重连）。
+3. **原生闹钟只自愈 wakelock**：`SCHEDULE_EXACT_ALARM` 到点只重取被 ColorOS 强摘的 wakelock + 打 `wakeup#` 日志，**不再 `invokeMethod("wakeup")`**：不唤醒 Dart、不触发任何连接动作。
+4. **前台 45s 保活不动**：`listen{stop}` 探针仍只在前台运行，这是绕开服务端 70s 空闲回收的唯一有效手段。
+5. **通知文案保留**：「小乐在后台运行」。且 82 起服务/通知的存活只看前后台——后台断线也保留通知，不会因被服务端回收而消失。
+6. **mock 任务卡真渲染**：修复 `MessageList` 把 `MessageType.system` 一律当居中纯文本的短路（`metadata['card']=='task'` 优先走 `MessageBubble → XlTaskCard`）。四态卡带卡框、标题、状态标签（queued 灰 / running 蓝 / done 绿 / failed 红）、时间或进度；点击进入 06 详情页（步骤/耗时/结果骨架，queued 也有 4 步演示数据）；注入与清除各一个入口。
 
-81 验收判据：
+82 验收判据（写死）：
 
-- 息屏 3 分钟：无 `1005`、无 `1006`、`[RECONNECT]` ≤1（0 次更好）；允许 0 tick（这是设计，不是缺陷）。
-- 亮屏后 ≤3 秒回到已连接，期间不出现"连接僵死"误杀、不弹错误。
+- 息屏 3 分钟：`1005 = 0`、`1006 = 0`、`[RECONNECT] = 0`；允许 Dart tick 为 0（设计如此）。
+- 亮屏：≤3 秒回连，无错误弹窗、无"连接僵死"；允许一次重连（这次重连是设计）。
 - 后台通知仍在、`isForeground=true`。
-- 开发者中心「任务卡演示」能注入四态，截图文件名带 `mock`。
+- 05 拍到四张带状态标签的真卡片，06 拍到点进去的详情页。
 
-05/06 mock 注入步骤（81 起的唯一入口）：
+05/06 mock 注入步骤（82 起走真任务卡组件）：
 
 1. 「我」页 → 「开发者选项」→ 输入密码 `zc19901111`；
 2. 进「UI 演示」→「任务卡演示」，提示"已注入"；
 3. 返回聊天页（若聊天页本来就在前台则立即出现；否则下次进入时消费排队指令）；
-4. 出现 4 条 mock 任务卡（queued / running / done / failed），日志 `[MOCK] 已注入 4 条 mock 任务卡`；
+4. 出现 4 张 mock 任务卡（queued / running / done / failed），每张都有卡框与状态 chip，点任意一张进详情页；日志 `[MOCK] 已注入 4 条 mock 任务卡（82：走 XlTaskCard 真卡片渲染，可点进详情）`；
 5. 截图命名 `05-mock-task-cards.png` / `06-mock-task-detail.png`；清除用「UI 演示 → 清除任务卡演示」。
 
-1006 结论：`XiaozhiWebSocketManager.connect()` 的 headers 只有一处构造路径（`device-id`/`client-id` 均来自 `final` 字段），首连与重连完全同值 → **不是重连头不一致**；1006 是 ColorOS 冻结 + 每次唤醒强制新建连接造成的重复会话/握手中断。81 通过"后台不重连 + 退避封顶"消除该路径。
+1006 结论：`XiaozhiWebSocketManager.connect()` 的 headers 只有一处构造路径（`device-id`/`client-id` 均来自 `final` 字段），首连与重连完全同值 → **不是重连头不一致**；1006 来自 ColorOS 冻结叠加上服务端 62s 空闲回收。81 的"后台最多 3 次"之所以无效，是因为每次握手成功都会清零计数；82 改为后台一次都不重连，从源头消除该循环。
 
 79 轮修复（历史，其中息屏 tick 方案已被 81 废止）：
 
@@ -51,10 +52,10 @@
 
 78 轮（历史）：
 
-1. **77 前台服务**：连接信号接进 `XiaozhiWebSocketManager`（`_completeHandshake` / 握手超时 / `_onDisconnected` / `forceReconnect` / `disconnect`）；服务仅在“已连接且退到后台”时启动，服务内自持 `PARTIAL_WAKE_LOCK`；Android 13+ 回前台补一次通知权限请求。
+1. **77 前台服务**：连接信号接进 `XiaozhiWebSocketManager`（`_completeHandshake` / 握手超时 / `_onDisconnected` / `forceReconnect` / `disconnect`）；**82 起服务/通知的存活只看前后台（退到后台且开关开启即启动，断线不撤通知）**；服务内自持 `PARTIAL_WAKE_LOCK`；Android 13+ 回前台补一次通知权限请求。
 2. **78 UI**：录音浮层改到聊天页 `Stack` 同层（`BackdropFilter` 能采到背后内容）、波形 11 根 3pt/3pt、深色导航 `#1A1A1A` 与时间分隔、会话列表品牌头像 + 未读红点、取消态胶囊 `r4` + `#FF8A8A` 圆标。
 
-README 不含截图资产；81 的真机截图在设备验收通过后补入。
+README 不含截图资产；82 的真机截图在设备验收通过后补入。
 
 
 ## 架构分层

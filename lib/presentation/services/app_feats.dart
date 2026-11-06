@@ -203,7 +203,7 @@ class AppFeats {
       ? '关闭（仅 ping + 无感重连）'
       : '自动（${wsKeepaliveIntervalSec}s · listen stop）';
 
-  // ---------- v6.11.24（81）：任务卡演示（开发者中心 → 聊天页） ----------
+  // ---------- v6.11.25（82）：任务卡演示（开发者中心 → 聊天页） ----------
   /// 聊天页通常是独立路由，开发者中心打开时它可能不在栈顶，
   /// 因此用指令总线排队：下次进入聊天页 initState 时消费，保证"点一下就注入"。
   static const String mockTaskActionInject = 'inject';

@@ -109,7 +109,11 @@ class MessageList extends StatelessWidget {
               )
             : null;
 
-        if (msg.type == MessageType.system) {
+        // 82：任务卡是卡片组件，不是系统纯文本。metadata card=task 必须先于
+        // MessageType.system 分支判断，否则 chat_page 注入的任务卡会被渲染成
+        // 居中四行纯文本（81 mock 验收失败的根因）。
+        final isTaskCard = msg.metadata?['card'] == 'task';
+        if (msg.type == MessageType.system && !isTaskCard) {
           return Column(
             children: [
               if (divider != null) divider,

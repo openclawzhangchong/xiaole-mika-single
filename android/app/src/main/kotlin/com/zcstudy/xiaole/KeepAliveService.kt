@@ -19,8 +19,8 @@ import io.flutter.plugin.common.MethodChannel
 
 /**
  * 后台保持连接（方案 B）：负责让进程在后台时不被系统冻结。
- * 81 起原生只做两件事：自愈被 ColorOS 强摘的 wakelock、检查 socket 是否已死。
- * 不补拍心跳、不推动重连——息屏期间宁可断开，亮屏由 Dart 侧秒回。
+ * 82 起原生只做一件事：自愈被 ColorOS 强摘的 wakelock。
+ * 既不补拍心跳、也不唤醒 Dart、更不推动重连——息屏期间宁可断开，亮屏由 Dart 侧秒回。
  */
 class KeepAliveService : Service() {
 
@@ -39,8 +39,8 @@ class KeepAliveService : Service() {
         private const val WAKE_LOCK_TAG = "XiaoLe:keepalive"
 
         // v6.11.22（79 轮）：原生兜底唤醒。
-        // 81：不再用 Handler 周期 tick，只保留 AlarmManager 闹钟（60s）——
-        // 到点做两件事：重取被 ColorOS 强摘的 wakelock、唤醒 Dart 检查 socket 是否已死。
+        // 82：不再用 Handler 周期 tick，只保留 AlarmManager 闹钟（60s）——
+        // 到点只重取被 ColorOS 强摘的 wakelock（不唤醒 Dart、不触发连接）。
         private const val ACTION_ALARM = "com.zcstudy.xiaole.KEEPALIVE_ALARM"
         private const val ALARM_INTERVAL_MS = 60_000L
         private const val ALARM_REQUEST_CODE = 7303
@@ -73,24 +73,18 @@ class KeepAliveService : Service() {
     private var wakeSeq = 0
 
     /**
-     * 81：原生闹钟只做两件事——自愈 wakelock、让 Dart 检查 socket。
-     * Dart 侧 `onNativeWakeup` 只打状态日志，不补拍心跳、不强制重连
-     * （80 的"每次唤醒都重连"正是 1005/1006 风暴的根源）。
+     * 82：原生闹钟**只做一件事实**——自愈被 ColorOS 强摘的 wakelock，并留一条 `wakeup#` 日志。
+     * 不再 `invokeMethod("wakeup")`：不唤醒 Dart、不触发任何连接动作
+     * （后台断线一律不重连，亮屏由 Dart 侧 `onReturnToForeground` 秒回）。
      */
     private fun emitWakeup(source: String, intervalSec: Long) {
         wakeSeq++
         ensureWakeLock()
-        val ch = dartChannel
         Log.i(
             TAG,
             "[KEEPALIVE] wakeup#$wakeSeq 来源=$source 间隔=${intervalSec}s " +
-                "用途=重取wakelock+检查socket 唤醒Dart=${if (ch == null) "否(无回调)" else "是"}",
+                "用途=仅自愈wakelock 唤醒Dart=否（82 口径）",
         )
-        try {
-            ch?.invokeMethod("wakeup", null)
-        } catch (_: Exception) {
-            // Dart 已销毁/引擎 detached：不能影响下一次闹钟
-        }
     }
 
     /** ColorOS OplusProxyWakeLock 会把服务自持的锁强摘，每拍检查并按需重取 */

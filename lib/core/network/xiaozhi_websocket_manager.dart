@@ -49,9 +49,14 @@ typedef XiaozhiWebSocketListener = void Function(XiaozhiEvent event);
 class XiaozhiWebSocketManager {
   final Logger logger = Logger('XiaozhiWebSocketManager');
 
-  // 81 重连策略：固定阶梯退避 2s→5s→15s→30s→60s 封顶。
-  // 前台最多 12 次；后台（息屏/切后台）最多 3 次即停手，等亮屏后由 onReturnToForeground 秒回。
-  // 1005=服务器静默回收(正常)静默重连；432x=身份校验失败(重连无效)停止；
+  // 82 重连策略：
+  // - 后台（息屏/切后台）：**一次都不重连**，不排重试、不建退避定时器，断就断到底；
+  //   理由是服务端 60–70s 空闲回收会稳定掐断后台连接，81 的"后台最多 3 次"仍会
+  //   形成"重连成功 → 62s 被回收 → 再重连"的 1006 死循环。
+  // - 回前台：立即补连一次（socket 已死时）；这一轮失败才走 2s→5s→15s，最多 3 次，
+  //   仍失败就停止并回调 UI 亮出手动「重新连接」。
+  // - 前台日常断线：固定阶梯 2s→5s→15s→30s→60s，最多 12 次。
+  // 1005=服务器静默回收(正常)；432x=身份校验失败(重连无效)停止；
   // 用户主动断开(_manualClosed)永不重连。
   static const List<int> RECONNECT_DELAYS_MS = <int>[
     2000,
@@ -62,8 +67,9 @@ class XiaozhiWebSocketManager {
   ];
   static const int RECONNECT_MAX_TRIES = 12;
 
-  /// 81：后台连续失败上限。ColorOS 息屏下宁可断开，也不许 1005/1006 风暴。
-  static const int RECONNECT_BG_MAX_TRIES = 3;
+  /// 82：亮屏恢复回合的退避阶梯与上限（只在回前台这一轮生效）。
+  static const List<int> RECOVER_DELAYS_MS = <int>[2000, 5000, 15000];
+  static const int RECOVER_MAX_TRIES = 3;
 
   /// v6.11.6：WS 保活间隔。云端会把空闲长连接约 60s 回收（真机日志实证：
   /// 16:07:53.809 连上 → 16:08:54.071 code=1006，时长 60.26s），
@@ -118,11 +124,21 @@ class XiaozhiWebSocketManager {
   final List<int> _closeCodes = <int>[];       // 最近收到的关闭码（含 null 记为 -1）
   bool _manualClosed = false;
 
-  // ===== v6.11.24（81）：前后台策略 =====
-  // 81 产品定义：息屏/后台不再要求 tick、不再要求 45s 心跳。
-  // 后台只做"断开等亮屏"——不跑业务保活探针、不跑看门狗、重连最多 3 次即停。
+  // ===== v6.11.25（82）：前后台策略 =====
+  // 82 产品定义（收口）：后台彻底不重连——断线一律不重连、不排重试、不建退避定时器；
+  // 回前台立即补连一次，仅这一轮允许 2s/5s/15s 共 3 次，失败交给 UI 手动「重新连接」。
   bool _appForeground = true;
   bool get appForeground => _appForeground;
+
+  /// 82：是否处于"亮屏恢复回合"（回前台 socket 已死 → 立即补连 + 最多 3 次退避）。
+  bool _recoverRound = false;
+  int _recoverTries = 0;
+
+  /// 是否处于亮屏恢复回合（页面据此保留"正在恢复连接…"不被"重连中…"覆盖）。
+  bool get isRecovering => _recoverRound;
+
+  /// 82：恢复回合 3 次用尽后的回调——页面亮出手动「重新连接」按钮。
+  void Function()? onRecoverGiveUp;
 
   /// v4.3.3：最近一次收到服务器消息的时间（供上层判断连接是否已僵死）
   DateTime? _lastRecvAt;
@@ -137,7 +153,6 @@ class XiaozhiWebSocketManager {
   int _segTicks = 0; // 本段 tick 次数（用于"跳过"统计）
   DateTime? _probeStartAt;
   DateTime? _lastUplinkAt; // 上次保活上行的时刻（用于日志"距上次上行"）
-  DateTime? _lastTickAt; // 上一次 tick 时刻（原生唤醒据此判"是否停摆"）
 
   /// 日志前缀：生产保活用 [KEEPALIVE]，诊断 detect 用 [PROBE]
   String get _tag => _probeMode == WsProbeMode.auto ? 'KEEPALIVE' : 'PROBE';
@@ -350,6 +365,14 @@ class XiaozhiWebSocketManager {
       _dispatchEvent(
         XiaozhiEvent(type: XiaozhiEventType.error, data: "创建WebSocket失败: $e"),
       );
+      // 82：同步建连失败不走 onDone，这里必须自己续上退避，否则亮屏恢复会停在第一次。
+      // 后台一律不重连（_scheduleXxx 内部会再判前台）。
+      if (_manualClosed) return;
+      if (_recoverRound) {
+        _scheduleRecover();
+      } else {
+        _scheduleReconnect();
+      }
     }
   }
 
@@ -365,6 +388,9 @@ class XiaozhiWebSocketManager {
     // 取消重连
     _reconnectTimer?.cancel();
     _isReconnecting = false;
+    // 82：主动断开即终止亮屏恢复回合，不再后台重试
+    _recoverRound = false;
+    _recoverTries = 0;
 
     // v6.11.6：主动断开时停掉看门狗，避免它把用户手动断开又连回去
     _watchdogTimer?.cancel();
@@ -417,8 +443,11 @@ class XiaozhiWebSocketManager {
         ? '-'
         : '${DateTime.now().difference(opened).inMilliseconds}ms';
     logger.info('[HANDSHAKE] 收到服务器 hello ACK，握手完成（socket→ACK $costMs）');
-    // 81：握手成功即健康，退避计数归零，后续再断从 2s 档重新开始
+    // 82：握手成功即健康，本轮亮屏恢复结束，后续再断重新从 2s 档开始。
+    // （后台已彻底不重连，这里的归零不会再造成"重连成功→62s 被回收→再重连"的死循环）
     _reconnectAttempts = 0;
+    _recoverRound = false;
+    _recoverTries = 0;
     if (_pendingIsReconnect) {
       _reconnectSuccess++;
       final started = _lastReconnectAt;
@@ -564,18 +593,15 @@ class XiaozhiWebSocketManager {
     }
     logger.info('[$_tag] 启动 mode=${mode.name} interval=${_probeInterval.inSeconds}s '
         '条件=已连接且无会话中；对话结束 ${PROBE_RESUME_DELAY.inSeconds}s 后恢复');
-    _probeTimer = Timer.periodic(_probeInterval, (_) => _tick('dart'));
+    _probeTimer = Timer.periodic(_probeInterval, (_) => _tick());
   }
 
-  /// 一拍心跳。[source] 只用于日志：`dart` = 配置间隔（默认 45s）定时器，
-  /// `native` = 原生 KeepAliveService 每 30s 唤醒补拍。
-  void _tick(String source) {
+  /// 一拍心跳：只由前台 45s 定时器触发（82 起原生闹钟不再唤醒 Dart）。
+  void _tick() {
     _probeSeq++;
     _segTicks++;
-    _lastTickAt = DateTime.now();
-    final from = source == 'native' ? ' 来源=native唤醒' : '';
     if (_manualClosed || !isConnected) {
-      logger.info('[$_tag] tick#$_probeSeq t=${_probeElapsedSec}s 发送=否 原因=未连接$from');
+      logger.info('[$_tag] tick#$_probeSeq t=${_probeElapsedSec}s 发送=否 原因=未连接');
       return;
     }
     // v6.11.13：会话过期统一交给独立定时器（_expireConversationIfStale），
@@ -584,14 +610,14 @@ class XiaozhiWebSocketManager {
       _expireConversationIfStale();
     }
     if (_conversationActive) {
-      logger.info('[$_tag] tick#$_probeSeq t=${_probeElapsedSec}s 发送=否 原因=会话中$from');
+      logger.info('[$_tag] tick#$_probeSeq t=${_probeElapsedSec}s 发送=否 原因=会话中');
       return;
     }
     final now = DateTime.now();
     final end = _conversationEndAt;
     if (end != null && now.difference(end) < PROBE_RESUME_DELAY) {
       logger.info('[$_tag] tick#$_probeSeq t=${_probeElapsedSec}s 发送=否 '
-          '原因=会话刚结束 ${now.difference(end).inSeconds}s<${PROBE_RESUME_DELAY.inSeconds}s$from');
+          '原因=会话刚结束 ${now.difference(end).inSeconds}s<${PROBE_RESUME_DELAY.inSeconds}s');
       return;
     }
     final gap =
@@ -603,26 +629,12 @@ class XiaozhiWebSocketManager {
     _lastUplinkAt = now;
     logger.info('[$_tag] tick#$_probeSeq t=${_probeElapsedSec}s 发送=是 距上次上行=$gap '
         'payload=${_probeMode == WsProbeMode.auto ? 'listen:stop' : 'listen:detect'} '
-        'recv=$_probeRecv$from');
+        'recv=$_probeRecv');
   }
 
-  /// 81：原生闹钟（60s）唤醒后调用。只做状态检查与日志，
-  /// **不补拍心跳、不强制重连**——后台/息屏不追求 tick，亮屏由 onReturnToForeground 秒回。
-  void onNativeWakeup() {
-    // 81：原生闹钟只负责"唤醒进程 + 检查 socket"。绝不 _tick、绝不 forceReconnect——
-    // 80 的"每次唤醒都重连"正是 1005/1006 风暴的根源。
-    final last = _lastTickAt;
-    final sinceTick = last == null
-        ? '从未启动'
-        : '${DateTime.now().difference(last).inSeconds}s 前';
-    logger.info('[$_tag] 原生唤醒：前台=$_appForeground '
-        'socket=${isSocketOpen ? '开' : '关'} connected=$isConnected '
-        '最近tick=$sinceTick 最近close=${lastCloseCode ?? '-'}'
-        '（81：不再唤醒即重连）');
-    if (!_appForeground || _manualClosed) return;
-    // 前台且 socket 已死：只安排一次退避重连（不跳过退避、不叠二次）
-    if (!isSocketOpen) _scheduleReconnect();
-  }
+  /// 82：原生闹钟**不再唤醒 Dart**（KeepAliveService 只自愈 wakelock、只打 wakeup# 日志）。
+  /// 因此这里也不再有"原生唤醒 → 检查 socket → 补连"的入口：
+  /// 后台断线一律不重连，亮屏由 [onReturnToForeground] 秒回。
 
   /// 各模式的保活载荷（v6.11.11：生产只剩 auto / off，detect 仅诊断）
   /// auto  : 单条 listen stop（"停止监听"，实测不触发回复，零副作用）
@@ -811,6 +823,10 @@ class XiaozhiWebSocketManager {
     // v1.1.6: 采集服务器关闭码/原因，便于真机诊断（如 1006=异常断开）
     final code = _channel?.closeCode;
     final reason = _channel?.closeReason;
+    // 82：断开即清掉 socket 句柄。否则 isSocketOpen 在断开后仍为 true，
+    // 回前台会被误判成"连接未死"而跳过立即补连（后台断线后无人再连 → 亮屏不回连）。
+    _streamSubscription = null;
+    _channel = null;
     // v6.11.8：先结算本次探针（候选名 / 存活秒数 / 发送数 / 收到帧 / close code）
     // 79 轮 P0：**只结算、不 cancel**——息屏掉线后 tick 必须继续跑，
     // 否则又回到"进程活着但心跳不跑"（78 真机 0 条 tick#2+ 的直接原因）。
@@ -830,12 +846,14 @@ class XiaozhiWebSocketManager {
     if (code == 1005) {
       // 服务器无状态码关闭：多为静默超 60s 被回收（正常保护）或身份大小写不符
       codeInfo = (codeInfo == null || codeInfo.isEmpty) ? '1005' : codeInfo;
-      logger.info('1005=服务器回收连接（多为静默超时，属正常），自动重连');
+      logger.info('1005=服务器回收连接（多为静默超时，属正常）；前台自动重连，'
+          '后台不重连（82）');
     } else if (code == 1006) {
-      // 81 结论：重连与首连共用同一 header 构造路径（device-id/client-id 均来自
-      // final 字段），不存在"重连头不一致"；1006 多为 ColorOS 冻结/重复会话所致。
-      logger.warning('1006=握手/协议被拒（81 已核对：重连 header 与首连一致，'
-          '非头不一致；多为冻结/重复会话）');
+      // 82 结论：重连与首连共用同一 header 构造路径（device-id/client-id 均来自
+      // final 字段），不存在"重连头不一致"；1006 是服务端 62s 空闲回收叠加
+      // ColorOS 冻结/重复会话所致，82 起后台一次都不重连，从源头消除该循环。
+      logger.warning('1006=握手/协议被拒（82 已核对：重连 header 与首连一致，'
+          '非头不一致；本次来源=服务端空闲回收/冻结）');
     } else if (code == 4326 || code == 4327 || code == 4328) {
       logger.severe('432x=身份校验失败，重连无效。核对 MAC/ClientID 或重新激活');
       _dispatchEvent(
@@ -853,6 +871,21 @@ class XiaozhiWebSocketManager {
       XiaozhiEvent(type: XiaozhiEventType.disconnected, data: codeInfo),
     );
 
+    // 82：后台彻底不重连——不排重试、不建退避定时器，只留一条取证日志。
+    if (!_appForeground) {
+      _isReconnecting = false;
+      _recoverRound = false;
+      _recoverTries = 0;
+      logger.info('[KEEPALIVE] 后台断开，等待亮屏（82 口径） code=$code');
+      return;
+    }
+
+    // 82：亮屏恢复回合只允许 2s/5s/15s 共 3 次，用尽后交给 UI 手动重连。
+    if (_recoverRound) {
+      _scheduleRecover();
+      return;
+    }
+
     // v3.0.0 指数退避自动重连（v6.11.6 抽成 _scheduleReconnect，看门狗复用同一路径）
     _scheduleReconnect();
   }
@@ -866,9 +899,13 @@ class XiaozhiWebSocketManager {
     }
     if (_serverUrl == null || _token == null) return;
     if (_isReconnecting) return;
-    // 81：后台最多 3 次即停手，把"熄屏期间的重连风暴"压到 0。
-    if (!_appForeground && _reconnectAttempts >= RECONNECT_BG_MAX_TRIES) {
-      logger.info('[RECONNECT] 后台已连续失败 $_reconnectAttempts 次 → 停手，等亮屏恢复（81）');
+    // 82：后台一次都不重连（81 的"后台最多 3 次"仍会形成 62s 死循环）
+    if (!_appForeground) {
+      logger.info('[KEEPALIVE] 后台断开，等待亮屏（82 口径）');
+      return;
+    }
+    if (_recoverRound) {
+      _scheduleRecover();
       return;
     }
     if (_reconnectAttempts >= RECONNECT_MAX_TRIES) {
@@ -904,7 +941,38 @@ class XiaozhiWebSocketManager {
     logger.info('网络中断，${delay / 1000}s 后第 $_reconnectAttempts 次自动重连…');
     _reconnectTimer = Timer(Duration(milliseconds: delay), () {
       _isReconnecting = false;
-      if (!_manualClosed && _serverUrl != null && _token != null) {
+      // 82：定时器到点时可能已被切到后台——后台一次都不重连
+      if (!_manualClosed && _appForeground && _serverUrl != null && _token != null) {
+        connect(_serverUrl!, _token!, isReconnect: true);
+      }
+    });
+  }
+
+  /// 82：亮屏恢复回合的退避。只在"回前台 socket 已死"这一轮生效：
+  /// 立即补连 1 次（由 [onReturnToForeground] 发起），失败后 2s→5s→15s 共 3 次；
+  /// 3 次仍失败就停手，回调 [onRecoverGiveUp] 让页面亮出手动「重新连接」。
+  void _scheduleRecover() {
+    if (_manualClosed || !_appForeground) return;
+    if (_isReconnecting) return;
+    if (_recoverTries >= RECOVER_MAX_TRIES) {
+      _recoverRound = false;
+      _isReconnecting = false;
+      logger.warning('[RECONNECT] 亮屏恢复 $RECOVER_MAX_TRIES 次仍未成功 → 停手，'
+          '等用户在 UI 手动重连');
+      onRecoverGiveUp?.call();
+      return;
+    }
+    final delay = RECOVER_DELAYS_MS[_recoverTries];
+    _recoverTries++;
+    _isReconnecting = true;
+    _reconnectTotal++;
+    _lastReconnectAt = DateTime.now();
+    logger.info('[RECONNECT] 亮屏恢复第 $_recoverTries/$RECOVER_MAX_TRIES 次，'
+        'delay=${delay / 1000}s code=${_closeCodes.isEmpty ? '-' : _closeCodes.last}');
+    _reconnectTimer?.cancel();
+    _reconnectTimer = Timer(Duration(milliseconds: delay), () {
+      _isReconnecting = false;
+      if (!_manualClosed && _appForeground && _serverUrl != null && _token != null) {
         connect(_serverUrl!, _token!, isReconnect: true);
       }
     });
@@ -938,10 +1006,10 @@ class XiaozhiWebSocketManager {
   void _startWatchdog() {
     _watchdogTimer?.cancel();
     _watchdogTimer = null;
-    // 81：后台不跑看门狗——不能让定时器在冻结边缘反复安排重连
+    // 82：后台不跑看门狗——后台断线本来就不重连，绝不能让定时器在冻结边缘安排连接
     if (!_appForeground) return;
     _watchdogTimer = Timer.periodic(WATCHDOG_INTERVAL, (_) {
-      if (_manualClosed) return;
+      if (_manualClosed || !_appForeground) return;
       if (!isConnected && !_isReconnecting) {
         logger.warning('看门狗：连接不存在，立即补连（已尝试 $_reconnectAttempts 次）');
         if (_reconnectAttempts >= RECONNECT_MAX_TRIES) _reconnectAttempts = 0;
@@ -987,29 +1055,32 @@ class XiaozhiWebSocketManager {
     unawaited(connect(_serverUrl!, _token!, isReconnect: true));
   }
 
-  /// 81：前后台切换入口。后台停业务保活/看门狗/待执行重连；
+  /// 82：前后台切换入口。后台停业务保活/看门狗/待执行重连，并且**从此不再重连**；
   /// 前台只恢复探针，真正的立即补连交给 [onReturnToForeground]。
   void setAppForeground(bool foreground) {
     if (_appForeground == foreground) return;
     _appForeground = foreground;
     if (!foreground) {
-      _stopProbe('进入后台（81：后台不发业务保活）');
+      _stopProbe('进入后台（82：后台不发业务保活、不重连）');
       _watchdogTimer?.cancel();
       _watchdogTimer = null;
       _reconnectTimer?.cancel();
       _reconnectTimer = null;
       _isReconnecting = false;
-      logger.info('[LIFECYCLE] 进入后台：已停保活探针/看门狗/待执行重连 '
-          'connected=$isConnected socket=$isSocketOpen attempts=$_reconnectAttempts');
+      _recoverRound = false;
+      _recoverTries = 0;
+      logger.info('[LIFECYCLE] 进入后台：已停保活探针/看门狗/待执行重连，'
+          '后台断线一律不重连（82 口径） connected=$isConnected socket=$isSocketOpen');
       return;
     }
-    logger.info('[LIFECYCLE] 回到前台：恢复保活探针（81：前台才发 45s listen:stop）');
+    logger.info('[LIFECYCLE] 回到前台：恢复保活探针（前台才发 45s listen:stop）');
     if (isSocketOpen) _startProbe();
   }
 
-  /// 81：亮屏秒回。取消待执行退避、清零计数：
+  /// 82：亮屏秒回。
   /// - socket 还开 → 不重连（避免误杀健康连接）；
-  /// - socket 已死 → 立即补连一次，不等退避。
+  /// - socket 已死 → **立即补连 1 次**，并进入"恢复回合"：失败后 2s→5s→15s 共 3 次，
+  ///   仍失败就回调 [onRecoverGiveUp]，由页面亮出手动「重新连接」。
   /// 返回是否真的进入了恢复流程（用户主动断开时为 false，页面不要显示恢复态）。
   bool onReturnToForeground() {
     _appForeground = true;
@@ -1017,14 +1088,21 @@ class XiaozhiWebSocketManager {
     _reconnectTimer = null;
     _isReconnecting = false;
     _reconnectAttempts = 0;
-    if (_manualClosed) return false;
+    _recoverTries = 0;
+    if (_manualClosed) {
+      _recoverRound = false;
+      return false;
+    }
     if (isSocketOpen) {
+      _recoverRound = false;
       logger.info('[LIFECYCLE] 回前台 socket 仍打开 → 不重连（连接未死）');
       if (_probeTimer == null) _startProbe();
       _startWatchdog(); // 后台停掉的看门狗同步恢复
       return false;
     }
-    logger.info('[LIFECYCLE] 回前台 socket 已死 → 立即补连一次（81 亮屏秒回）');
+    _recoverRound = true;
+    logger.info('[LIFECYCLE] 回前台 socket 已死 → 立即补连 1 次'
+        '（失败后 2s/5s/15s 最多 3 次，82 亮屏秒回）');
     forceReconnect(reason: '回前台');
     return true;
   }

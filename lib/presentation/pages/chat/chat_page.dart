@@ -21,7 +21,6 @@ import 'package:xiaozhi_client_flutter/core/network/xiaozhi_mqtt_presence.dart';
 import 'package:xiaozhi_client_flutter/core/network/xiaozhi_websocket_manager.dart';
 import 'package:xiaozhi_client_flutter/app/config/app_config.dart';
 import 'package:xiaozhi_client_flutter/core/providers/agent_provider.dart';
-import 'package:xiaozhi_client_flutter/core/service/keep_alive_service.dart';
 import 'package:xiaozhi_client_flutter/core/storage/storage_service.dart';
 import 'package:xiaozhi_client_flutter/core/providers/theme_provider.dart';
 import 'package:xiaozhi_client_flutter/core/utils/audio_util.dart';
@@ -238,8 +237,7 @@ class _ChatPageState extends ConsumerState<ChatPage>
     unawaited(_consumeDebugInjection());
     // v6.11.17：回前台补连（P0-3 的 Dart 侧兜底）
     WidgetsBinding.instance.addObserver(this);
-    // 79 轮 P0：原生 KeepAliveService 每 30s 唤醒 → 当前 WS 管理器补一拍心跳
-    KeepAliveService.onNativeWakeup = () => _wsManager?.onNativeWakeup();
+    // 82：原生闹钟只自愈 wakelock，不再唤醒 Dart，也不再挂"原生唤醒 → 检查 socket"回调
     // 任务卡：订阅 Mika 进程内任务事件，把真实状态写进聊天流
     MikaBridge.install();
     _mikaTaskSub = MikaBridge.taskStates.listen(_onMikaTaskState);
@@ -250,11 +248,12 @@ class _ChatPageState extends ConsumerState<ChatPage>
   /// 1002/1005 是服务端先断，交给 `_onDisconnected` 的正常重连，不再叠二次。
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.paused) {
-      // 81：后台/息屏不再要求 tick，也不再为 tick 持 wakelock；
-      // 通知 WS 管理器停止业务保活/看门狗并取消待执行重连。
+    if (state == AppLifecycleState.paused || state == AppLifecycleState.hidden) {
+      // 82：后台/息屏不要求 tick，也不再为 tick 持 wakelock；
+      // 通知 WS 管理器停止业务保活/看门狗，并**彻底关掉重连**（断线即断到底）。
+      // 同时接 paused 与 hidden：不同 ROM 上隐藏窗口未必立刻给 paused，早一步关掉更稳。
       _wsManager?.setAppForeground(false);
-      logger.info('[LIFECYCLE] paused → 后台断开策略（81：不要求 tick，重连退避且最多 3 次）');
+      logger.info('[LIFECYCLE] $state → 后台断开策略（82：不重连、不排重试，等亮屏立即补连）');
       return;
     }
     if (state != AppLifecycleState.resumed) return;
@@ -268,26 +267,32 @@ class _ChatPageState extends ConsumerState<ChatPage>
         '握手=${mgr.isConnected} 最近close=${mgr.lastCloseCode ?? '-'} '
         '下行静默=${silent == null ? '尚未收包' : '${silent}s'} '
         '上行静默=${uplinkSilent == null ? '尚未上行' : '${uplinkSilent}s'}');
-    // 81：先标记前台（恢复探针），再让管理器决定是否需要立即补连一次
+    // 82：先标记前台（恢复探针），再让管理器决定是否需要立即补连一次
     mgr.setAppForeground(true);
     final recovering = mgr.onReturnToForeground();
     if (recovering && !socketOpen) {
-      // 亮屏恢复过渡态：琥珀色、无错误弹窗；8s 未恢复才交还手动重连按钮
+      // 亮屏恢复过渡态：琥珀色、无错误弹窗。
+      // 手动「重新连接」按钮不靠固定 8s 倒计时，而是等管理器把
+      // 立即补连 + 2s/5s/15s 三次退避走完（onRecoverGiveUp）再亮出来。
+      _reconnectUiTimer?.cancel();
+      _reconnectUiTimer = null;
       setState(() {
         _isConnected = false;
         _connectionStatus = '正在恢复连接…';
         _showReconnectBar = true;
       });
-      _reconnectUiTimer?.cancel();
-      _reconnectUiTimer = Timer(const Duration(seconds: 8), () {
-        if (!mounted || _isConnected) return;
-        logger.warning('亮屏 8s 仍未恢复连接，显示手动重连按钮');
-        setState(() {
-          _connectionStatus = '连接已断开';
-          _showReconnectBar = true;
-        });
-      });
     }
+  }
+
+  /// 82：亮屏恢复回合（立即 1 次 + 2s/5s/15s 共 3 次）全部失败后的回调。
+  /// 这里才把手动「重新连接」按钮交给用户，在此之前保持"正在恢复连接…"。
+  void _onRecoverGiveUp() {
+    if (!mounted || _isConnected) return;
+    logger.warning('[LIFECYCLE] 亮屏恢复 3 次仍未成功，亮出手动重连按钮');
+    setState(() {
+      _connectionStatus = '连接已断开';
+      _showReconnectBar = true;
+    });
   }
 
   /// 幂等释放。任何路径（回前台/页面销毁）都走这里，原生侧同样幂等。
@@ -467,7 +472,6 @@ class _ChatPageState extends ConsumerState<ChatPage>
     _preconnectTimer?.cancel();
     // v6.11.17（P0-3）：页面销毁必须放锁，避免后台持锁泄漏
     unawaited(_releaseWakeLock('dispose'));
-    KeepAliveService.onNativeWakeup = null;
     WidgetsBinding.instance.removeObserver(this);
     AppFeats.wsProbeRevision.removeListener(_onWsProbeChanged);
     AppFeats.mockTaskRevision.removeListener(_onMockTaskRequested);
@@ -1178,7 +1182,12 @@ class _ChatPageState extends ConsumerState<ChatPage>
         'status': 'queued',
         'stepIndex': 0,
         'elapsedMs': 0,
-        'steps': <Map<String, dynamic>>[],
+        'steps': <Map<String, dynamic>>[
+          {'title': '解析指令', 'meta': '等待执行', 'state': 'pending'},
+          {'title': '打开时钟应用', 'meta': '等待执行', 'state': 'pending'},
+          {'title': '新建 7:30 闹钟', 'meta': '等待执行', 'state': 'pending'},
+          {'title': '回读并确认', 'meta': '等待执行', 'state': 'pending'},
+        ],
         'results': <String>[],
       },
       {
@@ -1247,7 +1256,7 @@ class _ChatPageState extends ConsumerState<ChatPage>
       }
     });
     _scrollToBottom();
-    logger.info('[MOCK] 已注入 4 条 mock 任务卡（仅 UI 视觉验证）');
+    logger.info('[MOCK] 已注入 4 条 mock 任务卡（82：走 XlTaskCard 真卡片渲染，可点进详情）');
   }
 
   /// 81：开发者中心「任务卡演示」指令消费。
@@ -1486,6 +1495,7 @@ class _ChatPageState extends ConsumerState<ChatPage>
   /// [source] v4.3.3：断开来源标记，写入日志便于区分"App 主动断开"与"服务器断开"
   Future<void> _cleanupWebSocket({String source = 'unknown'}) async {
     if (_wsManager != null) {
+      _wsManager!.onRecoverGiveUp = null;
       await _wsManager!.disconnect(source: source);
       _wsManager = null;
     }
@@ -1731,6 +1741,8 @@ class _ChatPageState extends ConsumerState<ChatPage>
 
       // 第四步: 添加事件监听器
       _wsManager!.addListener(_handleWebSocketEvent);
+      // 82：亮屏恢复 3 次仍失败 → 亮出手动「重新连接」
+      _wsManager!.onRecoverGiveUp = _onRecoverGiveUp;
 
       // 第四步半 (v3.0.0)：MCP 设备端——应答服务器 initialize/tools/list/tools/call，
       // 注册 9 项工具让 AI 真实操控设备（协议对齐真机 mcp_server.cc，见 xiaoleweb.md 第五章）
@@ -2640,6 +2652,11 @@ class _ChatPageState extends ConsumerState<ChatPage>
         final codeInfo = event.data?.toString() ?? '';
         // 432x = 身份校验失败：重连无效，必须让用户看到真实原因与手动入口
         final fatalIdentity = codeInfo.startsWith('432');
+        // 82：后台断线不重连（管理器已不排定时器），状态只置"后台已断开"；
+        // 亮屏恢复回合内保持"正在恢复连接…"，不被"重连中…"覆盖。
+        final mgr = _wsManager;
+        final inBackground = mgr != null && !mgr.appForeground;
+        final inRecover = mgr != null && mgr.isRecovering;
         setState(() {
           _isConnected = false;
           _showReconnectBar = false;
@@ -2647,6 +2664,10 @@ class _ChatPageState extends ConsumerState<ChatPage>
             // v1.1.6: 显示服务器关闭码，便于真机诊断失联原因
             _connectionStatus =
                 codeInfo.isEmpty ? '已断开' : '已断开 ($codeInfo)';
+          } else if (inBackground) {
+            _connectionStatus = '后台已断开';
+          } else if (inRecover) {
+            _connectionStatus = '正在恢复连接…';
           } else {
             // v6.11.7：1005/1006 多为云端按业务空闲回收，管理器 1–4s 内自动补连。
             // 不再显示"已断开"，只显示与"已连接"等宽的"重连中…"（顶部不跳字、不弹条）。
@@ -2654,10 +2675,12 @@ class _ChatPageState extends ConsumerState<ChatPage>
           }
         });
         // v4.3.2 埋点：断开原因（close code）进日志
-        logger.warning('WebSocket 已断开 closeCode=${event.data} fatalIdentity=$fatalIdentity');
+        logger.warning('WebSocket 已断开 closeCode=${event.data} fatalIdentity=$fatalIdentity '
+            '后台=$inBackground 恢复回合=$inRecover');
         // v3.1.0：断线停止周期上报（重连成功后自动恢复）
         _stopOtaReporting();
-        if (!fatalIdentity) _armReconnectUiTimer();
+        // 82：后台不亮重连条、不排 UI 倒计时；恢复回合的按钮由 onRecoverGiveUp 交还
+        if (!fatalIdentity && !inBackground && !inRecover) _armReconnectUiTimer();
         //_addConnectionStatusMessage('与服务器断开连接');
         break;
 
@@ -2672,7 +2695,13 @@ class _ChatPageState extends ConsumerState<ChatPage>
       case XiaozhiEventType.error:
         final errText = event.data?.toString() ?? '';
         logger.severe('WebSocket 错误: $errText');
-        // 81：亮屏恢复期只记日志，不弹错误提示（交给退避或 8s 后的手动重连入口）
+        // 82：后台只记日志——后台不重连，绝不能把"网络异常/正在重连"这类红条
+        // 留到亮屏时弹出（验收要求亮屏无错误弹窗）。
+        if (_wsManager != null && !_wsManager!.appForeground) {
+          logger.warning('后台出错（静默，82 不重连）：$errText');
+          break;
+        }
+        // 81：亮屏恢复期只记日志，不弹错误提示（交给退避或恢复回合用尽后的手动重连入口）
         if (_connectionStatus == '正在恢复连接…') {
           logger.warning('恢复连接期间出错（静默）：$errText');
           break;
