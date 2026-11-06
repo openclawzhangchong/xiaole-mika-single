@@ -1069,8 +1069,33 @@ class XiaozhiWebSocketManager {
       _isReconnecting = false;
       _recoverRound = false;
       _recoverTries = 0;
-      logger.info('[LIFECYCLE] 进入后台：已停保活探针/看门狗/待执行重连，'
-          '后台断线一律不重连（82 口径） connected=$isConnected socket=$isSocketOpen');
+      _pendingIsReconnect = false;
+      // 82：握手闸门定时器一并取消，避免后台误报 "8s 未收到 hello，走重连"
+      _helloTimer?.cancel();
+      _helloTimer = null;
+      _handshakeTimer?.cancel();
+      _handshakeTimer = null;
+      // 82：**主动断掉后台连接**。否则服务端会在 60–70s 空闲回收时发 1006/1005，
+      // 后台日志里就会有 close code（验收判据要求 1005=0 / 1006=0）。
+      // 断就断到底：这里不排任何重试，亮屏时由 onReturnToForeground 立即补连。
+      final hadSocket = isSocketOpen;
+      if (hadSocket) {
+        final sub = _streamSubscription;
+        final ch = _channel;
+        _streamSubscription = null;
+        _channel = null;
+        _handshakeDone = false;
+        unawaited(sub?.cancel());
+        unawaited(ch?.sink.close(status.normalClosure));
+      }
+      logger.info('[KEEPALIVE] 后台断开，等待亮屏（82 口径） socket=$hadSocket '
+          'connected=$isConnected');
+      if (hadSocket) {
+        _dispatchEvent(XiaozhiEvent(
+          type: XiaozhiEventType.disconnected,
+          data: '后台主动断开（82）',
+        ));
+      }
       return;
     }
     logger.info('[LIFECYCLE] 回到前台：恢复保活探针（前台才发 45s listen:stop）');
