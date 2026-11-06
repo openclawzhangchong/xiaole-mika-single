@@ -270,8 +270,8 @@ class _ChatPageState extends ConsumerState<ChatPage>
         '上行静默=${uplinkSilent == null ? '尚未上行' : '${uplinkSilent}s'}');
     // 81：先标记前台（恢复探针），再让管理器决定是否需要立即补连一次
     mgr.setAppForeground(true);
-    mgr.onReturnToForeground();
-    if (!socketOpen) {
+    final recovering = mgr.onReturnToForeground();
+    if (recovering && !socketOpen) {
       // 亮屏恢复过渡态：琥珀色、无错误弹窗；8s 未恢复才交还手动重连按钮
       setState(() {
         _isConnected = false;

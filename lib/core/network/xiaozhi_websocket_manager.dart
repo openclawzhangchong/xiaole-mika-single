@@ -1010,20 +1010,22 @@ class XiaozhiWebSocketManager {
   /// 81：亮屏秒回。取消待执行退避、清零计数：
   /// - socket 还开 → 不重连（避免误杀健康连接）；
   /// - socket 已死 → 立即补连一次，不等退避。
-  void onReturnToForeground() {
+  /// 返回是否真的进入了恢复流程（用户主动断开时为 false，页面不要显示恢复态）。
+  bool onReturnToForeground() {
     _appForeground = true;
     _reconnectTimer?.cancel();
     _reconnectTimer = null;
     _isReconnecting = false;
     _reconnectAttempts = 0;
-    if (_manualClosed) return;
+    if (_manualClosed) return false;
     if (isSocketOpen) {
       logger.info('[LIFECYCLE] 回前台 socket 仍打开 → 不重连（连接未死）');
       if (_probeTimer == null) _startProbe();
       _startWatchdog(); // 后台停掉的看门狗同步恢复
-      return;
+      return false;
     }
     logger.info('[LIFECYCLE] 回前台 socket 已死 → 立即补连一次（81 亮屏秒回）');
     forceReconnect(reason: '回前台');
+    return true;
   }
 }
